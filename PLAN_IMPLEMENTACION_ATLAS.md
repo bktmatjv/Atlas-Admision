@@ -1,7 +1,7 @@
 # Atlas: de recibir respuestas a poder resolver por tu cuenta
 
 > Plan inicial · Actualizado el 30 de octubre de 2026 con «Mis cursos» e importación de material propio · Estado: propuesta de implementación, no funcionalidades terminadas.
-> Revisión técnica del 30 de octubre de 2026: ver la sección 15 (recorte de P0, orden de fases y decisiones técnicas concretas para aprobar). Donde la sección 15 contradiga una sección anterior, prevalece la sección 15.
+> Revisión técnica inicial: sección 15. Estado de la implementación y cambios posteriores solicitados por el usuario: sección 16. Para estructura, comandos y estado real prevalece la sección 16; el resto conserva el diseño y su evolución.
 > Leer este documento antes de trabajar en cada fase. `AGENTS.md` gobierna la arquitectura; las instrucciones actuales del usuario prevalecen. Actualizar decisiones y verificaciones al ejecutar, sin marcar una fase como completa solo por tener interfaz.
 
 ## 1. Decisión de producto
@@ -567,4 +567,55 @@ Si la fecha no alcanza para G, se presenta como siguiente paso con su diseño do
 2. Stack de 15.3 (en especial zod en lugar de class-validator y Vitest en el backend).
 3. Workspaces y traslado de `motor` a `packages/motor`.
 4. Proveedor de IA (Anthropic propuesto) y tope de gasto.
-5. Hosting de un solo servicio, mismo origen y volumen persistente.
+5. Hosting de un solo servicio, mismo origen y volumen persistente. **Propuesta reemplazada por la separación frontend/backend solicitada después; ver sección 16.**
+
+## 16. Estado implementado y verificación para entrega
+
+Actualización del 30/10/2026. El usuario solicitó carpetas separadas y autorizó Docker para el backend; prevé frontend en Vercel y backend Docker en VM Azure, sin abordar todavía ese despliegue. Esta decisión reemplaza el frontend en raíz y el servicio único propuestos antes.
+
+### Estructura actual
+
+```text
+frontend/             React/Vite y assets; salida frontend/dist/
+backend/src/          NestJS: identidad, contenido, práctica, tutor y seguimiento
+backend/data/         Banco privado y datos UNMSM, con fuentes originales preservadas
+backend/workers/      Extracción documental aislada
+backend/test/         Pruebas HTTP con PostgreSQL real
+packages/motor/       Núcleo compartido: armado, corrección, Leitner, molde y temario
+scripts/              Verificación del monorepo e importación desde extracción externa
+```
+
+Un solo lockfile npm en la raíz. Los demás motores de renderizado/cálculo de la demo se conservan en frontend; no se trasladó código ajeno al flujo compartido por mera simetría. La API ya no sirve el frontend. Las dependencias se actualizaron a versiones sin hallazgos en la auditoría npm realizada, manteniendo React 18 y adoptando Vite 6, React Router 7, Vitest 5 y Zod 4.
+
+### Flujos conectados
+
+| Área | Implementado | Límite relevante |
+| --- | --- | --- |
+| Persistencia | PostgreSQL/TypeORM, migraciones, snapshot importado de forma repetible, sesiones y autorización por actor | Sesión invitada; sin recuperación entre dispositivos |
+| Práctica | Crear, responder con versión, revelar cuando corresponde, entregar y corregir; diagnóstico/simulacros y repasos | Los exámenes históricos son selecciones disponibles; no cuadernillos íntegros |
+| Tutor | Adaptador Anthropic, salida estructurada validada, idempotencia, árbol, expansión y aclaración con revisión anterior | Sin credenciales, error explícito; la prueba controlada no valida IA real |
+| Comprobación | Actividades propias de tres conceptos, resultado numérico y justificación persistida, bloqueo de ayudas durante el intento | La justificación no se califica automáticamente; no certifica comprensión profunda |
+| Mis cursos | Cursos personales, importación privada PDF con texto/TXT/Markdown, worker, trabajos recuperables, fragmentos y citas; propuestas de práctica guardadas | Organización IA sobre muestra acotada; revisión manual; prácticas generadas no revisadas |
+| Ejecución | Dockerfile backend, Compose con DB y volúmenes; frontend separado y cliente HTTP configurable | Arranque local, no despliegue cloud ni configuración final de producción |
+
+El prompt versionado actual está en `backend/src/modules/tutor/ai.ts` (`tutor-v1`), no en una carpeta de prompts separada. El modelo real se proporciona por configuración; no se garantiza disponibilidad de los nombres exploratorios propuestos en la sección 15. Los trabajos de documentos tienen concurrencia uno en este alcance. La búsqueda full-text está indexada, pero no se presenta como un buscador completo del curso; el tutor utiliza el fragmento seleccionado.
+
+### Verificaciones realizadas
+
+- `npm run verify`: lint, tipos frontend/backend, **384 pruebas en 38 archivos**, compilación de los workspaces, **22 pruebas HTTP con PostgreSQL Docker real** y auditoría npm sin vulnerabilidades reportadas.
+- Imagen backend construida y ejecutada con Node 22 y PostgreSQL 16. Ambos servicios saludables; se comprobó práctica/corrección, PDF en worker, conservación de sesión/datos tras reinicio y borrado del original/derivados.
+- Banco con claves fuera de los assets públicos. Los recursos existentes se trasladan, no se eliminan ni se regeneran desde la extracción privada.
+- Comprobación básica en navegador: inicio, navegación a Admisión, 26 exámenes cargados desde la API, sin alertas de error ni desbordamiento horizontal al ancho observado. No sustituye un recorrido visual completo móvil/escritorio con IA real.
+- Las pruebas habituales no llaman modelos de pago. El arranque local conserva `AI_PROVIDER=disabled` salvo configuración explícita.
+
+Comando único antes de entregar cambios: `npm run verify`. Consultar `README.md` y `backend/README.md` para arranque y contratos. No dar una fase por terminada por la existencia de un archivo: contrastar siempre con estas comprobaciones y con los límites de cada flujo.
+
+### Pendiente, sin presentarlo como terminado
+
+- Configurar credenciales/modelo y evaluar respuestas reales, incluyendo calidad pedagógica, exactitud y resistencia a instrucciones maliciosas del material.
+- Validación con postulantes/docentes, revisión académica de actividades y retención diferida real. Una prueba técnica no acredita eficacia educativa.
+- OCR, fuentes externas, edición avanzada de cursos, recuperación de cuentas e importación voluntaria del historial local legado.
+- Definir retención/respaldos, cuotas/coste real y completar revisión operativa antes de uso público.
+- Despliegue en Azure/Vercel, HTTPS, dominios y política final de cookies/CORS. No se ejecutó ninguno de esos pasos.
+
+**Criterio para push:** verificaciones técnicas correctas, diferencias revisadas, sin secretos/archivos generados y commits locales coherentes. Esto permite compartir la primera versión funcional; no equivale a declararla lista para producción o a afirmar que todo P0/P1 fue validado.
