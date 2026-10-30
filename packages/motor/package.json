@@ -1,0 +1,6 @@
+{
+  "name": "@atlas/motor", "version": "0.1.0", "private": true, "type": "module",
+  "exports": { "./*": { "types": "./dist/*.d.ts", "import": "./dist/*.js", "require": "./dist/*.cjs" } },
+  "scripts": { "build": "tsup src/*.ts --format esm,cjs --dts --clean" },
+  "devDependencies": { "tsup": "^8.5.0" }
+}

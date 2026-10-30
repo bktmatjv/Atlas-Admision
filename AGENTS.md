@@ -2,7 +2,7 @@
 
 ## 1. Propósito
 
-Este archivo orienta a los agentes que trabajan en el proyecto. Es una versión inicial: la arquitectura de detalle, los módulos y parte del alcance funcional todavía deben completarse.
+Este archivo orienta a los agentes que trabajan en el proyecto. La sección 14 documenta la estructura y las decisiones técnicas implementadas; prevalece sobre descripciones iniciales del estado del repositorio.
 
 El objetivo inmediato es evolucionar la demo existente hacia una aplicación funcional con frontend React, backend NestJS y base de datos persistente. Trabajar sobre lo que ya existe, comprender los flujos implementados y completar su funcionamiento de forma incremental.
 
@@ -14,7 +14,7 @@ El proyecto se ha trabajado como **Atlas Admisión**, una plataforma de apoyo a 
 
 La propuesta incluye diagnóstico, práctica por curso y tema, simulacros, revisión de errores, recomendaciones y seguimiento del progreso. Estas capacidades describen la intención del producto; no asumir que todas están implementadas o que sus reglas ya están definidas.
 
-La plataforma incorporará un tutor con IA que ayude a comprender conceptos y utilizar lo aprendido. Una de sus funcionalidades será el **árbol de comprensión** descrito más adelante.
+La plataforma cuenta con el módulo de tutor y **árbol de comprensión** descrito más adelante. Su adaptador real necesita credenciales y modelo configurados en backend; las pruebas con respuestas controladas no validan la calidad de la IA real.
 
 El problema educativo que orienta el diseño es «Aprender sin pensar»: completar actividades con ayuda de IA sin necesariamente comprenderlas. Favorecer explicaciones, participación del estudiante y aplicación independiente. No presentar el uso de IA ni la navegación por contenido como evidencia automática de aprendizaje.
 
@@ -32,11 +32,9 @@ El problema educativo que orienta el diseño es «Aprender sin pensar»: complet
 
 ### Pendiente de confirmar mediante inspección o definición del producto
 
-- Organización real del repositorio y estado de cada flujo.
-- Motor de base de datos y herramienta de acceso a datos.
-- Autenticación, roles y permisos.
-- Proveedor y modelo de IA.
-- Infraestructura de despliegue.
+- Recuperación de cuentas entre dispositivos y roles adicionales a la sesión invitada.
+- Modelo de IA disponible en la cuenta, presupuesto y calidad pedagógica con el proveedor real.
+- Dominios, HTTPS y configuración final de despliegue. El usuario prevé frontend en Vercel y backend Docker en VM Azure, sin implementarlo todavía.
 - Contratos definitivos de la API y módulos de negocio.
 - Prioridad y criterios de aceptación de las funcionalidades incompletas.
 
@@ -227,3 +225,18 @@ Al terminar una tarea, resumir el cambio, la validación realizada, los supuesto
 Este archivo establece la base del proyecto. Completarlo conforme se confirmen módulos, historias de usuario, reglas de negocio, arquitectura de datos, proveedor de IA y criterios de aceptación.
 
 Mantenerlo coherente con el repositorio. No convertir propuestas exploratorias en requisitos obligatorios ni documentar como implementadas funciones que todavía no existen.
+
+## 14. Estructura y decisiones implementadas (30/10/2026)
+
+- Monorepo npm workspaces: `frontend/` (React/Vite), `backend/` (NestJS independiente) y `packages/motor/` (reglas compartidas). Un solo `package-lock.json` en la raíz. La separación de carpetas fue solicitada explícitamente por el usuario.
+- Base PostgreSQL 16 en Docker; TypeORM 0.3 y migraciones, nunca `synchronize: true`. Node 22.13+; validación Zod y pruebas Vitest. Las dependencias de interfaz pertenecen al workspace frontend.
+- `backend/data/` contiene los snapshots privados del banco y metadatos. Los gráficos públicos pertenecen a `frontend/public/graficos/`. No volver a publicar JSON con claves en `public/` ni en `frontend/dist/`.
+- `frontend/src/integrations/api/` centraliza HTTP. Los módulos antiguos llamados Supabase/local se conservan para tipos y pruebas de regresión; no son un backend alternativo ni un fallback silencioso de la aplicación.
+- Sesiones invitadas con cookie HttpOnly y hash del token en servidor; autorización por actor. No hay recuperación de cuentas. La sesión dura 30 días y su pérdida no debe presentarse como recuperación de usuario automática.
+- Backend por módulos de identidad, contenido/documentos, práctica, tutor y seguimiento. El acceso SQL se concentra en `Database`, que normaliza la forma de los resultados del driver. No tratar un array vacío devuelto por UPDATE como registro encontrado.
+- Adaptador Anthropic detrás de `TutorAI`; `AI_MODEL` y claves solo en backend. `disabled` devuelve error explícito, `fake` es exclusivo de pruebas y se prohíbe en producción. No reutilizar credenciales del harness para activar el tutor.
+- Documentos: originales privados, extracción en worker con memoria/tiempo limitados, trabajos persistidos con lease y referencias a fragmentos. PDF con texto/TXT/Markdown; OCR y fuentes web externas siguen pendientes. Un visto bueno del alumno a la extracción no equivale a revisión académica.
+- `compose.yaml` es para desarrollo local: API en `127.0.0.1:3000`, PostgreSQL en `127.0.0.1:55432`; no intervenir en contenedores de otros proyectos. No ejecutar `down -v` sobre datos que deban conservarse.
+- Arranque: `npm ci`, `docker compose up --build -d --wait`, `npm run dev:web`. Backend y frontend se despliegan separados; la API no sirve la SPA.
+- Antes de cerrar cambios: `npm run verify`. Incluye lint, tipos, 384 pruebas de regresión, build, integración con PostgreSQL Docker temporal y auditoría npm. Los conteos pueden crecer; confirmar siempre el resultado real del comando.
+- Consultar `README.md`, `backend/README.md` y la sección 16 de `PLAN_IMPLEMENTACION_ATLAS.md` para límites y estado verificado. Tener tests verdes no equivale a validación con estudiantes ni a despliegue público.
