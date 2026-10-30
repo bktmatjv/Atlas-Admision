@@ -699,3 +699,72 @@ describe("Harness de comprensión: retropropagación del error", () => {
     expect(despues.data).toHaveLength(antes.data.length);
   });
 });
+
+describe("Harness de comprensión: nodos etiquetados y nodo faltante", () => {
+  let sid: string, arbol: string, raiz: string;
+  const crear = async (solicitud: string, key = randomUUID()) =>
+    http("/arboles", "POST", { tema: "proporciones", solicitud }, sid, key);
+  const nodos = async (id = arbol) =>
+    (await http(`/arboles/${id}`, "GET", undefined, sid)).data.nodos as {
+      id: string;
+      idea_clave: string | null;
+      titulo: string;
+      padre_id: string | null;
+    }[];
+  beforeAll(async () => {
+    sid = (await http("/sesion", "POST", {}, "")).cookie!;
+    const c = await crear("Quiero entender proporciones");
+    arbol = c.data.id;
+    raiz = (await nodos())[0].id;
+  });
+  it("el proveedor de pruebas etiqueta raíz e hijos con claves del concepto", async () => {
+    const ns = await nodos();
+    const claves = ["directa-vs-inversa", "valor-unitario"];
+    expect(ns.length).toBeGreaterThan(1);
+    for (const n of ns) expect(claves).toContain(n.idea_clave);
+    const [fila] = (
+      await db.query(`SELECT prompt_version FROM ${schema}.nodos WHERE id=$1`, [
+        raiz,
+      ])
+    ).rows;
+    expect(fila.prompt_version).toBe("tutor-v2");
+  });
+  it("una idea_clave fuera del catálogo propuesta por la IA se guarda como NULL", async () => {
+    const c = await crear("Explica proporciones [[clave-invalida]]");
+    expect(c.status).toBe(201);
+    const ns = await nodos(c.data.id);
+    expect(ns).toHaveLength(2);
+    expect(ns[0].idea_clave).not.toBeNull();
+    expect(ns[1].idea_clave).toBeNull();
+  });
+  it("expandir con idea_clave etiqueta el nodo creado y es idempotente", async () => {
+    const key = randomUUID();
+    const body = {
+      solicitud: "Explica esta idea",
+      idea_clave: "valor-unitario",
+    };
+    const url = `/arboles/${arbol}/nodos/${raiz}/expandir`;
+    const previos = await nodos();
+    const antes = previos.length;
+    const a = await http(url, "POST", body, sid, key);
+    expect(a.status).toBe(201);
+    const ns = await nodos();
+    expect(ns.length).toBeGreaterThan(antes);
+    const etiquetados = (l: { idea_clave: string | null }[]) =>
+      l.filter((n) => n.idea_clave === "valor-unitario").length;
+    expect(etiquetados(ns)).toBe(etiquetados(previos) + 1);
+    const b = await http(url, "POST", body, sid, key);
+    expect(b.data).toEqual(a.data);
+    expect((await nodos()).length).toBe(ns.length);
+  });
+  it("expandir rechaza una idea_clave que no es del concepto del árbol", async () => {
+    const r = await http(
+      `/arboles/${arbol}/nodos/${raiz}/expandir`,
+      "POST",
+      { solicitud: "Explica", idea_clave: "cambio-de-base" },
+      sid,
+      randomUUID(),
+    );
+    expect(r.status).toBe(400);
+  });
+});
