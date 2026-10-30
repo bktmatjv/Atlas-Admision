@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import carreras from "../../../scripts/admision/unmsm/carreras.json";
-import resultados from "../../../scripts/admision/unmsm/resultados.json";
-import procesos from "../../../scripts/admision/unmsm/procesos.json";
+import carreras from "../../../../backend/data/fuentes/unmsm/carreras.json";
+import resultados from "../../../../backend/data/fuentes/unmsm/resultados.json";
+import procesos from "../../../../backend/data/fuentes/unmsm/procesos.json";
 import { carreraDeJson, procesoDeJson, resultadoDeJson } from "./datos-unmsm";
 
 /**

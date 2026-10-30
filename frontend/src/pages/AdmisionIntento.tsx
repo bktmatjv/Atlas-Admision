@@ -16,7 +16,12 @@ import { puntajeParaIngresaba } from "@/lib/admision/diagnostico";
 const AREA: Record<string, string> = { A: "Área A", B: "Área B", C: "Área C", D: "Área D", E: "Área E", medicina: "Medicina" };
 
 /** `/admision/intento/:id`: rendir un examen de admisión y, entregado, repasarlo con las soluciones. */
-export default function AdmisionIntento() {
+export default function AdmisionIntentoPagina() {
+  const { id } = useParams<{ id: string }>();
+  return <AdmisionIntento key={id} />;
+}
+
+function AdmisionIntento() {
   const { id } = useParams<{ id: string }>();
   const x = useIntentoDeAdmision(id);
   const userId = useAuthUserId();
@@ -84,12 +89,14 @@ export default function AdmisionIntento() {
                 />
               )}
 
+              {!corregido && x.restante === 0 && x.pendientes > 0 && <section className="rounded-xl border border-destructive/30 bg-card p-4"><p>El tiempo terminó. Hay {x.pendientes} respuestas sin confirmar que no se incluirán si entregas ahora.</p><button className="mt-3 min-h-11 rounded-lg border px-4 font-semibold" disabled={x.entregando} onClick={() => { if (window.confirm('¿Entregar solo las respuestas ya guardadas en el servidor? Las pendientes no contarán.')) void x.entregar(true); }}>Entregar únicamente las respuestas guardadas</button></section>}
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_15rem]">
                 {/* `scroll-mt-24`: al saltar a una pregunta, su encabezado queda bajo la barra fija. */}
                 <div ref={arriba} className="min-w-0 scroll-mt-32 lg:scroll-mt-24">
                   {pregunta && (
                     <PreguntaDeAdmision
                       key={pregunta.pregunta_id}
+                      intentoId={x.intento.id}
                       pregunta={pregunta}
                       indice={actual}
                       total={x.preguntas.length}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import carrerasJson from "../../../scripts/admision/unmsm/carreras.json";
+import carrerasJson from "../../../../backend/data/fuentes/unmsm/carreras.json";
 import { carreraDeJson } from "./datos-unmsm";
 import { areaDelExamen, buscarEscuelas } from "./buscar-escuela";
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dumbbell } from "lucide-react";
-import { admisionDb, type AreaDeAdmision, type PreguntaDelIntento } from "@/integrations/supabase/admision";
+import { admision, type AreaDeAdmision, type PreguntaDelIntento } from '@/integrations/api/admision';
 import type { RespuestaLocal } from "@/hooks/useIntentoDeAdmision";
 import { usePerfilDeAdmision } from "@/hooks/useAdmisionDatos";
 import { usePracticarAdmision } from "@/hooks/usePracticarAdmision";
@@ -51,8 +51,7 @@ export function InformeCompleto({ area, preguntas, respuestas, userId, onIr }: P
     enabled: !!userId,
     retry: false,
     queryFn: async () => {
-      const { data, error: e } = await admisionDb.from("admision_intentos")
-        .select("id, modo, filtro, estado, puntaje, informe, created_at").order("created_at", { ascending: false }).limit(20);
+      const { data, error: e } = await admision.intentos();
       if (e) throw e;
       return data ?? [];
     },

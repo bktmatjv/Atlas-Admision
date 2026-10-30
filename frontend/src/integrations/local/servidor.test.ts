@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-// El banco real de public/datos, servido como lo haría la web.
-const PUBLICO = join(__dirname, "..", "..", "..", "public");
+// Pruebas del motor local legado; el banco ya no se sirve públicamente.
+const PUBLICO = join(__dirname, '..', '..', '..', '..', 'backend');
 vi.stubGlobal("fetch", async (url: string) => {
-  const ruta = join(PUBLICO, String(url).replace(/^\//, ""));
+  const ruta = join(PUBLICO, String(url).replace(/^\/datos\//, 'data/'));
   return new Response(readFileSync(ruta, "utf8"), { status: 200 });
 });
 const guardado = new Map<string, string>();

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const CONFIANZA: [number, string][] = [[1, "Dudo"], [2, "Más o menos"], [3, "Seguro"]];
 
 interface Props {
+  intentoId?: string;
   pregunta: PreguntaDelIntento;
   indice: number;
   total: number;
@@ -38,14 +39,14 @@ interface Props {
  * palabras además del color; y debajo, la solución de Atlas.
  */
 export function PreguntaDeAdmision({
-  pregunta, indice, total, respuesta, urls, corregida, revelado, puedeRevelar, onResponder, onMarcar, onRevelar, onConfiar, pie,
+  intentoId, pregunta, indice, total, respuesta, urls, corregida, revelado, puedeRevelar, onResponder, onMarcar, onRevelar, onConfiar, pie,
 }: Props) {
   const [ampliado, setAmpliado] = useState<string | null>(null);
   const [rotos, setRotos] = useState<Record<string, boolean>>({});
   const elegida = respuesta?.opcion ?? null;
   const clave = revelado?.clave ?? pregunta.clave;
   const solucion = revelado?.solucion ?? pregunta.solucion;
-  const mostrarCorreccion = (corregida || Boolean(revelado)) && clave !== null;
+  const mostrarCorreccion = (corregida || Boolean(revelado) || Boolean(respuesta?.revelada)) && clave !== null;
   const bloqueada = corregida || Boolean(respuesta?.revelada);
   const curso = pregunta.curso ? cursoPorId(pregunta.curso)?.nombre ?? pregunta.curso : null;
 
@@ -214,12 +215,12 @@ export function PreguntaDeAdmision({
               </p>
               {solucion && <div className="text-[0.97rem] leading-relaxed"><MathMarkdown content={solucion} /></div>}
               {/* La solución de arriba se lee; esto la hace él, con Atlas guiando cada paso. */}
-              {elegida !== clave && esCursoDeCalculo(pregunta.curso) && (
+              {intentoId && (
                 <Link
-                  to={`/resolver?admision=${encodeURIComponent(pregunta.pregunta_id)}`}
+                  to={`/aprender?intento=${encodeURIComponent(intentoId)}&pregunta=${encodeURIComponent(pregunta.pregunta_id)}`}
                   className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-primary hover:bg-muted"
                 >
-                  <ListOrdered className="h-4 w-4" aria-hidden /> Resolver paso a paso
+                  <ListOrdered className="h-4 w-4" aria-hidden /> Entender esta pregunta con Atlas
                 </Link>
               )}
             </section>

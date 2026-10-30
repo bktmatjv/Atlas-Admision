@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { NotebookPen } from "lucide-react";
-import { admisionDb, type AreaDeAdmision } from "@/integrations/supabase/admision";
+import { admision, type AreaDeAdmision } from '@/integrations/api/admision';
 import { usePracticarAdmision } from "@/hooks/usePracticarAdmision";
 import { diaDeLima, resumenDelCuaderno } from "@/lib/admision/motor/admision-leitner";
 
@@ -17,7 +17,7 @@ export function CuadernoDeErrores({ userId, area }: { userId: string | null; are
     enabled: !!userId,
     retry: false,
     queryFn: async () => {
-      const { data, error: e } = await admisionDb.from("admision_errores").select("pregunta_id, caja, proxima, dominada");
+      const { data, error: e } = await admision.errores();
       if (e) throw e;
       return data ?? [];
     },
@@ -35,12 +35,12 @@ export function CuadernoDeErrores({ userId, area }: { userId: string | null; are
           <h2 id="cuaderno-titulo" className="text-lg font-extrabold text-foreground">Tu cuaderno de errores</h2>
           <p className="text-sm text-muted-foreground">
             {r.total === 0
-              ? "Aquí vuelven las preguntas que falles, a los 1, 3 y 7 días, hasta que las domines. Haz un simulacro para empezar."
+              ? "Aquí vuelven las preguntas que falles, a los 1, 3 y 7 días, para volver a practicarlas. Haz un simulacro para empezar."
               : r.hoy > 0
                 ? `Hoy te tocan ${r.hoy} ${r.hoy === 1 ? "pregunta" : "preguntas"}. Repásalas mientras las tienes frescas.`
                 : r.proxima
                   ? `Hoy no te toca ninguna. La próxima vuelve el ${fecha(r.proxima)}.`
-                  : "Las dominaste todas. Las nuevas que falles entrarán aquí."}
+                  : "Completaste los repasos pendientes. Las nuevas que falles entrarán aquí."}
           </p>
         </div>
         {r.hoy > 0 && (
@@ -59,7 +59,7 @@ export function CuadernoDeErrores({ userId, area }: { userId: string | null; are
           <li className="rounded-full bg-muted px-3 py-1">Caja 1 (mañana): {r.porCaja[1]}</li>
           <li className="rounded-full bg-muted px-3 py-1">Caja 2 (3 días): {r.porCaja[2]}</li>
           <li className="rounded-full bg-muted px-3 py-1">Caja 3 (7 días): {r.porCaja[3]}</li>
-          <li className="rounded-full bg-muted px-3 py-1">Dominadas: {r.dominadas}</li>
+          <li className="rounded-full bg-muted px-3 py-1">Repasos completados: {r.dominadas}</li>
         </ul>
       )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Flame } from "lucide-react";
-import { admisionDb, type AreaDeAdmision } from "@/integrations/supabase/admision";
+import { admision, type AreaDeAdmision } from '@/integrations/api/admision';
 import { useDatosDeSanMarcos, usePerfilDeAdmision } from "@/hooks/useAdmisionDatos";
 import { puntajeParaIngresaba, type IntentoParaIngresaba } from "@/lib/admision/diagnostico";
 import { percentil, racha } from "@/lib/admision/progreso";
@@ -43,10 +43,9 @@ export function Progreso({ userId, intentos }: { userId: string | null; intentos
     retry: false,
     staleTime: Infinity,
     queryFn: async () => {
-      const { data, error } = await admisionDb.from("admision_distribuciones").select("*")
-        .eq("carrera_id", carreraId!).eq("ciclo", reciente!.ciclo).maybeSingle();
+      const { data, error } = await admision.unmsm();
       if (error) throw error;
-      return data;
+      return data?.distribuciones.find(x => x.carrera_id === carreraId && x.ciclo === reciente!.ciclo) ?? null;
     },
   });
 

@@ -4,8 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
 import { PageHeader } from "@/components/system/PageHeader";
 import { ThemeToggle } from "@/components/system/ThemeToggle";
-import { supabase } from "@/integrations/supabase/client";
-import { admisionDb, type AreaDeAdmision } from "@/integrations/supabase/admision";
+import { admision, type AreaDeAdmision } from '@/integrations/api/admision';
 import { useAuthUserId } from "@/hooks/useAuthUserId";
 import { functionErrorReason } from "@/lib/function-error";
 import { CURSOS } from "@/lib/admision/temario";
@@ -54,7 +53,7 @@ export default function Admision() {
   const { data: examenes = [] } = useQuery({
     queryKey: ["admision-examenes"],
     queryFn: async () => {
-      const { data, error: e } = await admisionDb.from("admision_examenes").select("*").order("ciclo", { ascending: false });
+      const { data, error: e } = await admision.examenes();
       if (e) throw e;
       return data ?? [];
     },
@@ -63,8 +62,7 @@ export default function Admision() {
     queryKey: ["admision-intentos", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error: e } = await admisionDb.from("admision_intentos")
-        .select("id, modo, tipo, area, filtro, estado, puntaje, informe, created_at").order("created_at", { ascending: false }).limit(20);
+      const { data, error: e } = await admision.intentos();
       if (e) throw e;
       return data ?? [];
     },
@@ -89,7 +87,7 @@ export default function Admision() {
   async function armar(clave: string, body: Record<string, unknown>) {
     setArmando(clave);
     setError(null);
-    const { data, error: e } = await supabase.functions.invoke("admision-armar", { body });
+    const { data, error: e } = await admision.crear(body);
     setArmando(null);
     if (e) { setError(await functionErrorReason(e)); return; }
     navigate(`/admision/intento/${(data as { intento_id: string }).intento_id}`);
@@ -142,12 +140,12 @@ export default function Admision() {
           <div className="grid gap-4 md:grid-cols-3">
             <section className={tarjeta} aria-labelledby="t-real">
               <h2 id="t-real" className="text-lg font-extrabold">Examen real</h2>
-              <p className="text-sm text-muted-foreground">Un examen pasado, tal cual, con su tiempo.</p>
+              <p className="text-sm text-muted-foreground">Selección disponible de un examen anterior; puede no incluir todas las preguntas originales.</p>
               <label className="block text-sm font-semibold">Examen
                 <select className={campo} value={examenId} onChange={(e) => setExamenId(e.target.value)}>
                   <option value="">Elige uno</option>
                   {examenesOrdenados.map((x) => (
-                    <option key={x.id} value={x.id}>{x.ciclo} · {AREAS.find((a) => a.id === x.area)?.nombre ?? x.area}</option>
+                    <option key={x.id} value={x.id}>{x.ciclo} · {AREAS.find((a) => a.id === x.area)?.nombre ?? x.area} · {x.disponibles} disponibles</option>
                   ))}
                 </select>
               </label>

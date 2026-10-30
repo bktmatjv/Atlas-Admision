@@ -6,7 +6,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { borrarTodo } from "@/integrations/local/almacen";
+import { api } from '@/integrations/api/client';
 import { cn } from "@/lib/utils";
 
 interface ResponsiveLayoutProps {
@@ -27,18 +27,34 @@ const enlace = ({ isActive }: { isActive: boolean }) =>
 export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
   const cliente = useQueryClient();
   const [borrado, setBorrado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [borrando, setBorrando] = useState(false);
+  async function borrar() {
+    setBorrando(true); setError(null);
+    try {
+      const cursos = await api<{id:string}[]>('/cursos');
+      for (const c of cursos) {
+        const curso = await api<{documentos:{id:string}[]}>(`/cursos/${c.id}`);
+        for (const d of curso.documentos) await api(`/documentos/${d.id}`, {method:'DELETE'});
+      }
+      await api('/sesion', {method:'DELETE'});
+      cliente.clear(); setBorrado(true); window.location.assign('/aprender');
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudieron eliminar los datos.'); }
+    finally { setBorrando(false); }
+  }
   return (
     // `overflow-x-clip` y no `-hidden`: con `hidden` la barra del examen (sticky, con su reloj) no se pega.
     <div className="flex min-h-screen w-full flex-col overflow-x-clip bg-background">
       <header className="sticky top-0 z-40 border-b border-border/30 bg-card/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] backdrop-blur-xl dark:shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
         <div className="px-4 md:px-6 lg:px-8"><div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3">
-          <NavLink to="/admision" end className="flex items-center gap-2">
+          <NavLink to="/aprender" end className="flex items-center gap-2">
             <AtlasLogo size="sm" />
-            <span className="text-sm font-extrabold tracking-tight">Atlas <span className="text-primary">Admisión</span></span>
+            <span className="text-sm font-extrabold tracking-tight">Atlas<span className="hidden sm:inline text-primary"> · Comprender</span></span>
           </NavLink>
           <nav aria-label="Secciones" className="flex items-center gap-1">
-            <NavLink to="/admision" end className={enlace}>Inicio</NavLink>
-            <NavLink to="/admision/temas" className={enlace}>Temas</NavLink>
+            <NavLink to="/aprender" className={enlace}>Aprender</NavLink>
+            <NavLink to="/cursos" className={enlace}>Mis cursos</NavLink>
+            <NavLink to="/admision" className={enlace}>Admisión</NavLink>
           </nav>
         </div></div>
       </header>
@@ -47,27 +63,24 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
       <footer className="border-t border-border/40">
         <div className="px-4 md:px-6 lg:px-8"><div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 py-4 text-xs text-muted-foreground">
-          <p>Tu progreso se guarda en este navegador. Si cambias de dispositivo o borras sus datos, empiezas de cero.</p>
+          <p>Tu progreso se guarda en Atlas. Conserva la sesión de este navegador para retomarlo; todavía no hay recuperación entre dispositivos.</p>
+          {error && <p role="alert" className="text-destructive">{error}</p>}
           <AlertDialog>
             <AlertDialogTrigger className="min-h-11 rounded-lg px-3 font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
-              {borrado ? "Progreso borrado" : "Empezar de cero"}
+              {borrando ? 'Eliminando…' : borrado ? 'Progreso borrado' : 'Empezar de cero'}
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Borrar todo tu progreso?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Se borran tus intentos, tu escuela y tu cuaderno de errores de este navegador. No se puede deshacer.
+                  Se eliminarán tus intentos, perfil, cursos, documentos y exploraciones de esta sesión en el servidor. No se puede deshacer. Las copias de seguridad siguen la política del despliegue.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => {
-                    borrarTodo();
-                    cliente.clear();
-                    setBorrado(true);
-                    window.location.assign("/admision");
-                  }}
+                  disabled={borrando}
+                  onClick={() => void borrar()}
                 >
                   Borrar todo
                 </AlertDialogAction>

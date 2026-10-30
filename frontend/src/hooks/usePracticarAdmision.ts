@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { admision } from '@/integrations/api/admision';
 import type { AreaDeAdmision } from "@/integrations/supabase/admision";
 import { functionErrorReason } from "@/lib/function-error";
 
@@ -15,9 +15,7 @@ export function usePracticarAdmision(area: AreaDeAdmision) {
   async function practicar(clave: string, cuerpo: Record<string, unknown>) {
     setArmando(clave);
     setError(null);
-    const { data, error: e } = await supabase.functions.invoke("admision-armar", {
-      body: { modo: "practica", area, n: 10, ver_soluciones: true, ...cuerpo },
-    });
+    const { data, error: e } = await admision.crear({ modo: 'practica', area, n: 10, ver_soluciones: true, ...cuerpo });
     setArmando(null);
     if (e) { setError(await functionErrorReason(e)); return; }
     navigate(`/admision/intento/${(data as { intento_id: string }).intento_id}`);

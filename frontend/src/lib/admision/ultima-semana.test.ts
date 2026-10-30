@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import procesosJson from "../../../scripts/admision/unmsm/procesos.json";
+import procesosJson from "../../../../backend/data/fuentes/unmsm/procesos.json";
 import { procesoDeJson, type DistribucionUnmsm } from "./datos-unmsm";
 import { diasHasta, enUltimaSemana, jornadaDe, planUltimaSemana } from "./ultima-semana";
 import { percentil, racha } from "./progreso";

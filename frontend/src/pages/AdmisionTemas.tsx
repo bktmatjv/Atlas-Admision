@@ -5,7 +5,7 @@ import { Dumbbell } from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
 import { PageHeader } from "@/components/system/PageHeader";
 import { ThemeToggle } from "@/components/system/ThemeToggle";
-import { admisionDb, type AreaDeAdmision } from "@/integrations/supabase/admision";
+import { admision, type AreaDeAdmision } from '@/integrations/api/admision';
 import { useAuthUserId } from "@/hooks/useAuthUserId";
 import { useDatosDeSanMarcos, usePerfilDeAdmision } from "@/hooks/useAdmisionDatos";
 import { usePracticarAdmision } from "@/hooks/usePracticarAdmision";
@@ -40,7 +40,7 @@ export default function AdmisionTemas() {
     retry: false,
     staleTime: 60 * 60 * 1000,
     queryFn: async () => {
-      const { data, error: e } = await admisionDb.rpc("admision_temas_frecuentes", { _area: area });
+      const { data, error: e } = await admision.temas(area);
       if (e) throw e;
       return agruparTemas(data ?? []);
     },

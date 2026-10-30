@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClock, ExternalLink } from "lucide-react";
-import { admisionDb, type AreaDeAdmision } from "@/integrations/supabase/admision";
+import { admision, type AreaDeAdmision } from '@/integrations/api/admision';
 import { useDatosDeSanMarcos } from "@/hooks/useAdmisionDatos";
 import type { ItemDelDia } from "@/lib/admision/datos-unmsm";
 import { diasHasta, enUltimaSemana, jornadaDe, planUltimaSemana } from "@/lib/admision/ultima-semana";
@@ -59,9 +59,9 @@ export function UltimaSemana({ userId, area }: { userId: string | null; area: Ar
     retry: false,
     staleTime: Infinity,
     queryFn: async () => {
-      const { data, error } = await admisionDb.from("admision_dia_examen").select("*").order("orden");
+      const { data, error } = await admision.unmsm();
       if (error) throw error;
-      return data ?? [];
+      return data?.dia_examen.sort((a,b)=>a.orden-b.orden) ?? [];
     },
   });
   const cuaderno = useQuery({
@@ -69,7 +69,7 @@ export function UltimaSemana({ userId, area }: { userId: string | null; area: Ar
     enabled: !!userId && ultima,
     retry: false,
     queryFn: async () => {
-      const { data, error } = await admisionDb.from("admision_errores").select("pregunta_id, caja, proxima, dominada");
+      const { data, error } = await admision.errores();
       if (error) throw error;
       return data ?? [];
     },

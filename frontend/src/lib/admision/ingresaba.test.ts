@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import carrerasJson from "../../../scripts/admision/unmsm/carreras.json";
-import procesosJson from "../../../scripts/admision/unmsm/procesos.json";
-import resultadosJson from "../../../scripts/admision/unmsm/resultados.json";
+import carrerasJson from "../../../../backend/data/fuentes/unmsm/carreras.json";
+import procesosJson from "../../../../backend/data/fuentes/unmsm/procesos.json";
+import resultadosJson from "../../../../backend/data/fuentes/unmsm/resultados.json";
 import { carreraDeJson, procesoDeJson, resultadoDeJson, type ResultadoUnmsm } from "./datos-unmsm";
 import { carrerasAlternativas, evaluarCarrera, evaluarProceso, puntajeComparable } from "./ingresaba";
 import { preguntasParaSubir, umbralMarcar, valorDeMarcar } from "./formula";

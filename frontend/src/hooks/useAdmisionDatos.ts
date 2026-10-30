@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { admisionDb, type PerfilDeAdmision } from "@/integrations/supabase/admision";
+import { admision, type PerfilDeAdmision } from '@/integrations/api/admision';
 import type { CarreraUnmsm, ProcesoUnmsm, ResultadoUnmsm } from "@/lib/admision/datos-unmsm";
 
 export interface DatosDeSanMarcos { carreras: CarreraUnmsm[]; procesos: ProcesoUnmsm[]; resultados: ResultadoUnmsm[] }
@@ -16,13 +16,9 @@ export function useDatosDeSanMarcos(activo = true) {
     staleTime: Infinity,
     retry: false,
     queryFn: async (): Promise<DatosDeSanMarcos> => {
-      const [c, p, r] = await Promise.all([
-        admisionDb.from("admision_carreras").select("id, nombre, area, codigo_oca, fuente, verificado, nota").order("nombre"),
-        admisionDb.from("admision_procesos").select("ciclo, fecha_examen, jornadas, vacantes_totales, fuente, verificado, nota").order("fecha_examen", { ascending: false }),
-        admisionDb.from("admision_resultados").select("ciclo, carrera_id, vacantes, postulantes, asistentes, ingresantes, ultimo_ingresante, maximo, fuente, verificado, nota"),
-      ]);
-      const error = c.error ?? p.error ?? r.error;
-      if (error) throw error;
+      const result = await admision.unmsm();
+      if (result.error) throw result.error;
+      const c = {data: result.data?.carreras}, p = {data: result.data?.procesos}, r = {data: result.data?.resultados};
       // `numeric` llega como texto o número según la versión de PostgREST.
       const num = (x: unknown) => (x === null || x === undefined ? null : Number(x));
       return {
@@ -43,7 +39,7 @@ export function usePerfilDeAdmision(userId: string | null) {
     enabled: !!userId,
     retry: false,
     queryFn: async (): Promise<PerfilDeAdmision | null> => {
-      const { data, error } = await admisionDb.from("admision_perfil").select("*").maybeSingle();
+      const { data, error } = await admision.perfil();
       if (error) throw error;
       return data;
     },
@@ -52,9 +48,7 @@ export function usePerfilDeAdmision(userId: string | null) {
     /** Sin perfil todavía hace falta la universidad; con perfil, basta lo que cambia (p. ej. las horas). */
     mutationFn: async (cambio: { universidad?: string; carrera_id?: string | null; horas_semana?: number | null }) => {
       if (!userId) throw new Error("Sin sesión");
-      const { data, error } = await admisionDb.from("admision_perfil")
-        .upsert({ user_id: userId, ...cambio, origen: "alumno", updated_at: new Date().toISOString() }, { onConflict: "user_id" })
-        .select("*").single();
+      const { data, error } = await admision.guardarPerfil(cambio);
       if (error) throw error;
       return data;
     },
