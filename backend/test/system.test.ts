@@ -523,3 +523,179 @@ describe("Atlas integrado con PostgreSQL real", () => {
     ).toBe(true);
   });
 });
+
+describe("Harness de comprensión: retropropagación del error", () => {
+  let actor: string,
+    foreign: string,
+    arbol: string,
+    raiz: string,
+    hijo: string,
+    fallo: { id: string },
+    segundoFallo: { id: string };
+  const crearArbol = async (tema: string, sid: string) =>
+    (
+      await http(
+        "/arboles",
+        "POST",
+        { tema, solicitud: "Quiero entender " + tema },
+        sid,
+        randomUUID(),
+      )
+    ).data.id as string;
+  const responder = async (id: string, respuesta: string, sid = actor) =>
+    http(
+      `/comprobaciones/${id}/respuesta`,
+      "PUT",
+      { respuesta, justificacion: "Mi razonamiento" },
+      sid,
+    );
+  const evidencias = async (comprobacion: string) =>
+    (
+      await db.query(
+        `SELECT tipo,detalle FROM ${schema}.evidencias WHERE comprobacion_id=$1 ORDER BY tipo`,
+        [comprobacion],
+      )
+    ).rows;
+  const rastros = async (arbolId: string) =>
+    (
+      await db.query(
+        `SELECT * FROM ${schema}.rastros_error WHERE arbol_id=$1 ORDER BY created_at`,
+        [arbolId],
+      )
+    ).rows;
+  const totalEvidencias = async () =>
+    (await db.query(`SELECT count(*)::int AS n FROM ${schema}.evidencias`))
+      .rows[0].n as number;
+  beforeAll(async () => {
+    actor = (await http("/sesion", "POST", {}, "")).cookie!;
+    foreign = (await http("/sesion", "POST", {}, "")).cookie!;
+    arbol = await crearArbol("porcentajes", actor);
+    const nodos = (await http(`/arboles/${arbol}`, "GET", undefined, actor))
+      .data.nodos;
+    raiz = nodos[0].id;
+    hijo = nodos[1].id;
+    // El etiquetado automático de nodos llega con la generación; aquí se fija a mano.
+    await db.query(
+      `UPDATE ${schema}.nodos SET idea_clave='cambio-de-base' WHERE id=$1`,
+      [hijo],
+    );
+  });
+  it("fallar porcentajes-1 con 100 señala cambio-de-base, pista y el camino en el árbol", async () => {
+    const c = await http("/comprobaciones", "POST", { arbol_id: arbol }, actor);
+    expect(c.status).toBe(201);
+    fallo = c.data;
+    const r = await responder(c.data.id, "100");
+    expect(r.status).toBe(200);
+    expect(r.data.correcta).toBe(false);
+    expect(r.data.rastro).toMatchObject({
+      idea_clave: "cambio-de-base",
+      nodo_retorno_id: hijo,
+      nivel_ayuda: "pista",
+      motivo: null,
+      respuesta: "100",
+    });
+    expect(r.data.rastro.descripcion).toContain("base");
+    expect(r.data.rastro.explicacion).toBeTruthy();
+    expect(r.data.rastro.pista).toBeTruthy();
+    expect(r.data.solucion).toBeTruthy();
+    const filas = await rastros(arbol);
+    expect(filas).toHaveLength(1);
+    expect(filas[0]).toMatchObject({
+      idea_clave: "cambio-de-base",
+      nodo_retorno_id: hijo,
+      nivel_ayuda: "pista",
+      comprobacion_id: c.data.id,
+    });
+    const t = await http(`/arboles/${arbol}`, "GET", undefined, actor);
+    expect(t.data.ultimo_rastro).toMatchObject({
+      idea_clave: "cambio-de-base",
+      nodo_retorno_id: hijo,
+      camino: [raiz, hijo],
+      nivel_ayuda: "pista",
+    });
+    expect((await evidencias(c.data.id)).map((e) => e.tipo)).toEqual([
+      "aplicacion_por_reforzar",
+    ]);
+  });
+  it("una respuesta fuera del mapa se declara sin evidencia y no inventa causa", async () => {
+    const otro = await crearArbol("fracciones", actor);
+    const c = await http("/comprobaciones", "POST", { arbol_id: otro }, actor);
+    const r = await responder(c.data.id, "7");
+    expect(r.data.correcta).toBe(false);
+    expect(r.data.rastro).toMatchObject({
+      idea_clave: null,
+      nodo_retorno_id: null,
+      motivo: "sin_evidencia",
+      nivel_ayuda: "pista",
+      descripcion: null,
+    });
+    expect(r.data.rastro.explicacion).toContain("evidencia suficiente");
+    expect(r.data.rastro.pista).toMatch(/justificaci|paso intermedio/);
+    const t = await http(`/arboles/${otro}`, "GET", undefined, actor);
+    expect(t.data.ultimo_rastro).toMatchObject({
+      idea_clave: null,
+      motivo: "sin_evidencia",
+      camino: [],
+    });
+    expect((await rastros(otro))[0].idea_clave).toBeNull();
+    await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, actor);
+  });
+  it("un segundo fallo en la misma idea del mismo árbol sube a ejemplo", async () => {
+    const c = await http("/comprobaciones", "POST", { arbol_id: arbol }, actor);
+    segundoFallo = c.data;
+    const r = await responder(c.data.id, "190");
+    expect(r.data.rastro).toMatchObject({
+      idea_clave: "cambio-de-base",
+      nivel_ayuda: "ejemplo",
+    });
+    expect((await rastros(arbol)).map((x) => x.nivel_ayuda)).toEqual([
+      "pista",
+      "ejemplo",
+    ]);
+  });
+  it("un acierto posterior sin ayuda en otra actividad registra corrigio_tras_error", async () => {
+    const c = await http("/comprobaciones", "POST", { arbol_id: arbol }, actor);
+    expect(c.data.id).not.toBe(fallo.id);
+    const r = await responder(c.data.id, "25");
+    expect(r.data.correcta).toBe(true);
+    expect(r.data.rastro).toBeNull();
+    const ev = await evidencias(c.data.id);
+    expect(ev.map((e) => e.tipo)).toEqual([
+      "corrigio_tras_error",
+      "resolvio_sin_ayuda",
+    ]);
+    expect(ev[0].detalle).toMatchObject({ idea_clave: "cambio-de-base" });
+    expect(await rastros(arbol)).toHaveLength(2);
+  });
+  it("reenviar la misma respuesta no duplica rastros ni evidencias", async () => {
+    const antes = await totalEvidencias();
+    const again = await responder(segundoFallo.id, "190");
+    expect(again.status).toBe(200);
+    expect(again.data.rastro.nivel_ayuda).toBe("ejemplo");
+    const also = await responder(fallo.id, "100");
+    expect(also.data.rastro.nivel_ayuda).toBe("pista");
+    expect(await rastros(arbol)).toHaveLength(2);
+    expect(await totalEvidencias()).toBe(antes);
+  });
+  it("otra sesión no puede leer el árbol ni su rastro", async () => {
+    expect(
+      (await http(`/arboles/${arbol}`, "GET", undefined, foreign)).status,
+    ).toBe(404);
+    expect(
+      (
+        await http(
+          `/comprobaciones/${fallo.id}/respuesta`,
+          "PUT",
+          { respuesta: "1" },
+          foreign,
+        )
+      ).status,
+    ).toBe(404);
+  });
+  it("abrir o leer nodos no crea evidencias aunque exista un rastro", async () => {
+    const antes = await http("/evidencias", "GET", undefined, actor);
+    await http(`/arboles/${arbol}`, "GET", undefined, actor);
+    const despues = await http("/evidencias", "GET", undefined, actor);
+    expect(despues.data).toHaveLength(antes.data.length);
+  });
+});

@@ -16,7 +16,8 @@ import { z } from "zod";
 import { Database } from "../../database/database.js";
 import { validate } from "../../http.js";
 import type { ActorRequest } from "../identidad/identidad.js";
-import { ACTIVIDADES } from "./actividades.js";
+import { ACTIVIDADES, buscarError } from "./actividades.js";
+import { construirRastro, nivelPorFallos } from "./rastros.js";
 @Controller()
 export class SeguimientoController {
   constructor(@Inject(Database) private db: Database) {}
@@ -129,11 +130,60 @@ export class SeguimientoController {
         "SELECT 1 FROM solicitudes_ia WHERE actor_id=$1 AND created_at>=$2 AND estado IN ('pendiente','completada') LIMIT 1",
         [r.actorId, row.created_at],
       );
+      let rastro: ReturnType<typeof construirRastro> | null = null;
+      let ideaDeCorreccion: string | null = null;
+      let corrige = false;
+      if (!correcta) {
+        // Retropropagación determinista: la IA no decide la idea clave ni el nodo.
+        const tipico = buscarError(task, num);
+        const idea = tipico?.idea_clave ?? null;
+        const [{ n }] = idea
+          ? await m.query(
+              "SELECT count(*)::int AS n FROM rastros_error WHERE arbol_id=$1 AND idea_clave=$2",
+              [row.arbol_id, idea],
+            )
+          : [{ n: 0 }];
+        const [nodo] = idea
+          ? await m.query(
+              "SELECT id FROM nodos WHERE arbol_id=$1 AND idea_clave=$2 ORDER BY created_at DESC,profundidad DESC LIMIT 1",
+              [row.arbol_id, idea],
+            )
+          : [];
+        const fila = {
+          actividad_id: task.id,
+          respuesta: b.respuesta,
+          idea_clave: idea,
+          nodo_retorno_id: (nodo?.id as string | undefined) ?? null,
+          nivel_ayuda: nivelPorFallos(n),
+        };
+        rastro = construirRastro(fila);
+        await m.query(
+          "INSERT INTO rastros_error(id,actor_id,arbol_id,comprobacion_id,respuesta,idea_clave,nodo_retorno_id,nivel_ayuda) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+          [
+            randomUUID(),
+            r.actorId,
+            row.arbol_id,
+            id,
+            b.respuesta,
+            idea,
+            fila.nodo_retorno_id,
+            fila.nivel_ayuda,
+          ],
+        );
+      } else if (!ayuda.length) {
+        const [ultimo] = await m.query(
+          "SELECT idea_clave FROM rastros_error WHERE arbol_id=$1 ORDER BY created_at DESC LIMIT 1",
+          [row.arbol_id],
+        );
+        if (ultimo) ideaDeCorreccion = ultimo.idea_clave ?? null;
+        corrige = Boolean(ultimo);
+      }
       const result = {
         correcta,
         solucion: task.solucion,
         ayuda: ayuda.length > 0,
         justificacion: b.justificacion,
+        rastro,
         nota: "Se comprobó solo el resultado numérico. Justificación guardada sin calificación automática. Este caso no certifica dominio ni eficacia pedagógica.",
       };
       await m.query(
@@ -155,6 +205,22 @@ export class SeguimientoController {
           { actividad_id: task.id, concepto: task.concepto, ...result },
         ],
       );
+      if (corrige)
+        await m.query(
+          "INSERT INTO evidencias(id,actor_id,tipo,arbol_id,comprobacion_id,detalle) VALUES($1,$2,$3,$4,$5,$6)",
+          [
+            randomUUID(),
+            r.actorId,
+            "corrigio_tras_error",
+            row.arbol_id,
+            id,
+            {
+              actividad_id: task.id,
+              concepto: task.concepto,
+              idea_clave: ideaDeCorreccion,
+            },
+          ],
+        );
       return result;
     });
   }

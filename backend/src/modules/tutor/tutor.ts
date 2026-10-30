@@ -20,6 +20,7 @@ import { validate } from "../../http.js";
 import { digest, type ActorRequest } from "../identidad/identidad.js";
 import { PracticaModule, PracticaService } from "../practica/practica.js";
 import { conceptoDe } from "../seguimiento/actividades.js";
+import { caminoHasta, construirRastro } from "../seguimiento/rastros.js";
 import { TutorAI, PROMPT_VERSION } from "./ai.js";
 const createSchema = z
   .object({
@@ -56,6 +57,7 @@ type Node = {
   contenido: string;
   tipo: string;
   citas: unknown[];
+  idea_clave: string | null;
 };
 @Injectable()
 export class TutorService {
@@ -74,12 +76,29 @@ export class TutorService {
   }
   async get(actor: string, id: string) {
     const t = await this.own(actor, id);
+    const nodos = await this.db.query<Node>(
+      "SELECT id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,citas,idea_clave FROM nodos WHERE arbol_id=$1 ORDER BY profundidad,orden",
+      [id],
+    );
+    const [ultimo] = await this.db.query<{
+      actividad_id: string;
+      respuesta: string;
+      idea_clave: string | null;
+      nodo_retorno_id: string | null;
+      nivel_ayuda: "pista" | "ejemplo" | "explicacion_completa";
+    }>(
+      "SELECT c.actividad_id,r.respuesta,r.idea_clave,r.nodo_retorno_id,r.nivel_ayuda FROM rastros_error r JOIN comprobaciones c ON c.id=r.comprobacion_id WHERE r.arbol_id=$1 AND r.actor_id=$2 ORDER BY r.created_at DESC LIMIT 1",
+      [id, actor],
+    );
     return {
       ...t,
-      nodos: await this.db.query<Node>(
-        "SELECT id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,citas FROM nodos WHERE arbol_id=$1 ORDER BY profundidad,orden",
-        [id],
-      ),
+      nodos,
+      ultimo_rastro: ultimo
+        ? {
+            ...construirRastro(ultimo),
+            camino: caminoHasta(nodos, ultimo.nodo_retorno_id),
+          }
+        : null,
     };
   }
   async material(actor: string, t: Partial<Tree>) {
