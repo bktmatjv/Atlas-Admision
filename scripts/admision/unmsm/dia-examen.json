@@ -1,0 +1,81 @@
+[
+  {
+    "id": "carne",
+    "categoria": "documentos",
+    "texto": "Carné de postulante – declaración jurada, impreso",
+    "detalle": "Se descarga desde el portal de admisión (suele habilitarse una semana antes). Fírmalo y revisa ahí tu local y aula.",
+    "fuente": "https://admision.unmsm.edu.pe/portal/admision2027-i/",
+    "verificado": true,
+    "nota": "El portal oficial de la OCA ofrece la 'Descarga del carné de postulante (declaración jurada)'; el plazo de una semana viene de Academia Savia."
+  },
+  {
+    "id": "dni",
+    "categoria": "documentos",
+    "texto": "DNI original y vigente (extranjeros: pasaporte o carné de extranjería)",
+    "fuente": "https://savia.school/admision-2026-ii-conoce-las-disposiciones-obligatorias-para-el-dia-del-examen-en-la-unmsm/",
+    "verificado": false,
+    "nota": "Disposiciones del proceso 2026-II publicadas por una academia citando la página oficial. Confirmar en el reglamento 2027-I."
+  },
+  {
+    "id": "lapiz",
+    "categoria": "llevar",
+    "texto": "Lápiz 2B (mejor dos) para la hoja de respuestas",
+    "detalle": "Marca firme dentro de los círculos; no dobles ni manches la hoja.",
+    "fuente": "https://savia.school/admision-2026-ii-conoce-las-disposiciones-obligatorias-para-el-dia-del-examen-en-la-unmsm/",
+    "verificado": false,
+    "nota": "Disposiciones 2026-II (fuente secundaria)."
+  },
+  {
+    "id": "borrador",
+    "categoria": "llevar",
+    "texto": "Borrador y tajador",
+    "detalle": "Recomendación de Atlas para corregir marcas sin dañar la hoja; confirma si están permitidos en tu carné o reglamento.",
+    "fuente": "Recomendación de Atlas",
+    "verificado": false,
+    "nota": "No figura en las disposiciones consultadas."
+  },
+  {
+    "id": "horario",
+    "categoria": "horario",
+    "texto": "Ingreso al local solo de 6:00 a 8:30 a. m.",
+    "detalle": "Después de las 8:30 no te dejan entrar. Calcula el tráfico y sal con tiempo.",
+    "fuente": "https://savia.school/admision-2026-ii-conoce-las-disposiciones-obligatorias-para-el-dia-del-examen-en-la-unmsm/",
+    "verificado": false,
+    "nota": "Horario del proceso 2026-II (fuente secundaria). Confirmar para 2027-I."
+  },
+  {
+    "id": "local",
+    "categoria": "horario",
+    "texto": "Revisa tu local y aula asignados y cómo llegar",
+    "detalle": "Haz el recorrido un día antes si puedes.",
+    "fuente": "https://admision.unmsm.edu.pe/portal/admision2027-i/",
+    "verificado": false,
+    "nota": "Recomendación de Atlas; el local figura en el carné de postulante."
+  },
+  {
+    "id": "celular",
+    "categoria": "prohibido",
+    "texto": "Nada de celular, audífonos, USB, cámaras ni otros aparatos electrónicos en el aula",
+    "detalle": "Llevarlos puede causar sanciones según el reglamento. Déjalos con quien te acompañe.",
+    "fuente": "https://savia.school/admision-2026-ii-conoce-las-disposiciones-obligatorias-para-el-dia-del-examen-en-la-unmsm/",
+    "verificado": false,
+    "nota": "Disposiciones 2026-II (fuente secundaria)."
+  },
+  {
+    "id": "duracion",
+    "categoria": "durante",
+    "texto": "Tienes 3 horas: empieza por lo que sabes y controla ~1 min 48 s por pregunta",
+    "detalle": "Revisa que el cuadernillo sea de tu área y llena bien tus datos de identificación.",
+    "fuente": "https://www.infobae.com/peru/2026/02/23/examen-de-admision-san-marcos-2026-ii-fechas-clave-vacantes-y-todo-lo-que-debes-saber-para-ingresar-a-la-unmsm/",
+    "verificado": false,
+    "nota": "Duración según prensa (ver FUENTES.md)."
+  },
+  {
+    "id": "noche",
+    "categoria": "durante",
+    "texto": "La noche anterior: duerme 7-8 horas, prepara la mochila y el desayuno",
+    "fuente": "Recomendación de Atlas",
+    "verificado": false,
+    "nota": "Consejo de Atlas, no es una regla de la universidad."
+  }
+]

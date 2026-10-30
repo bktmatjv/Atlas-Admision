@@ -1,0 +1,1117 @@
+[
+  {
+    "id": "ciencias-de-los-alimentos",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Ciencia de los Alimentos",
+    "codigoOca": "042",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "enfermeria",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Enfermería",
+    "codigoOca": "013",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "farmacia-y-bioquimica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Farmacia y Bioquímica",
+    "codigoOca": "041",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "medicina-humana",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Medicina Humana",
+    "codigoOca": "011",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "medicina-veterinaria",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Medicina Veterinaria",
+    "codigoOca": "081",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "nutricion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Nutrición",
+    "codigoOca": "015",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "obstetricia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Obstetricia",
+    "codigoOca": "012",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "odontologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Odontología",
+    "codigoOca": "051",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "psicologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Psicología",
+    "codigoOca": "181",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "psicologia-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Psicología (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "1814",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "psicologia-organizacional-y-de-la-gestion-humana",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Psicología Organizacional y de la Gestión Humana",
+    "codigoOca": "182",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "tec-med-lab-clinico-y-anatomia-patologica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Tecnología Médica: Laboratorio Clínico y Anatomía Patológica",
+    "codigoOca": "0141",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "tec-med-radiologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Tecnología Médica: Radiología",
+    "codigoOca": "0143",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "tec-med-terapia-fisica-y-rehabilitacion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Tecnología Médica: Terapia Física y Rehabilitación",
+    "codigoOca": "0142",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "tec-med-terapia-ocupacional",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Tecnología Médica: Terapia Ocupacional",
+    "codigoOca": "0144",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "toxicologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-A",
+    "nombre": "Toxicología",
+    "codigoOca": "043",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ciencias-biologicas",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Ciencias Biológicas",
+    "codigoOca": "101",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "computacion-cientifica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Computación Científica",
+    "codigoOca": "145",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "estadistica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Estadística",
+    "codigoOca": "142",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "fisica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Física",
+    "codigoOca": "131",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "genetica-y-biotecnologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Genética y Biotecnología",
+    "codigoOca": "102",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "geofisica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Geofísica",
+    "codigoOca": "133",
+    "fuente": "https://admision.unmsm.edu.pe/Website20262/A/A.html",
+    "verificado": false,
+    "nota": "Geofísica no figura en la API de carreras; se asume Área B (Facultad de Ciencias Físicas)."
+  },
+  {
+    "id": "ingenieria-mecanica-de-fluidos",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Ingeniería Mecánica de Fluidos",
+    "codigoOca": "132",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "investigacion-operativa",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Investigación Operativa",
+    "codigoOca": "144",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "investigacion-operativa-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Investigación Operativa (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "1444",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "matematica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Matemática",
+    "codigoOca": "141",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "microbiologia-y-parasitologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-B",
+    "nombre": "Microbiología y Parasitología",
+    "codigoOca": "103",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "arquitectura-y-urbanismo",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Arquitectura y Urbanismo",
+    "codigoOca": "169",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ciencia-de-la-computacion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ciencia de la Computación",
+    "codigoOca": "203",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-agroindustrial",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Agroindustrial",
+    "codigoOca": "073",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-ambiental",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Ambiental",
+    "codigoOca": "168",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-biomedica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Biomédica",
+    "codigoOca": "194",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-civil",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Civil",
+    "codigoOca": "167",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-minas",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Minas",
+    "codigoOca": "165",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-minas-oyon",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Minas (Oyón)",
+    "sede": "Oyón",
+    "codigoOca": "1653",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-seguridad-y-salud-en-el-trabajo",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Seguridad y Salud en el Trabajo",
+    "codigoOca": "173",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-sistemas",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Sistemas",
+    "codigoOca": "201",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-software",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Software",
+    "codigoOca": "202",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-telecomunicaciones",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Telecomunicaciones",
+    "codigoOca": "193",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-transportes-y-sistemas-ferroviarios",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería de Transportes y Sistemas Ferroviarios",
+    "codigoOca": "175",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-del-agua-y-tecnologias-de-tratamiento",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería del Agua y Tecnologías de Tratamientos",
+    "codigoOca": "074",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-electrica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Eléctrica",
+    "codigoOca": "192",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-electrica-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Eléctrica (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "1924",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-electronica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Electrónica",
+    "codigoOca": "191",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-geografica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Geográfica",
+    "codigoOca": "163",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-geologica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Geológica",
+    "codigoOca": "162",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-geologica-oyon",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Geológica (Oyón)",
+    "sede": "Oyón",
+    "codigoOca": "1623",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-industrial",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Industrial",
+    "codigoOca": "171",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-industrial-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Industrial (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "1714",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-logistica-y-cadena-de-sumistro-digital",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Logística y Cadena de Suministro Digital",
+    "codigoOca": "174",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-mecatronica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Mecatrónica",
+    "codigoOca": "195",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-metalurgica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Metalúrgica",
+    "codigoOca": "166",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-nuclear",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Nuclear",
+    "codigoOca": "196",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-quimica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Química",
+    "codigoOca": "072",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-textil-y-confecciones",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Ingeniería Textil y Confecciones",
+    "codigoOca": "172",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ingenieria-de-inteligencia-artificial",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Inteligencia Artificial",
+    "codigoOca": "204",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "quimica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-C",
+    "nombre": "Química",
+    "codigoOca": "071",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración",
+    "codigoOca": "091",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "0914",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-huaral",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración (Huaral)",
+    "sede": "Huaral",
+    "codigoOca": "0912",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración (Lima)",
+    "sede": "Lima",
+    "codigoOca": "091",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "0911",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-villa-rica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración (Villa Rica)",
+    "sede": "Villa Rica",
+    "codigoOca": "0915",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-la-gastronomia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de la Gastronomía",
+    "codigoOca": "094",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-negocios-internacionales",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Negocios Internacionales",
+    "codigoOca": "093",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-negocios-internacionales-huaral",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Negocios Internacionales (Huaral)",
+    "sede": "Huaral",
+    "codigoOca": "0932",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-negocios-internacionales-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Negocios Internacionales (Lima)",
+    "sede": "Lima",
+    "codigoOca": "093",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-negocios-internacionales-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Negocios Internacionales (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "0931",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-turismo",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Turismo",
+    "codigoOca": "092",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-turismo-huaral",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Turismo (Huaral)",
+    "sede": "Huaral",
+    "codigoOca": "0922",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-turismo-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Turismo (Lima)",
+    "sede": "Lima",
+    "codigoOca": "092",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-de-turismo-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración de Turismo (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "0921",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-maritima-y-portuaria",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración Marítima y Portuaria",
+    "codigoOca": "095",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-maritima-y-portuaria-chancay",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración Marítima y Portuaria (Chancay)",
+    "sede": "Chancay",
+    "codigoOca": "0957",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "administracion-maritima-y-portuaria-huaral",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Administración Marítima y Portuaria (Huaral)",
+    "sede": "Huaral",
+    "codigoOca": "0952",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "auditoria-empresarial-y-del-sector-publico",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Auditoría Empresarial y del Sector Público",
+    "codigoOca": "113",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "auditoria-empresarial-y-del-sector-publico-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Auditoría Empresarial y del Sector Público (Lima)",
+    "sede": "Lima",
+    "codigoOca": "113",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "auditoria-empresarial-y-del-sector-publico-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Auditoría Empresarial y del Sector Público (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "1131",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad",
+    "codigoOca": "111",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "1114",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad-huaral",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad (Huaral)",
+    "sede": "Huaral",
+    "codigoOca": "1112",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad (Lima)",
+    "sede": "Lima",
+    "codigoOca": "111",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad-oyon",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad (Oyón)",
+    "sede": "Oyón",
+    "codigoOca": "1113",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "1111",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "contabilidad-villa-rica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Contabilidad (Villa Rica)",
+    "sede": "Villa Rica",
+    "codigoOca": "1115",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "criminalistica-financiera-forense",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Criminalística Financiera Forense",
+    "codigoOca": "115",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "economia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Economía",
+    "codigoOca": "121",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "economia-internacional",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Economía Internacional",
+    "codigoOca": "123",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "economia-publica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Economía Pública",
+    "codigoOca": "122",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "gestion-tributaria",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Gestión Tributaria",
+    "codigoOca": "112",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "gestion-tributaria-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Gestión Tributaria (Lima)",
+    "sede": "Lima",
+    "codigoOca": "112",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "gestion-tributaria-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Gestión Tributaria (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "1121",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "marketing",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Marketing",
+    "codigoOca": "096",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "presupuesto-y-finanzas-publicas",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Presupuesto y Finanzas Públicas",
+    "codigoOca": "114",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "presupuesto-y-finanzas-publicas-lima",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Presupuesto y Finanzas Públicas (Lima)",
+    "sede": "Lima",
+    "codigoOca": "114",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20261/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "presupuesto-y-finanzas-publicas-s-j-l",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-D",
+    "nombre": "Presupuesto y Finanzas Públicas (San Juan de Lurigancho)",
+    "sede": "San Juan de Lurigancho",
+    "codigoOca": "1141",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "antropologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Antropología",
+    "codigoOca": "153",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "arqueologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Arqueología",
+    "codigoOca": "154",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "arte",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Arte",
+    "codigoOca": "036",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "bibliotecologia-y-ciencias-de-la-informacion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Bibliotecología y Ciencias de la Información",
+    "codigoOca": "037",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "ciencia-politica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Ciencia Política",
+    "codigoOca": "023",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "comunicacion-social",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Comunicación Social",
+    "codigoOca": "035",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "conservacion-y-restauracion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Conservación y Restauración",
+    "codigoOca": "039",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "danza",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Danza",
+    "codigoOca": "038",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "derecho",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Derecho",
+    "codigoOca": "022",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "derecho-chilca",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Derecho (Chilca)",
+    "sede": "Chilca",
+    "codigoOca": "0224",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "derecho-villa-rica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Derecho (Villa Rica)",
+    "sede": "Villa Rica",
+    "codigoOca": "0225",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "educacion-fisica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Educación Física",
+    "codigoOca": "062",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "educacion-fisica-oyon",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Educación Física (Oyón)",
+    "sede": "Oyón",
+    "codigoOca": "0623",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "educacion-inicial",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Educación Inicial",
+    "codigoOca": "0611",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "educacion-primaria",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Educación Primaria",
+    "codigoOca": "0612",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "educacion-secundaria",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Educación Secundaria",
+    "codigoOca": "0613",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "filosofia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Filosofía",
+    "codigoOca": "033",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "geografia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Geografía",
+    "codigoOca": "157",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "historia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Historia",
+    "codigoOca": "151",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "lenguas-traduccion-e-interpretacion",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Lenguas, Traducción e Interpretación",
+    "codigoOca": "0310",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "linguistica",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Lingüística",
+    "codigoOca": "034",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "literatura",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Literatura",
+    "codigoOca": "031",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "sociologia",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Sociología",
+    "codigoOca": "152",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  },
+  {
+    "id": "trabajo-social",
+    "universidadId": "unmsm",
+    "areaId": "unmsm-E",
+    "nombre": "Trabajo Social",
+    "codigoOca": "155",
+    "fuente": "https://www.unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/area (área) · https://admision.unmsm.edu.pe/Website20262/A/A.html (escuela)",
+    "verificado": true
+  }
+]

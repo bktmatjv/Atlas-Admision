@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Tema guardado antes de pintar, con la clave de next-themes: sin esto, quien eligió el
+         oscuro vería un fotograma claro al entrar. -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
+    <title>Atlas Admisión · San Marcos</title>
+    <meta name="description" content="Prepárate para el examen de admisión de San Marcos con exámenes reales, simulacros y práctica por curso y tema." />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

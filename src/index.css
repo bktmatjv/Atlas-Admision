@@ -1,0 +1,1694 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   OPTIMIZACIONES DE RENDIMIENTO (2024)
+   ============================================ */
+
+/* Respetar preferencia de usuario para animaciones reducidas */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimizar animaciones principales */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+  will-change: opacity;
+}
+
+/* REMOVER blur excesivo - usar máximo blur-lg */
+.blur-optimized {
+  filter: blur(40px);
+  will-change: filter;
+}
+
+/* 3D Flip Card */
+.perspective-1000 { perspective: 1000px; }
+.transform-style-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); }
+
+/* Custom shimmer animation for unlimited progress */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite ease-in-out;
+}
+
+/* Atlas Design System
+ * Azul de marca sobre escala neutra fría.
+ * Primary: sky-700 — botones, elementos activos, seleccionados
+ * Ink:     navy slate-900 — texto y superficies oscuras
+ * Neutros: escala slate
+ * El verde queda reservado para estados de éxito. No es color de marca.
+ * Mobile-first. Todos los colores en HSL.
+ */
+
+@layer base {
+  :root {
+    /* Base - neutros fríos de la escala slate */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    /* Blanco puro: separa la tarjeta del fondo frío */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary - sky-700, el azul de marca */
+    --primary: 201 96% 32%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - superficie slate-200 */
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 213 24% 93%;
+    /* 38 % y no 47 %. A 47 daba 4,51:1 sobre el fondo: AA raspado y sin un punto de margen,
+     * así que cualquier cosa que se interpusiera —el disco del globo de la landing, que va
+     * por detrás del texto— lo hundía por debajo de 4,5. A 38 % son 6,26:1 sobre el fondo y
+     * 6,56:1 sobre tarjeta. Sigue siendo un escalón claro por debajo de `foreground` (17:1),
+     * que es lo que tiene que seguir siendo. */
+    --muted-foreground: 215 16% 38%;
+
+    /* Accent - sky-600, un paso más claro para hover y realces */
+    --accent: 200 98% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Status colors */
+    /* 30% y no 38%: a 38% el patrón `text-success` sobre `bg-success/10` daba 3,18:1,
+     * por debajo del 4,5:1 de AA para texto pequeño, y `bg-success` con texto blanco
+     * daba 3,56:1. A 30% ambos pasan (4,66:1 y 5,34:1). */
+    --success: 142 60% 30%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 200 98% 39%;
+    --info-foreground: 0 0% 100%;
+
+    /* 47% y no 51%: mismo motivo que success, `text-destructive` sobre su propio tinte. */
+    --destructive: 0 72% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Achievement - ámbar contenido, no oro saturado */
+    --achievement: 38 75% 48%;
+    --achievement-foreground: 222 47% 11%;
+
+    /* La sala de estudio: se bajan las luces.
+     *
+     * Estudiar es la única tarea del producto que pide no ver nada más, y un fondo casi
+     * blanco a pantalla completa no dice eso: dice «seguís en la aplicación». Con la sala
+     * en penumbra la tarjeta blanca queda flotando y es lo único que hay.
+     *
+     * Es un token propio y no `--action` —que es esta misma tinta— porque `--action` se
+     * invierte a sky-400 en oscuro: serviría de fondo en un tema y sería un azul brillante
+     * en el otro. Éste se mantiene oscuro en ambos, que es justo el punto. */
+    --study-bg: 222 34% 12%;
+    --study-fg: 210 40% 96%;
+    --study-muted: 215 20% 62%;
+
+    /* UI */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+
+    /* Acción principal. Tinta en claro; en oscuro se invierte a sky-400.
+     * No se reusa --primary porque ese token también alimenta --ring, y un anillo de
+     * foco navy sobre texto navy no se distingue. */
+    --action: 222 47% 11%;
+    --action-foreground: 0 0% 100%;
+
+    /* Dos niveles de borde: el de sección separa bloques, el de fila es un paso más
+     * claro para que la retícula de las tablas no grite. --border se mantiene tal cual
+     * porque tiene consumidores por todo el producto sin migrar. */
+    --border-section: 214 32% 91%;
+    --border-row: 214 32% 95%;
+
+    /* La tabla del capítulo: una banda de cabecera y un contorno, no una retícula.
+     *
+     * La regla de arriba —que la rejilla no grite— se mantiene: las filas se siguen
+     * separando con --border-row y nada más. Lo que se añade es DÓNDE mirar primero. Una
+     * matriz de riesgo de 5x5 sin cabecera distinguible obliga a contar columnas para saber
+     * qué significa cada número, y eso es trabajo que la vista puede ahorrarle al alumno.
+     *
+     * El tinte sale del primario, que es el azul del producto, a una saturación en la que
+     * sigue leyéndose texto encima: es jerarquía, no adorno. Y el contorno usa el borde de
+     * sección —un paso por encima del de fila— para que la tabla se lea como UN objeto
+     * dentro del capítulo y no como texto con rayas. */
+    --tabla-cabecera: 201 55% 93%;
+    --tabla-contorno: 201 45% 80%;
+
+    /* El primario, no la tinta: un foco navy sobre texto oscuro no se distingue */
+    --ring: 201 96% 32%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar */
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 201 96% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 32% 93%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 201 96% 32%;
+
+    /* El turquesa y el violeta de las propuestas del Inicio.
+     *
+     * Son tokens y no hexadecimales sueltos en el JSX porque las dos propuestas son clara Y
+     * oscura: un `#8B5CF6` escrito a mano en un componente serviría para un tema y sería un
+     * borrón en el otro. El violeta baja de luminosidad en claro —sobre fondo blanco un
+     * violeta a 58% no sostiene texto encima— y sube en oscuro. */
+    --brand-teal: 172 70% 40%;
+    --brand-violet: 262 70% 52%;
+
+    /* Gradientes: solo los que tienen consumidores */
+    --gradient-primary: linear-gradient(135deg, hsl(201 96% 32%), hsl(200 98% 39%));
+    /* El disco del hero y los iconos de curso: turquesa a azul, en diagonal. */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--brand-teal)), hsl(var(--primary)));
+    /* El botón primario del Inicio: azul a violeta, horizontal como en la maqueta. */
+    --gradient-accion: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--brand-violet)));
+    --gradient-surface: linear-gradient(180deg, hsl(210 40% 98%) 0%, hsl(214 32% 95%) 100%);
+
+    /* Sombras: tinte navy neutro en vez de verde, y menos intensidad */
+    --shadow-xs: 0 1px 2px hsl(222 47% 11% / 0.04);
+    --shadow-medium: 0 4px 8px hsl(222 47% 11% / 0.05), 0 12px 28px hsl(222 47% 11% / 0.06);
+    --shadow-card: 0 1px 3px hsl(222 47% 11% / 0.03), 0 4px 16px hsl(222 47% 11% / 0.04);
+
+    --glass-bg: hsl(0 0% 100% / 0.92);
+    --glass-border: hsl(214 32% 91% / 0.8);
+
+    /* Colores de característica - desaturados para no competir con el azul de marca */
+    --feature-audio: 201 96% 32%;
+    --feature-video: 262 52% 47%;
+    --feature-class: 142 60% 38%;
+    --feature-docs: 32 95% 44%;
+  }
+
+  .dark {
+    /* Las superficies del modo oscuro se rebajaron de azul y se separaron entre sí.
+     *
+     * Antes el fondo iba a 42 % de saturación —eso no lee como "oscuro con matiz azul",
+     * lee como azul marino— y la tarjeta estaba a 15 % de luminosidad sobre un fondo al
+     * 12 %: TRES puntos. Con esa diferencia las tarjetas no se separan de la página, y
+     * el conjunto se percibe como una única masa plana. Se leía como problema de color
+     * y era, sobre todo, falta de jerarquía.
+     *
+     * Ahora la saturación baja a ~18 % y la separación tarjeta/fondo pasa de 3 a 7
+     * puntos. El primario, los textos y los colores de estado NO se tocan: la identidad
+     * azul sigue donde debe estar, en lo interactivo.
+     *
+     * Toda la escala va cuatro puntos por encima del primer intento, que se quedó
+     * demasiado apagado. La razón: quitar saturación quita también colorido, y el
+     * colorido se percibe como luz. Bajar el azul y bajar la luminosidad a la vez fue
+     * empujar dos veces hacia el mismo lado. Se rebaja el azul, sí, pero devolviendo la
+     * luz por el otro.
+     *
+     * El contraste sigue holgado: `muted-foreground` sobre tarjeta da 7,2:1 y el
+     * primario sobre el fondo 7,4:1, frente al 4,5 que pide AA. */
+    --background: 222 20% 14%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 18% 21%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 18% 21%;
+    --popover-foreground: 210 40% 98%;
+
+    /* El primario sube a sky-400: el sky-700 del modo claro no alcanza
+     * el contraste mínimo sobre fondo oscuro. Encima va tinta navy. */
+    --primary: 199 89% 58%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 222 16% 26%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 16% 25%;
+    /* 74 % y no 60 %, por el mismo motivo que en claro: dejar margen sobre el 4,5 de AA para
+     * lo que se lea con el disco del globo por detrás. A 60 daba 6,38:1 sobre el fondo y a 74
+     * sube a 9,87:1. Frente a `foreground` (18,35:1) sigue siendo la mitad, así que el texto
+     * secundario se lee secundario. */
+    --muted-foreground: 215 20% 78%;
+
+    --accent: 199 89% 64%;
+    --accent-foreground: 222 47% 11%;
+
+    --success: 142 55% 48%;
+    --success-foreground: 222 47% 11%;
+
+    --warning: 38 88% 55%;
+    --warning-foreground: 222 47% 11%;
+
+    --info: 199 89% 58%;
+    --info-foreground: 222 47% 11%;
+
+    --destructive: 0 68% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --achievement: 38 80% 58%;
+    --achievement-foreground: 222 47% 11%;
+
+    /* En oscuro la sala baja un paso más por debajo del fondo de la aplicación (14 %),
+     * porque si coincidieran no habría nada que indicara que se entró en otro sitio. */
+    --study-bg: 222 26% 9%;
+    --study-fg: 210 40% 98%;
+    --study-muted: 215 18% 60%;
+
+    --border: 222 16% 30%;
+    --input: 222 16% 28%;
+
+    /* En oscuro la contraparte de la tinta es el azul: sky-400 sobre tinta. */
+    --action: 199 89% 58%;
+    --action-foreground: 222 47% 11%;
+
+    /* En oscuro el borde de fila va más oscuro que el de sección, no más claro. */
+    --border-section: 222 16% 30%;
+    --border-row: 222 16% 25%;
+
+    /* En oscuro NO se invierte el par de arriba: se compone. Un 96% de claridad pasado a
+     * oscuro daría un bloque casi blanco que quemaría la página. La cabecera es una
+     * elevación sobre el lienzo —apenas más clara y con el matiz del primario—, y el
+     * contorno sube su claridad en vez de bajarla, porque en oscuro lo que separa es la luz
+     * y no la sombra. */
+    --tabla-cabecera: 215 25% 22%;
+    --tabla-contorno: 210 25% 38%;
+
+    --ring: 199 89% 58%;
+
+    --sidebar-background: 222 20% 14%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 199 89% 58%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 16% 24%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 16% 28%;
+    --sidebar-ring: 199 89% 58%;
+
+    /* En oscuro los dos suben: sobre el lienzo apagado, los valores de claro se apelmazan. */
+    --brand-teal: 172 66% 50%;
+    --brand-violet: 262 83% 66%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(201 90% 45%), hsl(199 89% 58%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--brand-teal)), hsl(201 90% 52%));
+    --gradient-accion: linear-gradient(90deg, hsl(199 89% 58%), hsl(var(--brand-violet)));
+    --gradient-surface: linear-gradient(180deg, hsl(222 18% 20%) 0%, hsl(222 16% 24%) 100%);
+
+    --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.2);
+    --shadow-medium: 0 4px 8px hsl(0 0% 0% / 0.3), 0 12px 28px hsl(0 0% 0% / 0.25);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 4px 16px hsl(0 0% 0% / 0.15);
+
+    --glass-bg: hsl(222 18% 21% / 0.9);
+    --glass-border: hsl(222 16% 30% / 0.8);
+
+    --feature-audio: 199 89% 58%;
+    --feature-video: 262 62% 62%;
+    --feature-class: 142 55% 48%;
+    --feature-docs: 38 88% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* Con qué luz pinta el navegador lo que no controlamos por CSS: el calendario del
+       `input type="date"` del formulario de acceso, las barras de scroll, el
+       autocompletado y los menús nativos. Sin esto, en tema oscuro salen en blanco —
+       y el calendario del formulario es un rectángulo blanco sobre tarjeta oscura. */
+    color-scheme: light;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', 'Inter Fallback', 'Inter Fallback Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Typography Scale - Mobile First, friendly & readable */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-foreground;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+
+  h4 {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+
+  /* Ojo: esto pinta el color y el cuerpo DIRECTAMENTE sobre cada <p>, y una
+     declaración propia siempre gana a un valor heredado, sea cual sea la capa.
+     Un <p> dentro de un contenedor con `text-*-foreground` (una burbuja de chat,
+     un badge de color) NO hereda ese color: se queda en --foreground, que en claro
+     es la misma tinta que --action, o sea texto invisible. En esos casos hay que
+     poner `text-inherit` y el tamaño en el propio <p>. */
+  p {
+    @apply text-foreground/85 text-sm sm:text-base leading-relaxed;
+  }
+
+  /* Anillo de foco en el azul de marca */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+
+  /* Prevent horizontal overflow */
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Selección de texto: la paleta, no el gris o azul que pone el navegador por defecto.
+     El primario en un tinte bajo mantiene el texto seleccionado legible en los dos temas
+     sin que la selección deje de sentirse parte del mismo sistema de color. */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.28);
+    color: hsl(var(--foreground));
+  }
+}
+
+/* ============================================
+   LA LECTURA DEL CAPÍTULO (Zilla Slab)
+   ============================================
+   Lo que antes había aquí era una corrección: `text-read`, `text-heading` y
+   `text-subheading` (tailwind.config.ts) se calibraron para Inter y esta hoja les
+   deshacía el tracking negativo para que Literata no se aglutinara. Esa corrección ya no
+   existe — los números buenos están en el token, que es su sitio, porque esa escala hoy
+   solo la usa la lección. Aquí queda lo único que un token no puede decir: la tinta y la
+   compensación de tema oscuro.
+
+   LA TINTA DE LA LECCIÓN
+   ----------------------
+   Sepia, y no el casi-negro de la aplicación. Medido: `--foreground` marca 16,96:1 sobre
+   el fondo, casi el triple del suelo de 6,30 que dejó fijado la auditoría — y ese exceso
+   es exactamente lo que pica a veinte mil caracteres. Ningún libro se compone a contraste
+   máximo: el ojo lo lee como un borde, no como texto. El sepia baja a 13,51:1, sigue al
+   doble del suelo, y es lo que el ojo asocia a leer y no a operar una pantalla.
+
+   **Se redefinen los tokens, no se pintan colores.** `--foreground` y
+   `--muted-foreground` son tripletes HSL que heredan, así que redeclararlos en un
+   subárbol vuelve a teñir TODO lo que hay dentro —`text-foreground`,
+   `text-muted-foreground`, los bordes que los usan— sin tocar una sola clase de utilidad
+   ni un solo componente. Y acota el cambio a la lección: la barra de arriba, los botones
+   y el sendero viven fuera de `<main>` y conservan la tinta de la aplicación.
+
+   El atenuado no es el gris de la app teñido: es el mismo tono que la tinta, dos pasos
+   más claro, para que el texto secundario del capítulo pertenezca al capítulo. A 34 % da
+   6,57:1, que incluso mejora el 6,26 que la app documenta para su propio atenuado. */
+.lectura {
+  --foreground: 30 23% 16%;        /* #32291F — 13,51:1 sobre el fondo claro */
+  --muted-foreground: 32 14% 34%;  /*           6,57:1  — suelo 6,30 */
+  /* **Y `color`, no solo el token.** Redefinir `--foreground` aquí solo cambia a quien lo
+     lea explícitamente (`text-foreground`); el texto que simplemente HEREDA su color lo
+     recibe ya resuelto del `body`, o sea en el casi-negro de la aplicación. Sin esta
+     línea el capítulo entero —que hereda— se quedaba negro y solo cambiaban de tinta los
+     pocos elementos con la clase puesta. Medido: `<main>` daba rgb(15,23,41) con el token
+     ya en sepia. */
+  color: hsl(var(--foreground));
+}
+.dark .lectura {
+  /* En oscuro la tinta es la clara, y el problema se invierte: el blanco puro sangra
+     sobre fondo oscuro (halation) y las letras se perciben más apretadas de lo que miden.
+     Un hueso cálido en vez de blanco quita ese halo y mantiene la temperatura del sepia. */
+  --foreground: 38 35% 89%;        /* #EDE6D9 — 13,25:1 sobre el fondo oscuro */
+  --muted-foreground: 38 20% 77%;  /*           9,86:1  — el mismo escalón que la app */
+}
+
+/* Las matemáticas EN LÍNEA no pueden cambiar el alto del renglón que las contienen.
+
+   KaTeX se pinta a 1.21em por defecto, un número calibrado contra la x-height pequeña de
+   Computer Modern. Zilla Slab la tiene generosa, así que ese 21% de más no compensa nada: solo
+   hace que la caja de la fórmula sobresalga del renglón. Medido dentro de un mismo párrafo,
+   la línea con fórmula medía 6px más que las de al lado — el texto de alrededor se descuadra
+   en el único sitio donde tiene que estar más pegado.
+
+   `line-height: 1` porque la caja en línea de KaTeX no necesita el interlineado del cuerpo:
+   su alto lo pone su propio contenido, y el 1.6 del párrafo se le sumaba encima. */
+/* La letra del cuerpo de la Explicación: Zilla Slab, entre 1,03 y 1,12rem según el ancho —la
+   losa tiene el ojo más pequeño que Inter, pero a 1,15 fijos un móvil daba seis palabras por
+   renglón—. Solo los párrafos y los puntos de lista: los títulos van en Nunito,
+   las tablas y los controles siguen en Inter —las cifras de una tabla se leen mejor en sans—.
+   **Y el color aquí, no heredado:** la app le pone tinta a todo `<p>` y, dentro de `.lectura`,
+   esa tinta es el sepia; heredado del `<article>`, el petróleo no llegaba al párrafo. */
+.capitulo-lectura p.text-read,
+.capitulo-lectura li.text-read,
+.capitulo-lectura .capitulo-md p,
+.capitulo-lectura .capitulo-md li {
+  color: hsl(var(--arc-leccion-cuerpo));
+  font-family: "Zilla Slab", "Zilla Slab Fallback", Georgia, "Times New Roman", serif;
+  font-size: clamp(1.03rem, 0.97rem + 0.25vw, 1.12rem);
+  line-height: 1.6;
+}
+/* La marca de los subtítulos del material: un cuadradito del azul de Atlas, que dice «aquí
+   empieza otra idea» antes de leer la palabra. Es decoración, no texto: no la lee un lector. */
+.capitulo-lectura .titulo-de-material::before {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.5em;
+  border-radius: 3px;
+  background: hsl(var(--arc-azul));
+  vertical-align: 0.12em;
+}
+
+.capitulo-lectura .capitulo-md .katex:not(.katex-display) {
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* Una fórmula de bloque es un objeto, no un renglón.
+
+   Va centrada y con su propio aire —más del que separa dos párrafos, para que se lea como
+   una pieza aparte y no como una línea rara del párrafo anterior—, y **no hereda el
+   interlineado del cuerpo**: el 1.6 está calibrado para renglones de texto y estira una
+   fracción o un sumatorio hasta descuadrarlos. Y se desplaza en horizontal dentro de su caja
+   cuando no cabe, igual que una tabla ancha: una ecuación larga no tiene por qué desbordar la
+   pantalla de un móvil. */
+.capitulo-lectura .capitulo-formula {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+.capitulo-lectura .capitulo-formula .katex-display {
+  margin: 0;
+  line-height: normal;
+  text-align: center;
+}
+
+/* Compensación de tema oscuro: tinta clara sobre fondo oscuro "sangra" un poco más que
+   tinta oscura sobre fondo claro (halation) y las letras se perciben más apretadas de lo
+   que miden. Un pelo más de interlineado y de tracking devuelve la misma sensación de
+   aire que en claro. Solo aquí: el resto del producto no sostiene párrafos largos y no le
+   hace falta la corrección.
+
+   Los valores son un punto mayores que con Literata: los remates en bloque de una losa
+   tienen más superficie que los de una serif de libro, así que sangran más. */
+.dark .capitulo-lectura .text-read,
+/* El texto que sale de `MathMarkdown` (fórmulas y párrafos con markdown real) no lleva
+   `text-read` como clase propia: la recibe vía el selector `[&_p]:text-read`, que no dice
+   nada a un selector externo como éste. `.capitulo-md`, la clase del contenedor que lo
+   envuelve, es el gancho para que ese texto reciba el mismo ajuste. */
+.dark .capitulo-lectura .capitulo-md p,
+.dark .capitulo-lectura .capitulo-md li {
+  letter-spacing: 0.006em;
+  line-height: 1.68;
+}
+.dark .capitulo-lectura .text-heading {
+  letter-spacing: -0.008em;
+}
+.dark .capitulo-lectura .text-subheading {
+  letter-spacing: -0.002em;
+}
+
+@layer components {
+  /* Container utility for consistent padding */
+  .container-padding {
+    @apply px-4 sm:px-5 md:px-6 lg:px-8;
+  }
+
+  /* Touch-friendly minimum sizes */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+
+  /* Achievement card with gold accent */
+  .card-achievement {
+    @apply rounded-2xl border border-border/50 bg-card relative overflow-hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-achievement::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, hsl(45 90% 55% / 0.05), transparent);
+  }
+
+  .card-achievement:hover::before {
+    @apply opacity-100;
+  }
+
+  /*
+   * El planeta de la landing (ver Planeta.tsx).
+   *
+   * El halo y las órbitas se dibujan aquí y no en la foto: la imagen generada traía el
+   * resplandor en el canal alfa con escalones, que sobre blanco se veían como anillos. La
+   * foto se recorta por el borde de la esfera y la atmósfera la pone un degradado, que
+   * además cambia con el tema. El tono es el de --primary en cada tema.
+   */
+  .planeta-halo {
+    background: radial-gradient(
+      circle closest-side,
+      hsl(var(--primary) / 0.34) 66%,
+      hsl(var(--primary) / 0.12) 80%,
+      hsl(var(--primary) / 0) 100%
+    );
+  }
+  .dark .planeta-halo {
+    background: radial-gradient(
+      circle closest-side,
+      hsl(var(--primary) / 0.45) 66%,
+      hsl(var(--primary) / 0.14) 80%,
+      hsl(var(--primary) / 0) 100%
+    );
+  }
+  /* Sombra del lado de la noche: la luz de la foto entra por arriba a la derecha. */
+  .planeta-sombra {
+    background: radial-gradient(
+      circle at 70% 28%,
+      hsl(0 0% 100% / 0.1) 0%,
+      hsl(0 0% 0% / 0) 45%,
+      hsl(222 60% 8% / 0.35) 100%
+    );
+  }
+  .planeta-orbita {
+    stroke: hsl(var(--primary) / 0.35);
+  }
+  .dark .planeta-orbita {
+    stroke: hsl(var(--primary) / 0.45);
+  }
+
+  /*
+   * El libro de la landing (ver LibroEnVideo.tsx). Los fotogramas son transparentes; en
+   * oscuro, los blancos del papel se verían del color del fondo, así que el libro se posa
+   * sobre una luz suave, como un flexo sobre la mesa.
+   */
+  .dark .libro-video::before {
+    content: "";
+    position: absolute;
+    inset: 2% -4% 0 4%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, hsl(38 22% 84%) 50%, hsl(38 22% 84% / 0.35) 78%, transparent);
+  }
+  .libro-resaltado {
+    color: hsl(222 30% 22%);
+    background: hsl(48 96% 68% / 0.7);
+    padding: 0.05em 0.2em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .libro-planeta-flota {
+    animation: libro-flotar 6s ease-in-out infinite;
+  }
+  @keyframes libro-flotar {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-6%) rotate(2deg);
+    }
+  }
+  .libro-idioma {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: hsl(var(--primary));
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 999px;
+    padding: 3px 9px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+}
+
+@layer utilities {
+  /* Slim scrollbar for transcript viewer */
+  .transcript-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .transcript-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .transcript-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground) / 0.1);
+    border-radius: 9999px;
+  }
+  .transcript-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground) / 0.2);
+  }
+
+  /* Film grain texture — adds depth like Stripe/Linear */
+  .landing-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  /* Superficie translúcida para barras y cabeceras fijas */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: var(--glass-border);
+  }
+
+  .bg-surface-gradient {
+    background: var(--gradient-surface);
+  }
+
+  /* =====================================
+     GENERAL UI ANIMATIONS
+     Smooth, modern, engaging
+     ===================================== */
+
+  /* Stagger animation - Smooth entrance */
+  .animate-in-stagger > * {
+    @apply animate-fade-in;
+    animation-fill-mode: both;
+  }
+  .animate-in-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .animate-in-stagger > *:nth-child(2) { animation-delay: 60ms; }
+  .animate-in-stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .animate-in-stagger > *:nth-child(4) { animation-delay: 180ms; }
+  .animate-in-stagger > *:nth-child(5) { animation-delay: 240ms; }
+  .animate-in-stagger > *:nth-child(6) { animation-delay: 300ms; }
+  .animate-in-stagger > *:nth-child(7) { animation-delay: 360ms; }
+  .animate-in-stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+  /* Slide up entrance */
+  .animate-slide-up {
+    animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slide-up {
+    0% {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Scale up entrance */
+  .animate-scale-up {
+    animation: scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes scale-up {
+    0% {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Shake animation for errors */
+  .animate-shake {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+  }
+
+  /* Glow pulse for important elements */
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(168 65% 42% / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 12px hsl(168 65% 42% / 0);
+    }
+  }
+
+  /* Confetti burst - for celebrations */
+  .animate-confetti {
+    animation: confetti 0.6s ease-out forwards;
+  }
+
+  @keyframes confetti {
+    0% {
+      transform: scale(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.5) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  /* Feature colors */
+  .bg-feature-audio { background-color: hsl(var(--feature-audio)); }
+  .bg-feature-video { background-color: hsl(var(--feature-video)); }
+  .bg-feature-class { background-color: hsl(var(--feature-class)); }
+  .bg-feature-docs { background-color: hsl(var(--feature-docs)); }
+
+  .text-feature-audio { color: hsl(var(--feature-audio)); }
+  .text-feature-video { color: hsl(var(--feature-video)); }
+  .text-feature-class { color: hsl(var(--feature-class)); }
+  .text-feature-docs { color: hsl(var(--feature-docs)); }
+
+  /* Achievement colors */
+  .bg-achievement { background-color: hsl(var(--achievement)); }
+  .text-achievement { color: hsl(var(--achievement)); }
+  .border-achievement { border-color: hsl(var(--achievement)); }
+
+  /* La sala de estudio */
+  .bg-study { background-color: hsl(var(--study-bg)); }
+  .text-study-fg { color: hsl(var(--study-fg)); }
+  .text-study-muted { color: hsl(var(--study-muted)); }
+
+  /*
+   * La pregunta de la tarjeta.
+   *
+   * Es la única excepción a la escala de cinco tamaños del sistema, y tiene un motivo
+   * concreto: esa escala está calibrada para pantallas densas —tablas, paneles, listas—.
+   * En la sesión de estudio hay una pregunta, sola, en una pantalla vacía, y a 15px se lee
+   * como una tarjeta que se olvidaron de terminar.
+   *
+   * En Nunito, la redonda de los títulos del recorrido (`font-redonda`), y en el azul del
+   * recorrido como texto (7,4:1 sobre blanco): es un titular, no un párrafo.
+   *
+   * `clamp` y no un salto en `sm:` porque el rango de longitudes es enorme: hay preguntas
+   * de cuatro palabras y preguntas de tres líneas con una fórmula dentro. Las largas bajan
+   * un escalón con `.study-question-larga` para no llenar la tarjeta de titular.
+   */
+  .study-question p {
+    font-family: Nunito, "Inter Tight", Inter, system-ui, sans-serif;
+    font-size: clamp(1.45rem, 1.05rem + 1.9vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    color: hsl(224 82% 45%);
+  }
+  .study-question-larga p {
+    font-size: clamp(1.2rem, 1rem + 0.9vw, 1.5rem);
+    line-height: 1.28;
+  }
+
+  /* La respuesta no compite con la pregunta: se lee, no se proclama. En Inter, que es la que
+   * sostiene texto corrido, en el marino del recorrido, y con las palabras que la sostienen en
+   * azul: el énfasis que pidió el generador, sin inventar ninguno aquí. */
+  /* `.prose` pone su propio color en el mismo elemento, y `dark:prose-invert` lo aclara: sobre
+   * la tarjeta, que es blanca en los dos temas, eso dejaba el texto gris claro sobre blanco. */
+  .study-answer,
+  .prose.study-answer {
+    color: hsl(226 58% 17%);
+  }
+  .study-answer p,
+  .study-answer li {
+    /* La regla base pinta cada <p> con --foreground directamente: sin esto, el marino del
+       contenedor no llega al párrafo. */
+    color: hsl(226 58% 17%);
+    font-size: clamp(1rem, 0.92rem + 0.45vw, 1.1875rem);
+    line-height: 1.55;
+    letter-spacing: -0.011em;
+  }
+  .study-answer p + p {
+    margin-top: 0.6em;
+  }
+  .study-answer strong {
+    color: hsl(224 82% 45%);
+    font-weight: 800;
+  }
+  .study-answer ul,
+  .study-answer ol {
+    margin: 0.4em 0 0.6em;
+    padding-left: 1.3em;
+  }
+  .study-answer li {
+    margin-bottom: 0.3em;
+    padding-left: 0.15em;
+  }
+  .study-answer li::marker {
+    color: hsl(224 82% 45%);
+    font-weight: 800;
+  }
+  .study-answer pre {
+    background: hsl(220 60% 96%);
+    border: 1px solid hsl(220 38% 86%);
+    border-radius: 12px;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.875rem;
+  }
+  .study-answer :not(pre) > code {
+    background: hsl(220 60% 95%);
+    color: hsl(226 58% 17%);
+    border-radius: 6px;
+    padding: 0.1em 0.35em;
+    font-size: 0.9em;
+  }
+
+  .study-question .katex,
+  .study-answer .katex {
+    font-size: 1.05em; /* KaTeX se queda corto frente al texto que lo rodea. */
+  }
+
+  /* Scrollbar - Subtle */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  /* Better text rendering */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Safe area insets for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* Prevent text overflow */
+  .truncate-lines-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-lines-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Subtle shine effect */
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      hsl(0 0% 100% / 0.15) 50%,
+      transparent 100%
+    );
+    transform: rotate(30deg);
+    animation: shine 4s ease-in-out infinite;
+  }
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) rotate(30deg);
+    }
+    100% {
+      transform: translateX(100%) rotate(30deg);
+    }
+  }
+
+  /* Rainbow border animation - for special elements */
+  .rainbow-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: 1rem;
+  }
+
+  .rainbow-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      hsl(168 65% 42%),
+      hsl(200 60% 50%),
+      hsl(260 45% 55%),
+      hsl(340 55% 52%),
+      hsl(45 90% 55%),
+      hsl(168 65% 42%)
+    );
+    background-size: 300% 100%;
+    animation: rainbow-move 3s linear infinite;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .rainbow-border:hover::before {
+    opacity: 1;
+  }
+
+  @keyframes rainbow-move {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  /* Loading dots animation */
+  .loading-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .loading-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: loading-dot 1.4s ease-in-out infinite;
+  }
+
+  .loading-dots span:nth-child(1) { animation-delay: 0s; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes loading-dot {
+    0%, 80%, 100% {
+      transform: scale(0.6);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: inline-flex;
+    gap: 3px;
+    padding: 8px 12px;
+    background: hsl(var(--muted));
+    border-radius: 16px;
+  }
+
+  .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: hsl(var(--muted-foreground));
+    animation: typing-bounce 1.4s ease-in-out infinite;
+  }
+
+  .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing-bounce {
+    0%, 60%, 100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-8px);
+    }
+  }
+
+  /* Progress bar with animation */
+  .progress-animated {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-animated::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 100% / 0.3),
+      transparent
+    );
+    animation: progress-shine 1.5s ease-in-out infinite;
+  }
+
+  @keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Notification badge bounce */
+  .badge-bounce {
+    animation: badge-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes badge-bounce {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  /* Success checkmark animation */
+  .checkmark-animate {
+    animation: checkmark-draw 0.5s ease-out forwards;
+  }
+
+  @keyframes checkmark-draw {
+    0% {
+      stroke-dashoffset: 50;
+    }
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Skeleton loading shimmer */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* =====================================
+     ENHANCED IMAGE ANIMATIONS
+     Modern, engaging hover effects
+     ===================================== */
+
+  /* Image zoom on hover */
+  .img-zoom {
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .img-zoom img {
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .img-zoom:hover img {
+    transform: scale(1.08);
+  }
+
+  /* Image reveal animation */
+  .img-reveal {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .img-reveal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.3),
+      hsl(var(--accent) / 0.2)
+    );
+    transform: translateX(-100%);
+    animation: img-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes img-reveal {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Image tilt effect on hover */
+  .img-tilt {
+    transition: transform 0.3s ease-out;
+    transform-style: preserve-3d;
+  }
+
+  .img-tilt:hover {
+    transform: perspective(1000px) rotateY(5deg) rotateX(3deg);
+  }
+
+  /* Image glow effect */
+  .img-glow {
+    transition: all 0.4s ease-out;
+  }
+
+  .img-glow:hover {
+    filter: drop-shadow(0 0 20px hsl(var(--primary) / 0.4));
+  }
+
+  /* Pulse soft animation */
+  .animate-pulse-soft {
+    animation: pulse-soft 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.85;
+      transform: scale(1.05);
+    }
+  }
+
+  /* Fade in up animation */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Scale in with bounce */
+  .animate-scale-in-bounce {
+    animation: scale-in-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes scale-in-bounce {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    60% {
+      transform: scale(1.1);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Slide in from bottom */
+  .animate-slide-in-bottom {
+    animation: slide-in-bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slide-in-bottom {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Icon spin on hover */
+  .icon-spin-hover {
+    transition: transform 0.4s ease-out;
+  }
+
+  .group:hover .icon-spin-hover {
+    transform: rotate(360deg);
+  }
+
+  /* Icon bounce on hover */
+  .icon-bounce-hover {
+    transition: transform 0.3s ease-out;
+  }
+
+  .group:hover .icon-bounce-hover {
+    animation: icon-bounce 0.5s ease-out;
+  }
+
+  @keyframes icon-bounce {
+    0%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+    50% { transform: translateY(-3px); }
+    70% { transform: translateY(-5px); }
+  }
+
+  /* Card 3D hover effect */
+  .card-3d {
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+    transform-style: preserve-3d;
+  }
+
+  .card-3d:hover {
+    transform: translateY(-8px) perspective(1000px) rotateX(2deg);
+    box-shadow: 
+      0 20px 40px -15px hsl(var(--primary) / 0.2),
+      0 4px 8px -2px hsl(var(--foreground) / 0.05);
+  }
+
+  /* Ripple effect on click */
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: hsl(var(--primary) / 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease-out, height 0.6s ease-out;
+  }
+
+  .ripple:active::after {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Magnetic button effect indicator */
+  .magnetic {
+    transition: transform 0.2s ease-out;
+  }
+
+  .magnetic:hover {
+    transform: scale(1.02);
+  }
+
+  .magnetic:active {
+    transform: scale(0.98);
+  }
+
+  /* Gradient text shimmer */
+  .text-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--foreground)),
+      hsl(var(--primary)),
+      hsl(var(--foreground))
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: text-shimmer 3s linear infinite;
+  }
+
+  @keyframes text-shimmer {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* Floating elements with parallax feel */
+  .float-slow {
+    animation: float-slow 6s ease-in-out infinite;
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(1deg); }
+    50% { transform: translateY(-5px) rotate(-1deg); }
+    75% { transform: translateY(-15px) rotate(0.5deg); }
+  }
+
+  /* Success celebration burst */
+  .celebrate-burst {
+    position: relative;
+  }
+
+  .celebrate-burst::before,
+  .celebrate-burst::after {
+    content: '🎉';
+    position: absolute;
+    font-size: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .celebrate-burst::before {
+    top: -20px;
+    left: 10%;
+    animation: burst-left 1s ease-out forwards;
+  }
+
+  .celebrate-burst::after {
+    top: -20px;
+    right: 10%;
+    animation: burst-right 1s ease-out forwards;
+  }
+
+  @keyframes burst-left {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-30px, -40px) rotate(-45deg);
+    }
+  }
+
+  @keyframes burst-right {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(30px, -40px) rotate(45deg);
+    }
+  }
+
+  /* Heartbeat animation for important elements */
+  .heartbeat {
+    animation: heartbeat 1.5s ease-in-out infinite;
+  }
+
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.1); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.1); }
+    70% { transform: scale(1); }
+  }
+
+  /* Border glow animation */
+  .border-glow {
+    position: relative;
+  }
+
+  .border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      45deg,
+      hsl(var(--primary)),
+      hsl(var(--accent)),
+      hsl(var(--primary))
+    );
+    background-size: 200% 200%;
+    animation: border-glow-move 2s linear infinite;
+    z-index: -1;
+    opacity: 0.7;
+    filter: blur(8px);
+  }
+
+  @keyframes border-glow-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Morphing blob background */
+  .blob-bg {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .blob-bg::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      ellipse at center,
+      hsl(var(--primary) / 0.1) 0%,
+      transparent 70%
+    );
+    animation: blob-morph 8s ease-in-out infinite;
+  }
+
+  @keyframes blob-morph {
+    0%, 100% {
+      transform: translate(0%, 0%) scale(1);
+      border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+    }
+    25% {
+      transform: translate(5%, -5%) scale(1.1);
+      border-radius: 60% 40% 40% 60% / 40% 60% 40% 60%;
+    }
+    50% {
+      transform: translate(-5%, 5%) scale(0.95);
+      border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+    }
+    75% {
+      transform: translate(3%, 3%) scale(1.05);
+      border-radius: 50% 50% 40% 60% / 50% 60% 50% 40%;
+    }
+  }
+}
+
+/* =====================================
+   ATLAS — el movimiento del asistente
+   =====================================
+   Un solo sitio para las curvas de Atlas, con dos: `--atlas-salida` para lo que entra
+   (arranca rápido y se posa, que es lo que hace que una respuesta se sienta inmediata) y
+   `--atlas-vaiven` para lo que se mueve sin entrar ni salir, como las latitudes del logo.
+
+   Las entradas llevan `backwards` y no `both`: aplican su primer fotograma durante el
+   retraso —lo que hace falta para la cascada— y al acabar no dejan nada puesto. Un
+   `transform` relleno para siempre convertiría al elemento en el bloque de referencia de
+   cualquier `position: fixed` de dentro (ver `ModalDeParada`).
+
+   Todo va en CSS y no en framer-motion porque corre fuera del hilo principal: la respuesta
+   llega justo cuando React pinta el markdown, KaTeX incluido, y una animación en JS
+   perdería fotogramas en ese mismo momento. */
+:root {
+  --atlas-salida: cubic-bezier(0.23, 1, 0.32, 1);
+  --atlas-vaiven: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Pensando: las tres latitudes del globo laten como una onda de audio. Es la marca
+   haciendo lo que su dibujo ya sugiere, en vez de unos puntos que valdrían para cualquier
+   chat. `fill-box` para que cada línea se encoja desde su propio centro y no desde el
+   del SVG. */
+.atlas-latitud {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.atlas-pensando .atlas-latitud {
+  animation: atlas-onda 0.9s var(--atlas-vaiven) infinite alternate;
+}
+.atlas-pensando .atlas-latitud:nth-child(2) { animation-delay: -0.3s; }
+.atlas-pensando .atlas-latitud:nth-child(3) { animation-delay: -0.6s; }
+@keyframes atlas-onda {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.4); }
+}
+
+/* Lo que acaba de llegar. Nunca desde cero: 6 px y un 98 % bastan para que el ojo vea de
+   dónde viene sin tener que esperarlo. */
+@keyframes atlas-entrar {
+  from { opacity: 0; transform: translateY(6px); }
+}
+@keyframes atlas-tuyo {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+.atlas-entrar { animation: atlas-entrar 280ms var(--atlas-salida) backwards; }
+.atlas-tuyo {
+  animation: atlas-tuyo 240ms var(--atlas-salida) backwards;
+  transform-origin: bottom right;
+}
+
+/* La respuesta se revela por bloques —párrafo, lista, tabla— y no por palabras. Por
+   palabras obligaría a esperar para leer una respuesta que ya está entera; por bloques el
+   ojo empieza por el primero mientras el resto se posa, y el total no pasa de ~0,9 s por
+   larga que sea la respuesta. */
+.atlas-revelar .prose > * {
+  animation: atlas-entrar 420ms var(--atlas-salida) backwards;
+}
+.atlas-revelar .prose > :nth-child(2) { animation-delay: 70ms; }
+.atlas-revelar .prose > :nth-child(3) { animation-delay: 140ms; }
+.atlas-revelar .prose > :nth-child(4) { animation-delay: 210ms; }
+.atlas-revelar .prose > :nth-child(5) { animation-delay: 280ms; }
+.atlas-revelar .prose > :nth-child(6) { animation-delay: 350ms; }
+.atlas-revelar .prose > :nth-child(7) { animation-delay: 420ms; }
+.atlas-revelar .prose > :nth-child(n + 8) { animation-delay: 490ms; }
+/* Las fuentes y las acciones, cuando ya hay algo que leer encima. */
+.atlas-revelar .atlas-despues {
+  animation: atlas-entrar 320ms var(--atlas-salida) backwards;
+  animation-delay: 360ms;
+}
+
+/* «Buscando en tu material»: un brillo que recorre el texto. Lineal, porque es un
+   movimiento constante y cualquier curva lo haría tartamudear en cada vuelta. */
+.atlas-brillo {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted-foreground)) 0%,
+    hsl(var(--muted-foreground)) 35%,
+    hsl(var(--foreground)) 50%,
+    hsl(var(--muted-foreground)) 65%,
+    hsl(var(--muted-foreground)) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: atlas-brillo 2.4s linear infinite;
+}
+@keyframes atlas-brillo {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
+}
+
+/* Movimiento reducido. La regla global de arriba ya deja las duraciones en nada, pero no
+   toca los retrasos: sin esto, el último párrafo de una respuesta se quedaría medio
+   segundo invisible sin animación ninguna que lo justifique. */
+@media (prefers-reduced-motion: reduce) {
+  .atlas-revelar .prose > *,
+  .atlas-revelar .atlas-despues,
+  .atlas-pensando .atlas-latitud {
+    animation-delay: 0ms !important;
+  }
+  .atlas-brillo {
+    animation: none;
+    color: hsl(var(--muted-foreground));
+  }
+}
+
+/* =====================================
+   ATLAS — practicar: preguntas y respuestas
+   ===================================== */
+
+/* La pregunta siguiente entra desde la derecha: avanzar es ir hacia delante. */
+@keyframes atlas-pregunta {
+  from { opacity: 0; transform: translateX(14px); }
+}
+.atlas-pregunta { animation: atlas-pregunta 280ms var(--atlas-salida) backwards; }
+
+/* Fallar: un temblor corto y amortiguado, como un «no» con la cabeza. Tres vaivenes y
+   no más: es información, no un castigo. */
+@keyframes atlas-temblor {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(1.5px); }
+}
+.atlas-temblor { animation: atlas-temblor 360ms var(--atlas-vaiven) backwards; }
+
+/* El sello de acierto: se pasa un poco y se posa. El único rebote de la app va aquí,
+   porque es el único momento que lo merece varias veces por sesión. */
+@keyframes atlas-sello {
+  from { opacity: 0; transform: scale(0.6); }
+}
+.atlas-sello { animation: atlas-sello 300ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+
+/* Un número que cambia salta un poco para que se vea que cambió. */
+@keyframes atlas-salto {
+  40% { transform: translateY(-3px) scale(1.12); }
+}
+.atlas-salto { display: inline-block; animation: atlas-salto 320ms var(--atlas-salida); }
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-temblor, .atlas-salto { animation: none; }
+}
+
+/* =====================================
+   ATLAS — ventanas del sendero
+   ===================================== */
+@keyframes atlas-velo { from { opacity: 0; } }
+.atlas-velo { animation: atlas-velo 200ms var(--atlas-salida) backwards; }
+/* La ventana sube 8 px y crece del 97 %: sale del sendero, no aparece de la nada. */
+@keyframes atlas-ventana { from { opacity: 0; transform: translateY(8px) scale(0.97); } }
+.atlas-ventana { animation: atlas-ventana 260ms var(--atlas-salida) backwards; }
+
+/* El sendero del hero del Inicio se dibuja hasta la cumbre, y luego sube la bandera. */
+@keyframes atlas-trazo { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.atlas-trazo {
+  stroke-dasharray: 1;
+  animation: atlas-trazo 1100ms var(--atlas-vaiven) 200ms backwards;
+}
+@keyframes atlas-bandera { from { opacity: 0; transform: translateY(10px); } }
+.atlas-bandera {
+  transform-box: fill-box;
+  animation: atlas-bandera 420ms var(--atlas-salida) 1150ms backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-trazo, .atlas-bandera { animation-delay: 0ms !important; }
+}
+
+/* Al navegar, el contenido entra; la navegación se queda quieta. Corto: se ve muchas veces.
+   Solo opacidad y SIN `fill`: un `transform` aquí convertiría a este contenedor en el bloque
+   de referencia de todo `position: fixed` de la página (ver `ModalDeParada`), y un relleno
+   que se queda puesto al acabar lo seguiría haciendo. Así, a los 220 ms no queda nada. */
+@keyframes atlas-pagina { from { opacity: 0; } }
+.atlas-pagina { animation: atlas-pagina 220ms var(--atlas-salida); }

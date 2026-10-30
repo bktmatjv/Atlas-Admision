@@ -1,0 +1,861 @@
+/* =====================================
+   ARCADE — el lenguaje visual del recorrido del alumno
+   =====================================
+   Tablero de niveles, lección, verdadero/falso, opción múltiple y repaso hablan este
+   idioma: azul vivo y cian de base, marino para el texto, amarillo, coral y menta de
+   acento, superficies claras y un relieve moderado —un canto de 3 px bajo cada pieza que
+   se pulsa—.
+
+   Un solo fichero, cargado después de `index.css`, para que no haya un estilo por
+   pantalla: las pantallas componen estas piezas con utilidades de Tailwind para el
+   espacio y el tamaño. Por eso aquí casi nunca se fija `padding` ni `width`: una clase
+   de este fichero va después de las utilidades y ganaría a un `px-8` escrito al lado.
+
+   Los colores son tripletes HSL, como el resto de tokens de la app, para poder usarlos
+   con alfa (`hsl(var(--arc-azul) / 0.1)`) y desde Tailwind (`bg-[hsl(var(--arc-menta))]`).
+
+   El movimiento de la interfaz —elegir, pulsar, enfocar— es CSS y corto. Lo que explica
+   un concepto va en Remotion (`src/remotion/`), y nunca al revés. */
+
+:root {
+  --arc-azul: 224 90% 52%;
+  --arc-azul-hondo: 226 82% 38%;
+  --arc-azul-claro: 220 100% 96%;
+  /* El azul como TEXTO. En claro es el mismo tono un paso más oscuro (5,9:1 sobre blanco);
+     en oscuro sube, porque el azul de relleno no se lee sobre la superficie oscura. */
+  --arc-azul-texto: 224 82% 45%;
+  --arc-cian: 190 88% 46%;
+  /* El cian con letra: blanco sobre él o él sobre blanco, 5,2:1 (el de trazo da 2,3:1). En
+     oscuro el relleno se queda así; el texto vuelve al cian vivo, que sobre la superficie
+     oscura da 6:1. */
+  --arc-cian-hondo: 192 90% 30%;
+  --arc-cian-texto: 192 90% 30%;
+  /* Los rellenos con letra blanca de las etapas de una explicación (pastilla y cadena), por
+     lo mismo que el cian: el tono de trazo no aguanta texto encima. Blanco sobre el coral de
+     trazo da 3,5:1; sobre el amarillo hondo, 2,6:1; sobre la menta, 4,2:1 en claro y 1,9:1
+     en oscuro, donde la menta sube. Estos dan 5,1–5,2:1 y NO cambian en oscuro: la letra
+     sigue siendo blanca y el relleno es el que la tiene que aguantar. El amarillo pasa a
+     tostado porque un amarillo que aguante blanco ya no es amarillo. */
+  --arc-coral-hondo: 6 76% 46%;
+  --arc-amarillo-tostado: 36 88% 32%;
+  --arc-menta-hondo: 160 62% 30%;
+  --arc-marino: 226 58% 17%;
+  --arc-amarillo: 44 97% 62%;
+  --arc-amarillo-hondo: 38 86% 46%;
+  --arc-amarillo-claro: 46 100% 93%;
+  --arc-coral: 6 84% 60%;
+  --arc-coral-texto: 4 70% 42%;
+  --arc-coral-claro: 6 100% 96%;
+  --arc-menta: 160 62% 34%;
+  --arc-menta-claro: 152 58% 92%;
+  /* La letra de una pastilla sobre `-claro`, como `--arc-azul-texto` y `--arc-coral-texto`. En
+     claro coinciden con el tostado y la menta honda; en oscuro suben, porque esos dos no
+     cambian (son relleno bajo letra blanca) y sobre el `-claro` oscuro no se leían. */
+  --arc-amarillo-texto: 36 88% 32%;
+  --arc-menta-texto: 160 62% 30%;
+  --arc-crema: 42 70% 98%;
+
+  --arc-superficie: 0 0% 100%;
+  --arc-lienzo: 218 70% 97%;
+  --arc-texto: 226 58% 17%;
+  --arc-texto-suave: 224 20% 36%;
+  /* La tinta de la Explicación: el texto que se lee en petróleo, y los títulos en azul hondo.
+     Con color pero sin bajar del suelo de la auditoría: el cuerpo da 7,4:1 sobre blanco y
+     6,6:1 sobre los fondos teñidos de las tarjetas; la negrita, 9,4:1; el título, 9,6:1. */
+  --arc-leccion-cuerpo: 196 72% 27%;
+  --arc-leccion-fuerte: 196 75% 22%;
+  --arc-leccion-titulo: 226 82% 38%;
+  /* El canto de las piezas en relieve y su contorno. */
+  --arc-borde: 226 48% 24%;
+  --arc-borde-suave: 220 38% 86%;
+
+  --arc-radio-s: 10px;
+  --arc-radio: 16px;
+  --arc-radio-l: 24px;
+
+  --arc-relieve: 0 3px 0 hsl(var(--arc-borde) / 0.9);
+  --arc-sombra: 0 14px 30px -18px hsl(226 60% 25% / 0.45);
+
+  --arc-rapida: 140ms;
+  --arc-media: 220ms;
+}
+
+.dark {
+  --arc-azul: 224 88% 56%;
+  --arc-azul-hondo: 226 80% 34%;
+  --arc-azul-claro: 224 36% 22%;
+  --arc-azul-texto: 218 95% 74%;
+  --arc-amarillo-claro: 40 40% 20%;
+  --arc-coral-texto: 6 90% 74%;
+  --arc-cian-texto: 190 88% 46%;
+  --arc-coral-claro: 6 30% 21%;
+  --arc-menta: 156 55% 58%;
+  --arc-menta-claro: 158 28% 20%;
+  --arc-amarillo-texto: 44 92% 66%;
+  --arc-menta-texto: 156 60% 62%;
+  --arc-crema: 224 20% 20%;
+
+  --arc-superficie: 224 22% 19%;
+  --arc-lienzo: 224 24% 12%;
+  --arc-texto: 210 40% 97%;
+  --arc-texto-suave: 215 22% 76%;
+  /* En oscuro, 8,3:1 el cuerpo y 8,6:1 el título sobre la superficie. */
+  --arc-leccion-cuerpo: 190 55% 72%;
+  --arc-leccion-fuerte: 190 60% 86%;
+  --arc-leccion-titulo: 218 90% 84%;
+  --arc-borde: 224 36% 7%;
+  --arc-borde-suave: 224 18% 32%;
+
+  --arc-relieve: 0 3px 0 hsl(var(--arc-borde));
+  --arc-sombra: 0 14px 30px -18px hsl(0 0% 0% / 0.7);
+}
+
+/* ---------- Superficies ---------- */
+
+/* El lienzo de las pantallas de estudio: azul muy claro con dos círculos al fondo. Son
+   gradientes del propio fondo y no nodos del DOM: no pesan ni se pueden enfocar. */
+.arc-lienzo {
+  background-color: hsl(var(--arc-lienzo));
+  background-image:
+    radial-gradient(circle at -6% 38%, transparent 0 150px, hsl(var(--arc-azul) / 0.07) 151px 210px, transparent 211px),
+    radial-gradient(circle at 104% 92%, hsl(var(--arc-azul) / 0.08) 0 170px, transparent 171px);
+  background-attachment: local;
+  color: hsl(var(--arc-texto));
+}
+
+/* La pieza en relieve: contorno fino y un canto debajo. */
+.arc-relieve {
+  background-color: hsl(var(--arc-superficie));
+  border: 1.5px solid hsl(var(--arc-borde) / 0.85);
+  border-radius: var(--arc-radio);
+  box-shadow: var(--arc-relieve);
+  color: hsl(var(--arc-texto));
+}
+
+/* Una tarjeta de lectura: sin canto, borde claro. El relieve es para lo que se pulsa. */
+.arc-tarjeta {
+  background-color: hsl(var(--arc-superficie));
+  border: 1px solid hsl(var(--arc-borde-suave));
+  border-radius: var(--arc-radio);
+  box-shadow: var(--arc-sombra);
+  color: hsl(var(--arc-texto));
+}
+
+/* Lo que se pulsa sube un poco al pasar y se hunde al pulsar: el canto se come. */
+.arc-pulsable {
+  transition:
+    transform var(--arc-rapida) var(--atlas-salida),
+    box-shadow var(--arc-rapida) var(--atlas-salida),
+    background-color var(--arc-media) ease,
+    border-color var(--arc-media) ease;
+  touch-action: manipulation;
+}
+@media (hover: hover) {
+  .arc-pulsable:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 hsl(var(--arc-borde) / 0.9);
+  }
+}
+.arc-pulsable:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 hsl(var(--arc-borde) / 0.9);
+}
+.arc-pulsable:focus-visible {
+  outline: 3px solid hsl(var(--arc-azul));
+  outline-offset: 3px;
+}
+
+/* ---------- Botones ----------
+   Se usan a través de `<Button variant="arcade…">` (components/ui/button.tsx): un solo
+   componente de botón en toda la app, con estas tres variantes para el recorrido. */
+.arc-boton {
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  transition:
+    transform var(--arc-rapida) var(--atlas-salida),
+    box-shadow var(--arc-rapida) var(--atlas-salida),
+    filter var(--arc-media) ease;
+  touch-action: manipulation;
+}
+.arc-boton:active:not(:disabled) {
+  transform: translateY(3px);
+}
+@media (hover: hover) {
+  .arc-boton:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+}
+.arc-boton:disabled {
+  /* Apagado de verdad, no medio transparente: un botón gris con su texto a 4,5:1 se lee
+     como «todavía no», uno al 50 % se lee como roto. */
+  opacity: 1;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  box-shadow: none;
+  transform: translateY(3px);
+}
+.arc-boton-primario {
+  background: hsl(var(--arc-azul));
+  border-color: hsl(var(--arc-azul-hondo));
+  color: #fff;
+  box-shadow: 0 4px 0 hsl(var(--arc-azul-hondo));
+}
+.arc-boton-primario:active:not(:disabled) {
+  box-shadow: 0 1px 0 hsl(var(--arc-azul-hondo));
+}
+.arc-boton-acento {
+  background: hsl(var(--arc-amarillo));
+  border-color: hsl(var(--arc-amarillo-hondo));
+  color: hsl(226 58% 17%);
+  box-shadow: 0 4px 0 hsl(var(--arc-amarillo-hondo));
+}
+.arc-boton-acento:active:not(:disabled) {
+  box-shadow: 0 1px 0 hsl(var(--arc-amarillo-hondo));
+}
+.arc-boton-neutro {
+  background: hsl(var(--arc-superficie));
+  border-color: hsl(var(--arc-borde-suave));
+  color: hsl(var(--arc-texto));
+  box-shadow: 0 4px 0 hsl(var(--arc-borde-suave));
+}
+.arc-boton-neutro:active:not(:disabled) {
+  box-shadow: 0 1px 0 hsl(var(--arc-borde-suave));
+}
+
+/* El contorno de toda la app: neutro, con un canto claro. Más fino que el neutro grande
+   porque vive en barras de herramientas y filas, junto a texto pequeño. */
+.arc-boton-suave {
+  background: hsl(var(--arc-superficie));
+  border-color: hsl(var(--arc-borde-suave));
+  color: hsl(var(--arc-texto));
+  font-weight: 600;
+  box-shadow: 0 2px 0 hsl(var(--arc-borde-suave));
+}
+.arc-boton-suave:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 hsl(var(--arc-borde-suave));
+}
+@media (hover: hover) {
+  .arc-boton-suave:hover:not(:disabled) {
+    background: hsl(var(--arc-azul-claro));
+    filter: none;
+  }
+}
+.arc-boton-secundario {
+  background: hsl(var(--arc-azul-claro));
+  border-color: transparent;
+  color: hsl(var(--arc-azul-texto));
+  font-weight: 700;
+}
+.arc-boton-secundario:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* ---------- Rótulos ---------- */
+
+.arc-antetitulo {
+  /* 12,8px: el mínimo que se lee sin esfuerzo en mayúsculas espaciadas. */
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.arc-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 8px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: hsl(var(--arc-amarillo));
+  color: hsl(226 58% 17%);
+}
+
+/* ---------- Cabecera ilustrada ----------
+   Compacta a propósito: dice dónde estás y deja sitio a lo que hay que hacer. */
+.arc-cabecera {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--arc-radio-l);
+  color: #fff;
+  background:
+    linear-gradient(115deg, transparent 58%, hsl(0 0% 100% / 0.1) 58% 70%, transparent 70%),
+    radial-gradient(120% 140% at 0% 0%, hsl(222 100% 62%) 0%, hsl(var(--arc-azul)) 42%, hsl(var(--arc-azul-hondo)) 100%);
+  box-shadow: 0 5px 0 hsl(var(--arc-azul-hondo)), var(--arc-sombra);
+}
+.arc-cabecera :where(h1, h2, h3, p) {
+  color: inherit;
+}
+
+/* ---------- Barra de progreso ----------
+   Crece con `scaleX`, no con `width`: no recalcula el layout en cada fotograma. */
+.arc-barra {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: hsl(var(--arc-borde-suave) / 0.7);
+}
+.arc-barra > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  transform-origin: left;
+  transition: transform 600ms var(--atlas-salida);
+}
+
+/* ---------- Teclas y opciones ---------- */
+
+.arc-tecla {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  background: hsl(var(--arc-superficie));
+  border: 1.5px solid hsl(var(--arc-borde-suave));
+  box-shadow: 0 3px 0 hsl(var(--arc-borde-suave));
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: hsl(var(--arc-texto));
+  transition: background-color var(--arc-media) ease, color var(--arc-media) ease, border-color var(--arc-media) ease;
+}
+
+/* Compacta: el examen de admisión tiene que enseñar las cinco opciones sin bajar, en un portátil
+   de 768 px y en un móvil. La misma tecla y la misma sombra, a 48 px de alto en vez de 75. */
+.arc-opcion.arc-opcion--compacta { gap: 0.75rem; }
+.arc-opcion--compacta .arc-tecla {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  font-size: 1.05rem;
+}
+
+/* Una opción de respuesta. Antes de comprobar, TODAS se pintan igual: ni el color ni el
+   icono pueden adelantar cuál es la buena. El estado lo pone `data-estado`. */
+.arc-opcion {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  border-radius: var(--arc-radio);
+  background: hsl(var(--arc-superficie));
+  border: 1.5px solid hsl(var(--arc-borde-suave));
+  box-shadow: 0 4px 0 hsl(var(--arc-azul) / 0.55);
+  color: hsl(var(--arc-texto));
+  cursor: pointer;
+  transition:
+    transform var(--arc-rapida) var(--atlas-salida),
+    box-shadow var(--arc-rapida) var(--atlas-salida),
+    border-color var(--arc-media) ease,
+    background-color var(--arc-media) ease,
+    opacity var(--arc-media) ease;
+}
+@media (hover: hover) {
+  .arc-opcion[data-estado="libre"]:hover {
+    border-color: hsl(var(--arc-azul) / 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 hsl(var(--arc-azul) / 0.55);
+  }
+}
+.arc-opcion[data-estado="libre"]:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 hsl(var(--arc-azul) / 0.55);
+}
+.arc-opcion:focus-visible,
+.arc-opcion:has(:focus-visible) {
+  outline: 3px solid hsl(var(--arc-azul));
+  outline-offset: 3px;
+}
+.arc-opcion[data-estado="elegida"] {
+  border-color: hsl(var(--arc-azul));
+  background: hsl(var(--arc-azul-claro));
+  box-shadow: 0 4px 0 hsl(var(--arc-azul-hondo));
+}
+.arc-opcion[data-estado="elegida"] .arc-tecla {
+  background: hsl(var(--arc-azul));
+  border-color: hsl(var(--arc-azul-hondo));
+  box-shadow: 0 3px 0 hsl(var(--arc-azul-hondo));
+  color: #fff;
+}
+.arc-opcion[data-estado="correcta"] {
+  cursor: default;
+  border-color: hsl(var(--arc-menta));
+  background: hsl(var(--arc-menta-claro));
+  box-shadow: 0 4px 0 hsl(var(--arc-menta));
+}
+.arc-opcion[data-estado="correcta"] .arc-tecla {
+  background: hsl(var(--arc-menta));
+  border-color: hsl(var(--arc-menta));
+  box-shadow: 0 3px 0 hsl(160 62% 24%);
+  color: #fff;
+}
+.arc-opcion[data-estado="fallada"] {
+  cursor: default;
+  border-color: hsl(var(--arc-coral));
+  background: hsl(var(--arc-coral-claro));
+  box-shadow: 0 4px 0 hsl(var(--arc-coral));
+}
+.arc-opcion[data-estado="fallada"] .arc-tecla {
+  background: hsl(var(--arc-coral));
+  border-color: hsl(var(--arc-coral));
+  box-shadow: 0 3px 0 hsl(4 70% 42%);
+  color: #fff;
+}
+.arc-opcion[data-estado="apagada"] {
+  cursor: default;
+  opacity: 0.55;
+  box-shadow: 0 2px 0 hsl(var(--arc-borde-suave));
+}
+
+/* El círculo de la derecha de cada opción: vacío, marcado, o el veredicto. */
+.arc-marca {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-left: auto;
+  border-radius: 999px;
+  border: 2px solid hsl(var(--arc-texto) / 0.75);
+  color: #fff;
+}
+[data-estado="elegida"] > .arc-marca {
+  border-color: hsl(var(--arc-azul));
+  box-shadow: inset 0 0 0 5px hsl(var(--arc-superficie));
+  background: hsl(var(--arc-azul));
+}
+[data-estado="correcta"] > .arc-marca {
+  border-color: hsl(var(--arc-menta));
+  background: hsl(var(--arc-menta));
+}
+[data-estado="fallada"] > .arc-marca {
+  border-color: hsl(var(--arc-coral));
+  background: hsl(var(--arc-coral));
+}
+
+/* ---------- Pastillas de pregunta ----------
+   La pregunta de ahora y las ya contestadas, con su resultado real. */
+.arc-pastilla {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: hsl(var(--arc-superficie));
+  border: 1.5px solid hsl(var(--arc-borde-suave));
+  box-shadow: 0 2px 0 hsl(var(--arc-borde-suave));
+  color: hsl(var(--arc-texto-suave));
+}
+.arc-pastilla[data-estado="actual"] {
+  border: 2px solid hsl(var(--arc-azul));
+  box-shadow: 0 2px 0 hsl(var(--arc-azul-hondo));
+  color: hsl(var(--arc-azul-texto));
+}
+.arc-pastilla[data-estado="acierto"] {
+  background: hsl(var(--arc-menta));
+  border-color: hsl(var(--arc-menta));
+  box-shadow: 0 2px 0 hsl(160 62% 24%);
+  color: #fff;
+}
+/* Examen de admisión: respondida (aún sin corregir) y marcada para revisar. La marcada se dice
+   también con la forma (borde discontinuo), no solo con el color. */
+.arc-pastilla[data-estado="respondida"] {
+  background: hsl(var(--arc-azul-claro));
+  border-color: hsl(var(--arc-azul));
+  color: hsl(var(--arc-azul-texto));
+}
+.arc-pastilla[data-estado="marcada"] {
+  background: hsl(var(--arc-amarillo-claro));
+  border: 2px dashed hsl(var(--arc-amarillo-hondo));
+  color: hsl(var(--arc-amarillo-texto));
+}
+.arc-pastilla[data-estado="fallo"] {
+  background: hsl(var(--arc-coral));
+  border-color: hsl(var(--arc-coral));
+  box-shadow: 0 2px 0 hsl(4 70% 42%);
+  color: #fff;
+}
+
+/* ---------- Tarjeta de nivel ---------- */
+.arc-nivel {
+  background-color: hsl(var(--arc-crema));
+}
+.arc-nivel[data-estado="completado"] {
+  background-color: hsl(var(--arc-menta-claro));
+}
+.arc-nivel[data-seleccionado="true"] {
+  border-color: hsl(var(--arc-azul));
+  background-color: hsl(var(--arc-azul-claro));
+  box-shadow: 0 3px 0 hsl(var(--arc-azul-hondo)), 0 0 0 3px hsl(var(--arc-azul) / 0.22);
+}
+
+/* La ilustración de una tarjeta se acerca un poco al pasar: la tarjeta entera responde. */
+.arc-ilustracion {
+  transition: transform 260ms var(--atlas-salida);
+}
+@media (hover: hover) {
+  .arc-pulsable:hover .arc-ilustracion {
+    transform: translateY(-3px) rotate(-3deg) scale(1.04);
+  }
+}
+
+/* ---------- Entradas ----------
+   Mismo criterio que las del asistente (`index.css`): `backwards`, para no dejar un
+   transform puesto que rompa los `position: fixed` de dentro. */
+@keyframes arc-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.arc-entrar {
+  animation: arc-entrar 320ms var(--atlas-salida) backwards;
+}
+@keyframes arc-posarse {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.arc-posarse {
+  animation: arc-posarse 260ms var(--atlas-salida) backwards;
+}
+
+/* La regla global de movimiento reducido anula duraciones pero no retardos: sin esto, una
+   pieza con retardo se quedaría invisible hasta que le tocara. */
+@media (prefers-reduced-motion: reduce) {
+  .arc-entrar,
+  .arc-posarse {
+    animation: none;
+  }
+  .arc-pulsable,
+  .arc-boton,
+  .arc-opcion,
+  .arc-ilustracion {
+    transition: none;
+  }
+}
+
+/* =====================================
+   LA SALA DE ESTUDIO DE LAS TARJETAS
+   =====================================
+   Azul nocturno a pantalla completa y una sola tarjeta clara encima (`FlashCardStudy`). Es
+   oscura en los dos temas a propósito: estudiar pide no ver nada más, y la tarjeta blanca
+   flotando es lo único que hay. Por eso aquí los colores van fijos y no por `.dark`. */
+
+.arc-sala {
+  --arc-sala-fondo: 225 62% 11%;
+  background-color: hsl(var(--arc-sala-fondo));
+  background-image:
+    radial-gradient(90% 60% at 50% -10%, hsl(224 80% 28% / 0.55), transparent 70%),
+    radial-gradient(circle at -4% 72%, hsl(224 70% 40% / 0.16) 0 190px, transparent 191px),
+    radial-gradient(circle at 104% 20%, hsl(224 70% 40% / 0.14) 0 150px, transparent 151px);
+  color: hsl(210 40% 97%);
+}
+/* El texto secundario de la sala: 6,5:1 sobre el fondo. */
+.arc-sala-suave {
+  color: hsl(215 28% 74%);
+}
+
+/* La tarjeta. Clara en los dos temas, con el marino del recorrido para el texto. */
+.arc-flashcard {
+  --arc-texto: 226 58% 17%;
+  --arc-texto-suave: 224 20% 36%;
+  --arc-azul-texto: 224 82% 45%;
+  --arc-borde-suave: 220 38% 86%;
+  --arc-superficie: 0 0% 100%;
+  /* Y los de la app que usan las piezas de la lección que viven dentro (la tabla del
+     material): sus valores claros, porque en oscuro se invertirían sobre fondo blanco. */
+  --foreground: 222 47% 11%;
+  --muted: 213 24% 93%;
+  --muted-foreground: 215 16% 38%;
+  --border: 214 32% 91%;
+  --border-row: 214 32% 95%;
+  --tabla-cabecera: 201 55% 93%;
+  --tabla-contorno: 201 45% 80%;
+  --ring: 224 82% 45%;
+  background: hsl(0 0% 100%);
+  border-radius: 28px;
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.9) inset,
+    0 6px 0 hsl(220 40% 82%),
+    0 28px 60px -24px hsl(226 90% 4% / 0.8);
+  color: hsl(var(--arc-texto));
+}
+/* Las tarjetas que quedan detrás: el mazo. */
+.arc-flashcard-fantasma {
+  border-radius: 28px;
+  background: hsl(220 40% 88%);
+  box-shadow: 0 6px 0 hsl(222 30% 70%);
+}
+
+/* Una tecla pequeña: el atajo dicho al lado del botón o dentro de él. */
+.arc-tecla-mini {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.4rem;
+  border-radius: 7px;
+  border: 1px solid hsl(0 0% 100% / 0.28);
+  background: hsl(0 0% 100% / 0.1);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Las cuatro valoraciones. Mismo tamaño, mismo canto: ninguna manda más que otra. El texto
+   de cada una pasa de 4,5:1 sobre su relleno (medido: coral 4,7, amarillo 10,5, azul 6,0,
+   menta 6,5). */
+.arc-valoracion {
+  position: relative;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  box-shadow: 0 4px 0 var(--canto);
+  background: var(--relleno);
+  color: var(--tinta);
+  transition:
+    transform var(--arc-rapida) var(--atlas-salida),
+    box-shadow var(--arc-rapida) var(--atlas-salida),
+    filter var(--arc-media) ease;
+  touch-action: manipulation;
+}
+.arc-valoracion:hover:not(:disabled),
+.arc-valoracion:focus-visible {
+  background: var(--relleno);
+  color: var(--tinta);
+}
+@media (hover: hover) {
+  .arc-valoracion:hover:not(:disabled) {
+    filter: brightness(1.06);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--canto);
+  }
+}
+.arc-valoracion:active:not(:disabled),
+.arc-valoracion[data-elegida="true"] {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--canto);
+}
+.arc-valoracion[data-elegida="true"] {
+  outline: 3px solid hsl(0 0% 100%);
+  outline-offset: 3px;
+}
+.arc-valoracion:focus-visible {
+  outline: 3px solid hsl(188 90% 62%);
+  outline-offset: 3px;
+}
+.arc-valoracion:disabled {
+  cursor: default;
+}
+.arc-valoracion-coral {
+  --relleno: hsl(4 74% 50%);
+  --canto: hsl(4 70% 36%);
+  --tinta: #fff;
+}
+.arc-valoracion-amarillo {
+  --relleno: hsl(var(--arc-amarillo));
+  --canto: hsl(var(--arc-amarillo-hondo));
+  --tinta: hsl(226 58% 17%);
+}
+.arc-valoracion-azul {
+  --relleno: hsl(224 90% 52%);
+  --canto: hsl(226 82% 34%);
+  --tinta: #fff;
+}
+.arc-valoracion-menta {
+  --relleno: hsl(var(--arc-menta-vivo));
+  --canto: hsl(162 64% 28%);
+  --tinta: hsl(226 58% 17%);
+}
+:root {
+  /* La menta de relleno: la de `--arc-menta` es de texto y no se lee como botón. */
+  --arc-menta-vivo: 160 58% 46%;
+}
+.arc-valoracion .arc-tecla-mini {
+  border-color: currentColor;
+  background: hsl(0 0% 100% / 0.16);
+  opacity: 0.9;
+}
+
+/* La caja «En pocas palabras»: el amarillo claro del recorrido, con su marino. */
+.arc-en-pocas {
+  border-radius: 16px;
+  background: hsl(46 100% 93%);
+  border: 1px solid hsl(44 90% 78%);
+  color: hsl(226 58% 17%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arc-valoracion {
+    transition: none;
+  }
+}
+
+/* ── Juegos ─────────────────────────────────────────────────────────────────────────────
+   Los cuatro juegos de práctica (09-10-2026). Eran tarjetas blancas con texto: no parecían
+   juegos. Cada pieza lleva un TONO de la paleta arcade y el mismo canto en relieve que los
+   botones, para que se lean como fichas que se tocan. */
+
+/* Los tonos: relleno, canto, tinta sobre el relleno, y el claro con su texto para fondos. */
+.arc-tono-azul {
+  --relleno: hsl(224 90% 52%);
+  --canto: hsl(226 82% 34%);
+  --tinta: #fff;
+  --claro: hsl(var(--arc-azul-claro));
+  --texto: hsl(var(--arc-azul-texto));
+}
+.arc-tono-coral {
+  --relleno: hsl(4 74% 50%);
+  --canto: hsl(4 70% 36%);
+  --tinta: #fff;
+  --claro: hsl(var(--arc-coral-claro));
+  --texto: hsl(var(--arc-coral-texto));
+}
+.arc-tono-amarillo {
+  --relleno: hsl(var(--arc-amarillo));
+  --canto: hsl(var(--arc-amarillo-hondo));
+  --tinta: hsl(226 58% 17%);
+  --claro: hsl(var(--arc-amarillo-claro));
+  --texto: hsl(var(--arc-amarillo-texto));
+}
+.arc-tono-menta {
+  --relleno: hsl(var(--arc-menta-vivo));
+  --canto: hsl(162 64% 28%);
+  --tinta: hsl(226 58% 17%);
+  --claro: hsl(var(--arc-menta-claro));
+  --texto: hsl(var(--arc-menta-texto));
+}
+.arc-tono-cian {
+  --relleno: hsl(var(--arc-cian));
+  --canto: hsl(var(--arc-cian-hondo));
+  --tinta: hsl(226 58% 17%);
+  --claro: hsl(190 80% 94%);
+  --texto: hsl(var(--arc-cian-texto));
+}
+.dark .arc-tono-cian {
+  --claro: hsl(192 40% 18%);
+  --texto: hsl(190 80% 66%);
+}
+
+/* Una ficha teñida: fondo claro de su tono, borde y canto del tono. */
+.arc-ficha {
+  border-radius: var(--arc-radio);
+  border: 1.5px solid color-mix(in srgb, var(--canto) 35%, transparent);
+  background: var(--claro);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--canto) 45%, transparent);
+}
+/* La pastilla de color lleno: el rótulo de una ficha o un marcador. */
+.arc-pastilla-tono {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  background: var(--relleno);
+  color: var(--tinta);
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 2px 0 var(--canto);
+}
+
+/* El memorama. La carta gira sobre sí misma: dorso de color, cara blanca. */
+.arc-carta {
+  position: relative;
+  perspective: 900px;
+  min-height: 7.5rem;
+  border-radius: 18px;
+  touch-action: manipulation;
+}
+.arc-carta-giro {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 420ms var(--atlas-salida);
+}
+.arc-carta[data-arriba="true"] .arc-carta-giro {
+  transform: rotateY(180deg);
+}
+.arc-carta-dorso,
+.arc-carta-cara {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.arc-carta-dorso {
+  background:
+    radial-gradient(circle at 30% 25%, hsl(0 0% 100% / 0.28), transparent 45%),
+    var(--relleno);
+  box-shadow: 0 5px 0 var(--canto);
+  color: var(--tinta);
+}
+.arc-carta-cara {
+  transform: rotateY(180deg);
+  padding: 0.75rem;
+  background: hsl(var(--arc-superficie));
+  border: 2px solid var(--relleno);
+  box-shadow: 0 5px 0 var(--canto);
+  color: hsl(var(--arc-texto));
+  text-align: center;
+}
+.arc-carta[data-hecha="true"] .arc-carta-cara {
+  background: var(--claro);
+  border-color: var(--canto);
+}
+@media (hover: hover) {
+  .arc-carta:not([data-arriba="true"]):hover .arc-carta-giro {
+    transform: translateY(-3px);
+  }
+}
+.arc-carta:focus-visible {
+  outline: 3px solid hsl(188 90% 62%);
+  outline-offset: 3px;
+}
+/* El acierto se nota: la pareja da un pequeño salto al quedarse arriba. */
+@keyframes arc-pareja {
+  0% { transform: rotateY(180deg) scale(1); }
+  45% { transform: rotateY(180deg) scale(1.06); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+.arc-carta[data-hecha="true"] .arc-carta-giro {
+  animation: arc-pareja 380ms var(--atlas-salida) 1;
+}
+
+/* Las burbujas del debate: cada bando con su tono. */
+.arc-burbuja {
+  border-radius: 20px;
+  padding: 0.85rem 1rem;
+  background: var(--claro);
+  border: 1.5px solid color-mix(in srgb, var(--canto) 30%, transparent);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--canto) 40%, transparent);
+}
+.arc-burbuja-atlas { border-top-left-radius: 6px; }
+.arc-burbuja-alumno { border-top-right-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .arc-carta-giro {
+    transition: none;
+  }
+  .arc-carta[data-hecha="true"] .arc-carta-giro {
+    animation: none;
+  }
+}

@@ -1,0 +1,124 @@
+[
+  {
+    "id": "unmsm-2026-I",
+    "universidadId": "unmsm",
+    "codigo": "2026-I",
+    "modalidad": "ordinario",
+    "fechaExamen": "2025-10-04",
+    "jornadas": [
+      {
+        "fecha": "2025-10-04",
+        "areas": [
+          "D",
+          "E"
+        ]
+      },
+      {
+        "fecha": "2025-10-05",
+        "areas": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "fecha": "2025-10-11",
+        "areas": [
+          "A"
+        ],
+        "detalle": "Área A excepto Medicina Humana"
+      },
+      {
+        "fecha": "2025-10-12",
+        "areas": [
+          "A"
+        ],
+        "detalle": "Solo Medicina Humana"
+      }
+    ],
+    "vacantesTotales": 2771,
+    "fuente": "https://andina.pe/agencia/noticia-admision-2026i-unmsm-conoce-aqui-los-resultados-las-cuatro-jornadas-evaluacion-1048087.aspx",
+    "verificado": false,
+    "nota": "Fechas y vacantes según Andina (agencia estatal); resultados por escuela sí verificados en la OCA."
+  },
+  {
+    "id": "unmsm-2026-II",
+    "universidadId": "unmsm",
+    "codigo": "2026-II",
+    "modalidad": "ordinario",
+    "fechaExamen": "2026-03-07",
+    "jornadas": [
+      {
+        "fecha": "2026-03-07",
+        "areas": [
+          "D",
+          "E"
+        ]
+      },
+      {
+        "fecha": "2026-03-08",
+        "areas": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "fecha": "2026-03-14",
+        "areas": [
+          "A"
+        ],
+        "detalle": "Área A excepto Medicina Humana"
+      },
+      {
+        "fecha": "2026-03-15",
+        "areas": [
+          "A"
+        ],
+        "detalle": "Solo Medicina Humana"
+      }
+    ],
+    "fuente": "https://www.infobae.com/peru/2026/02/23/examen-de-admision-san-marcos-2026-ii-fechas-clave-vacantes-y-todo-lo-que-debes-saber-para-ingresar-a-la-unmsm/",
+    "verificado": false,
+    "nota": "Fechas según prensa; resultados por escuela verificados en la OCA."
+  },
+  {
+    "id": "unmsm-2027-I",
+    "universidadId": "unmsm",
+    "codigo": "2027-I",
+    "modalidad": "ordinario",
+    "fechaExamen": "2026-10-17",
+    "jornadas": [
+      {
+        "fecha": "2026-10-17",
+        "areas": [
+          "D",
+          "E"
+        ]
+      },
+      {
+        "fecha": "2026-10-18",
+        "areas": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "fecha": "2026-10-24",
+        "areas": [
+          "A"
+        ],
+        "detalle": "Área A excepto Medicina Humana"
+      },
+      {
+        "fecha": "2026-10-25",
+        "areas": [
+          "A"
+        ],
+        "detalle": "Solo Medicina Humana"
+      }
+    ],
+    "vacantesTotales": 2581,
+    "fuente": "https://www.infobae.com/peru/2026/10/01/examen-de-admision-san-marcos-2027-i-postulantes-podran-inscribirse-hasta-el-9-de-octubre-para-competir-por-una-de-las-2581-vacantes/",
+    "verificado": false,
+    "nota": "Próximo proceso. Fechas y vacantes según prensa (oct. 2026); confirmar en admision.unmsm.edu.pe."
+  }
+]

@@ -1,0 +1,240 @@
+/*
+ * LAS FUENTES, ALOJADAS EN CASA
+ *
+ * Antes venían de Google Fonts con el truco `media="print" onload`: un origen más
+ * (DNS + TLS desde Lima), una hoja de estilos que se pedía tarde y 12 `@font-face` para
+ * tres familias. Llegaban hacia los 3 s en un móvil con 4G lento, y el <h1> del hero
+ * cambiaba de tamaño al llegar Inter Tight: el 99 % del CLS de la landing (0,164).
+ *
+ * Ahora:
+ * - Los woff2 pasan por Vite (`src/assets/fonts`), así que salen con hash y heredan la
+ *   caché de un año de `/assets`. El de Inter Tight latino se precarga desde index.html
+ *   (plugin `precargar-fuente-del-titular` en vite.config.ts): es la letra del LCP.
+ * - Inter e Inter Tight son VARIABLES: un fichero por subconjunto cubre todos los pesos
+ *   (100–900), en vez de uno por peso.
+ * - Solo latin y latin-ext, cada uno con su `unicode-range`: el español entero cabe en
+ *   latin, y latin-ext solo se descarga si una página pinta un carácter de ahí.
+ * - Zilla Slab se declara aquí pero no se descarga hasta que algo la pinta: el navegador
+ *   solo pide una `@font-face` cuando un texto la usa, y solo la usa la lección.
+ * - Inter Tight va con `swap`, como el resto. Se probaron `optional` y `block`, y los dos
+ *   eran parches para un problema que ya no existe: React sustituía el HTML pre-renderizado
+ *   y el <h1> nuevo, ya con la fuente real y un 2 % más ancho que el de la sustituta,
+ *   contaba como un LCP nuevo con React montado. Ahora main.tsx HIDRATA, el <h1> es el
+ *   mismo nodo de principio a fin, y el cambio de fuente no genera un LCP nuevo: el
+ *   titular cuenta desde el primer pintado.
+ * - Cada familia tiene una sustituta con las métricas ajustadas (size-adjust y overrides
+ *   calculados con fontkit sobre los ficheros reales, al estilo de capsize): mientras la
+ *   de verdad no llega, el texto ocupa lo mismo, y al llegar no se mueve nada. Dos por
+ *   familia porque el móvil Android no trae Arial: allí la base es Roboto.
+ *
+ * Licencia: SIL Open Font License 1.1 (los OFL-*.txt, junto a los ficheros).
+ */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("./assets/fonts/inter-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("./assets/fonts/inter-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("./assets/fonts/inter-tight-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("./assets/fonts/inter-tight-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./assets/fonts/zilla-slab-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./assets/fonts/zilla-slab-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("./assets/fonts/zilla-slab-latin-ext-600-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("./assets/fonts/zilla-slab-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("./assets/fonts/zilla-slab-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("./assets/fonts/zilla-slab-latin-700-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./assets/fonts/zilla-slab-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./assets/fonts/zilla-slab-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 600;
+  src: url("./assets/fonts/zilla-slab-latin-ext-600-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Zilla Slab";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 600;
+  src: url("./assets/fonts/zilla-slab-latin-600-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Las sustitutas. Los números salen de medir el ancho medio de un texto en español con
+   cada fuente (Inter a 400, Inter Tight a 800, que es el peso del titular) contra la
+   base local; ascent/descent son los de la fuente real divididos por ese ajuste. */
+@font-face {
+  font-family: "Inter Fallback";
+  font-weight: 100 500;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 106.23%;
+  ascent-override: 91.2%;
+  descent-override: 22.71%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Inter Fallback Roboto";
+  font-weight: 100 500;
+  src: local("Roboto"), local("Roboto-Regular");
+  size-adjust: 107.19%;
+  ascent-override: 90.38%;
+  descent-override: 22.5%;
+  line-gap-override: 0%;
+}
+/* Las negritas, con su propia base. Sin ellas el navegador engordaba la Arial regular
+   (negrita sintética), bastante más ancha que Inter 700: el antetítulo del hero, en
+   mayúsculas y negrita, ocupaba dos líneas hasta que llegaba Inter y entonces saltaba a
+   una, y todo el hero subía 18 px (CLS 0,015). */
+@font-face {
+  font-family: "Inter Fallback";
+  font-weight: 600 900;
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  size-adjust: 101.85%;
+  ascent-override: 95.12%;
+  descent-override: 23.68%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Inter Fallback Roboto";
+  font-weight: 600 900;
+  src: local("Roboto Bold"), local("Roboto-Bold");
+  size-adjust: 108.37%;
+  ascent-override: 89.39%;
+  descent-override: 22.26%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Inter Tight Fallback";
+  /* Rango de pesos: la base ya es la negrita, y declarada a 400 el navegador le
+     pondría negrita sintética encima al pedirla a 800, más ancha que lo medido. */
+  font-weight: 100 900;
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Arial");
+  size-adjust: 97.05%;
+  ascent-override: 99.82%;
+  descent-override: 24.85%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Inter Tight Fallback Roboto";
+  /* Rango de pesos: la base ya es la negrita, y declarada a 400 el navegador le
+     pondría negrita sintética encima al pedirla a 800, más ancha que lo medido. */
+  font-weight: 100 900;
+  src: local("Roboto Bold"), local("Roboto-Bold"), local("Roboto");
+  size-adjust: 103.27%;
+  ascent-override: 93.81%;
+  descent-override: 23.36%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Zilla Slab Fallback";
+  src: local("Georgia");
+  size-adjust: 97.08%;
+  ascent-override: 97.24%;
+  descent-override: 26.37%;
+  line-gap-override: 0%;
+}
+
+/*
+ * Nunito: los TITULARES de la lección (definiciones, bloques, partes). Redondeada y de trazo
+ * lleno, como pide la dirección de Atlas: «títulos redondeados, expresivos y legibles». Se
+ * declara aquí y solo se descarga cuando un texto la pinta, igual que Zilla Slab.
+ * Variable (200–1000): un fichero por subconjunto. @fontsource-variable/nunito 5.3.0, OFL.
+ */
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 1000;
+  src: url("./assets/fonts/nunito-latin-ext-wght-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 1000;
+  src: url("./assets/fonts/nunito-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
