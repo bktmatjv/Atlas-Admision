@@ -35,7 +35,11 @@ export const ComposerTutor = forwardRef<ComposerRef, Props>(
         className="tc-composer"
         onSubmit={(e) => {
           e.preventDefault();
-          if (puede) p.onEnviar();
+          if (puede) {
+            p.onEnviar();
+            // Tras enviar con el botón, el cursor sigue en el campo para escribir la siguiente idea.
+            area.current?.focus();
+          }
         }}
       >
         <label className="sr-only" htmlFor={p.id}>
