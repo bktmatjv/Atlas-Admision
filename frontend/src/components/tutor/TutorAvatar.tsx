@@ -1,11 +1,18 @@
 import { useId } from "react";
 
 /** Ilustración local de la guía; no representa a una persona conectada. */
-export function TutorAvatar({ small = false }: { small?: boolean }) {
+export function TutorAvatar({
+  small = false,
+  estado = "reposo",
+}: {
+  small?: boolean;
+  estado?: "reposo" | "pensando" | "celebrando" | "atento";
+}) {
   const id = useId().replace(/:/g, "");
   return (
     <span
-      className={`tutor-avatar${small ? " tutor-avatar--small" : ""}`}
+      className={`tutor-avatar${small ? " tutor-avatar--small" : ""} tw-avatar--${estado}`}
+      data-estado={estado}
       aria-hidden="true"
     >
       <svg viewBox="0 0 64 64" fill="none">
@@ -37,7 +44,13 @@ export function TutorAvatar({ small = false }: { small?: boolean }) {
           strokeLinecap="round"
         />
         <path
-          d="M31 39c2 2 4 2 6 0"
+          d={
+            estado === "atento"
+              ? "M31 40h6"
+              : estado === "celebrando"
+                ? "M29 38c3 6 7 6 10 0"
+                : "M31 39c2 2 4 2 6 0"
+          }
           stroke="#9B514B"
           strokeWidth="1.5"
           strokeLinecap="round"

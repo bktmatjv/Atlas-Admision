@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
   useNavigate,
@@ -30,7 +30,21 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { api, post } from "@/integrations/api/client";
-import type { Conversacion } from "@/lib/tutor/chat";
+import type { Bloque, Conversacion } from "@/lib/tutor/chat";
+import { BloqueView } from "@/components/tutor/Bloques";
+import { PanelArtefactos } from "@/components/tutor/PanelArtefactos";
+import { transicionArtefacto } from "@/lib/tutor/transiciones";
+import type {
+  ComprobacionActiva,
+  ResultadoComprobacion,
+} from "@/components/tutor/ComprobacionTutor";
+import {
+  esArtefactoGrande,
+  limitarAnchoPanel,
+  planRetropropagacion,
+  ultimoFallo,
+  type Evidencia,
+} from "@/lib/tutor/wow";
 import type { Grafo } from "@/lib/tutor/grafo";
 import type { ItemHistorial } from "@/lib/tutor/historial";
 import {
@@ -45,6 +59,7 @@ import {
 } from "@/lib/tutor/inicio";
 import "@/components/tutor/tutor.css";
 import "@/components/tutor/tutor-chat.css";
+import "@/components/tutor/tutor-wow.css";
 type IntentoLite = { id: string; estado: string };
 type RespuestaLite = { pregunta_id: string; correcta: boolean | null };
 async function cargarUltimaPractica() {
@@ -85,6 +100,17 @@ const anchoGrande = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(min-width: 1100px)").matches;
 const CLAVE_MODO = "calibra-tutor-modo";
+function preferenciaPanel() {
+  try {
+    const p = JSON.parse(localStorage.getItem("calibra-tutor-panel") ?? "{}");
+    return {
+      ancho: limitarAnchoPanel(Number(p.ancho ?? 44)),
+      activo: typeof p.activo === "string" ? p.activo : "grafo",
+    };
+  } catch {
+    return { ancho: 44, activo: "grafo" };
+  }
+}
 const modoGuardado = () => {
   try {
     return localStorage.getItem(CLAVE_MODO) === "claro";
@@ -98,12 +124,27 @@ export default function Tutor() {
     nav = useNavigate(),
     client = useQueryClient();
   const vistaGrafo = search.get("vista") === "grafo" && !id;
+  const demo = search.get("demo") === "1";
+  const [preferencias, setPreferencias] = useState(preferenciaPanel);
+  const [abiertos, setAbiertos] = useState<string[]>(() =>
+    preferencias.activo === "grafo" ? [] : [preferencias.activo],
+  );
+  const [eventoRetro, setEventoRetro] = useState(false);
+  const consumirRetro = useCallback(() => setEventoRetro(false), []);
+  const cambiarPreferencias = (p: typeof preferencias) => {
+    setPreferencias(p);
+    try {
+      localStorage.setItem("calibra-tutor-panel", JSON.stringify(p));
+    } catch {
+      /* Preferencias opcionales. */
+    }
+  };
   const [borrador, setBorrador] = useState(""),
     [inicio, setInicio] = useState(""),
     [intencion, setIntencion] = useState<Intencion["id"] | null>(null),
     [elegido, setElegido] = useState<string | null>(null),
     [busqueda, setBusqueda] = useState(""),
-    [mapaAbierto, setMapaAbierto] = useState(anchoGrande),
+    [mapaAbierto, setMapaAbierto] = useState(() => demo || anchoGrande()),
     [historialAbierto, setHistorialAbierto] = useState(false);
   const deUrl: OpcionDeContexto | null = search.get("fragmento")
     ? {
@@ -149,8 +190,11 @@ export default function Tutor() {
   });
   const activa = useQuery({
     queryKey: ["comprobacion-activa"],
-    queryFn: () =>
-      api<{ id: string; arbol_id: string } | null>("/comprobaciones/activa"),
+    queryFn: () => api<ComprobacionActiva | null>("/comprobaciones/activa"),
+  });
+  const evidencias = useQuery({
+    queryKey: ["evidencias"],
+    queryFn: () => api<Evidencia[]>("/evidencias"),
   });
   const salud = useQuery({
     queryKey: ["salud"],
@@ -202,7 +246,7 @@ export default function Tutor() {
       setInicio("");
       setIntencion(null);
       void client.invalidateQueries({ queryKey: ["conversaciones"] });
-      nav(`/tutor/${r.id}`);
+      nav(`/tutor/${r.id}${demo ? "?demo=1" : ""}`);
     },
   });
   const enviar = useMutation({
@@ -221,6 +265,7 @@ export default function Tutor() {
       void conv.refetch();
       void grafo.refetch();
       void historial.refetch();
+      void evidencias.refetch();
     },
   });
   const comprobar = useMutation({
@@ -228,7 +273,7 @@ export default function Tutor() {
       post("/comprobaciones", { arbol_id: conv.data!.arbol_id }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["comprobacion-activa"] });
-      nav(`/aprender/${conv.data!.arbol_id}`);
+      // La comprobación ocurre aquí: el error y su recorrido se ven juntos, sin cambiar de pantalla.
     },
   });
   const empezar = (texto: string, contexto = contextoElegido) =>
@@ -264,7 +309,68 @@ export default function Tutor() {
     !!salud.data && !salud.data.pruebas && salud.data.ia !== "disabled";
   const titulo =
     historial.data?.find((c) => c.id === id)?.titulo ?? "Conversación";
-  const nodoActual = grafo.data?.nodos.find((n) => n.id === elegido);
+  const fallo = ultimoFallo(evidencias.data ?? [], conv.data?.arbol_id ?? "");
+  const nodoActual =
+    grafo.data?.nodos.find(
+      (n) => n.id === elegido && n.arbol_id === conv.data?.arbol_id,
+    ) ??
+    grafo.data?.nodos.find(
+      (n) =>
+        n.id === fallo?.detalle.rastro?.nodo_retorno_id &&
+        n.arbol_id === conv.data?.arbol_id,
+    ) ??
+    grafo.data?.nodos.find(
+      (n) => n.id === grafo.data?.foco && n.arbol_id === conv.data?.arbol_id,
+    ) ??
+    grafo.data?.nodos.find((n) => n.arbol_id === conv.data?.arbol_id);
+  const plan = useMemo(
+    () =>
+      grafo.data
+        ? planRetropropagacion(grafo.data, fallo?.detalle.rastro ?? null)
+        : null,
+    [grafo.data, fallo],
+  );
+  const falloPendiente = !!fallo && !(evidencias.data ?? []).some(e => e.arbol_id === fallo.arbol_id && e.tipo === "corrigio_tras_error" && e.created_at >= fallo.created_at);
+  const bloquesDisponibles =
+    conv.data?.mensajes.flatMap((m) => m.bloques).filter(esArtefactoGrande) ??
+    [];
+  const bloquesPanel = bloquesDisponibles.filter((b) =>
+    abiertos.includes(b.id),
+  );
+  const tabActivo = bloquesPanel.some((b) => b.id === preferencias.activo)
+    ? preferencias.activo
+    : "grafo";
+  const abrirArtefacto = (b: Bloque) =>
+    transicionArtefacto(() => {
+      setAbiertos((ids) => (ids.includes(b.id) ? ids : [...ids, b.id]));
+      cambiarPreferencias({ ...preferencias, activo: b.id });
+      setMapaAbierto(true);
+    }, b.id);
+  const cerrarPanel = () =>
+    transicionArtefacto(() => {
+      setMapaAbierto(false);
+      window.setTimeout(
+        () =>
+          (
+            document.getElementById(`abrir-${tabActivo}`) ??
+            document.getElementById("tw-toggle-panel")
+          )?.focus(),
+        0,
+      );
+    }, tabActivo);
+  const actualizarComprobacion = async (r?: ResultadoComprobacion) => {
+    await Promise.all([
+      activa.refetch(),
+      grafo.refetch(),
+      evidencias.refetch(),
+    ]);
+    if (r?.rastro?.idea_clave) {
+      setElegido(r.rastro.nodo_retorno_id);
+      cambiarPreferencias({ ...preferencias, activo: "grafo" });
+      setMapaAbierto(true);
+      setEventoRetro(Boolean(r.rastro.nodo_retorno_id));
+    }
+  };
   const temaActual =
     nodoActual?.titulo ??
     TEMAS_SOPORTADOS.find((t) => t.id === nodoActual?.concepto)?.nombre ??
@@ -285,7 +391,7 @@ export default function Tutor() {
     <button
       type="button"
       className="tc-btn tc-btn--line"
-      onClick={() => setHistorialAbierto(true)}
+      onClick={() => { if (!anchoGrande()) setMapaAbierto(false); setHistorialAbierto(true); }}
     >
       <History size={18} aria-hidden="true" /> Historial
     </button>
@@ -312,7 +418,7 @@ export default function Tutor() {
         </>
       }
     >
-      <main className="tc-page">
+      <main className={`tc-page tw-page${demo ? " tw-demo" : ""}`}>
         {claro && <span className="tc-claro" hidden />}
         {vistaGrafo ? (
           <div className="tc-vista-grafo">
@@ -334,6 +440,8 @@ export default function Tutor() {
                   grafo={grafo.data}
                   seleccionado={elegido}
                   onSeleccionar={setElegido}
+                  plan={plan}
+                  demo={demo}
                 />
               ) : (
                 <p role="status">Preparando tu mapa…</p>
@@ -382,6 +490,7 @@ export default function Tutor() {
               {botonHistorial}
               <button
                 type="button"
+                id="tw-toggle-panel"
                 className="tc-btn tc-btn--soft"
                 aria-pressed={mapaAbierto}
                 onClick={() => setMapaAbierto((a) => !a)}
@@ -391,7 +500,12 @@ export default function Tutor() {
               </button>
             </div>
             <div
-              className={`tc-conv${mapaAbierto ? " tc-conv--con-mapa" : ""}`}
+              className={`tc-conv tw-workspace${mapaAbierto ? " tw-workspace--abierto" : ""}`}
+              style={
+                {
+                  "--panel-width": `${preferencias.ancho}%`,
+                } as React.CSSProperties
+              }
             >
               {conv.isError ? (
                 <div className="tc-banner tc-banner--error" role="alert">
@@ -402,6 +516,7 @@ export default function Tutor() {
                 </div>
               ) : (
                 <ConversacionTutor
+                  key={id}
                   conv={conv.data ?? { id: id, arbol_id: "", mensajes: [] }}
                   cargando={conv.isPending}
                   pensando={enviar.isPending}
@@ -418,6 +533,17 @@ export default function Tutor() {
                   onBorrador={setBorrador}
                   onEnviar={(t) => t && enviar.mutate(t)}
                   activa={activa.data ?? null}
+                  comprobacion={activa.data ?? null}
+                  onActualizarComprobacion={actualizarComprobacion}
+                  grafo={grafo.data}
+                  nodo={nodoActual}
+                  evidencias={evidencias.data}
+                  onAbrirArtefacto={abrirArtefacto}
+                  artefactoActivo={mapaAbierto ? tabActivo : undefined}
+                  onRespuestaBloque={() => {
+                    void grafo.refetch();
+                  }}
+                  demo={demo}
                   ocupado={
                     enviar.isPending || comprobar.isPending || !conv.data
                   }
@@ -426,44 +552,93 @@ export default function Tutor() {
                 />
               )}
               {mapaAbierto && (
-                <aside className="tc-map" aria-labelledby="tc-mapa-titulo">
-                  <h2 id="tc-mapa-titulo">Tu mapa de comprensión</h2>
-                  <p>
-                    Así se conectan tus ideas. El estado de cada nodo sale de
-                    tus comprobaciones.
-                  </p>
-                  <label className="tc-search">
-                    <Search size={17} aria-hidden="true" />
-                    <span className="sr-only">Buscar ideas en tu mapa</span>
-                    <input
-                      type="search"
-                      value={busqueda}
-                      onChange={(e) => setBusqueda(e.target.value)}
-                      placeholder="Buscar ideas en tu mapa…"
-                    />
-                  </label>
-                  {grafo.isPending ? (
-                    <p role="status">Preparando tu mapa…</p>
-                  ) : grafo.isError ? (
-                    <div role="alert">
-                      <p>{grafo.error.message}</p>
-                      <button
-                        type="button"
-                        className="tc-btn tc-btn--line"
-                        onClick={() => void grafo.refetch()}
-                      >
-                        Reintentar mapa
-                      </button>
-                    </div>
-                  ) : (
-                    <GrafoComprension
-                      grafo={grafo.data}
-                      seleccionado={elegido}
-                      onSeleccionar={setElegido}
-                      busqueda={busqueda}
-                    />
-                  )}
-                </aside>
+                <PanelArtefactos
+                  ancho={preferencias.ancho}
+                  onAncho={(ancho) =>
+                    cambiarPreferencias({ ...preferencias, ancho })
+                  }
+                  activo={tabActivo}
+                  onActivo={(activo) =>
+                    cambiarPreferencias({ ...preferencias, activo })
+                  }
+                  bloques={bloquesPanel}
+                  onCerrar={cerrarPanel}
+                  onCerrarTab={(id) => {
+                    setAbiertos((ids) => ids.filter((x) => x !== id));
+                    if (tabActivo === id)
+                      cambiarPreferencias({ ...preferencias, activo: "grafo" });
+                    window.setTimeout(
+                      () => document.getElementById(`abrir-${id}`)?.focus(),
+                      0,
+                    );
+                  }}
+                  grafo={
+                    <section
+                      className="tc-map"
+                      aria-labelledby="tc-mapa-titulo"
+                    >
+                      <h2 id="tc-mapa-titulo">Tu mapa de comprensión</h2>
+                      <p>
+                        Así se conectan tus ideas. El estado de cada nodo sale
+                        de tus comprobaciones.
+                      </p>
+                      <label className="tc-search">
+                        <Search size={17} aria-hidden="true" />
+                        <span className="sr-only">Buscar ideas en tu mapa</span>
+                        <input
+                          type="search"
+                          value={busqueda}
+                          onChange={(e) => setBusqueda(e.target.value)}
+                          placeholder="Buscar ideas en tu mapa…"
+                        />
+                      </label>
+                      {grafo.isPending ? (
+                        <p role="status">Preparando tu mapa…</p>
+                      ) : grafo.isError ? (
+                        <div role="alert">
+                          <p>{grafo.error.message}</p>
+                          <button
+                            type="button"
+                            className="tc-btn tc-btn--line"
+                            onClick={() => void grafo.refetch()}
+                          >
+                            Reintentar mapa
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                        {falloPendiente && !plan && <p className="tw-retro-nota" role="status">{fallo.detalle.rastro?.idea_clave ? "El sistema identificó una idea para revisar, pero no hay una ruta válida de retorno en este mapa. No se dibuja un recorrido inventado." : "Sin evidencia suficiente para señalar una idea. Comparte un paso de tu razonamiento."}</p>}
+                        <GrafoComprension
+                          grafo={grafo.data}
+                          seleccionado={elegido}
+                          onSeleccionar={setElegido}
+                          busqueda={busqueda}
+                          plan={plan}
+                          eventoRetro={eventoRetro}
+                          onConsumirRetro={consumirRetro}
+                          demo={demo}
+                        />
+                        </>
+                      )}
+                    </section>
+                  }
+                >
+                  {bloquesPanel
+                    .filter((b) => b.id === tabActivo)
+                    .map((b) => (
+                      <BloqueView
+                        key={b.id}
+                        bloque={b}
+                        arbolId={conv.data?.arbol_id ?? ""}
+                        comprobando={!!activa.data}
+                        onComprobar={() => comprobar.mutate()}
+                        alResponder={(t) => {
+                          void grafo.refetch();
+                          if (t) enviar.mutate(t);
+                        }}
+                      />
+                    ))}
+                </PanelArtefactos>
               )}
             </div>
           </>

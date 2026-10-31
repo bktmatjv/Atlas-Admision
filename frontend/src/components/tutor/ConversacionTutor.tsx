@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -9,7 +9,17 @@ import {
 } from "lucide-react";
 import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import { ApiError } from "@/integrations/api/client";
-import type { Conversacion } from "@/lib/tutor/chat";
+import type { Bloque, Conversacion } from "@/lib/tutor/chat";
+import type { Grafo, NodoGrafo } from "@/lib/tutor/grafo";
+import { esArtefactoGrande, type Evidencia } from "@/lib/tutor/wow";
+import { ArtefactoCompacto } from "./PanelArtefactos";
+import { CaminoComprension, MomentosComprension } from "./CaminoComprension";
+import { PasosAgente } from "./PasosAgente";
+import {
+  ComprobacionTutor,
+  type ComprobacionActiva,
+  type ResultadoComprobacion,
+} from "./ComprobacionTutor";
 import { BloqueView } from "./Bloques";
 import { ComposerTutor } from "./ComposerTutor";
 import { TutorAvatar } from "./TutorAvatar";
@@ -25,6 +35,15 @@ type Props = {
   onBorrador: (v: string) => void;
   onEnviar: (texto: string) => void;
   activa: { arbol_id: string } | null;
+  comprobacion?: ComprobacionActiva | null;
+  onActualizarComprobacion?: (resultado?: ResultadoComprobacion) => void;
+  grafo?: Grafo;
+  nodo?: NodoGrafo;
+  evidencias?: Evidencia[];
+  onAbrirArtefacto?: (bloque: Bloque) => void;
+  artefactoActivo?: string;
+  onRespuestaBloque?: () => void;
+  demo?: boolean;
   ocupado: boolean;
   temaActual: string;
   onComprobar: () => void;
@@ -34,6 +53,22 @@ const esLimite = (e: Error) =>
 export function ConversacionTutor(p: Props) {
   const log = useRef<HTMLDivElement>(null);
   const { mensajes } = p.conv;
+  const conocidos = useRef<Set<string> | null>(null);
+  const [nuevos, setNuevos] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (p.cargando) return;
+    const siguientes = new Set(mensajes.map((m) => m.id));
+    setNuevos(
+      new Set(
+        conocidos.current
+          ? mensajes
+              .filter((m) => !conocidos.current!.has(m.id))
+              .map((m) => m.id)
+          : [],
+      ),
+    );
+    conocidos.current = siguientes;
+  }, [mensajes, p.cargando]);
   // La última respuesta queda visible: al llegar un mensaje o empezar a pensar, baja al final.
   useEffect(() => {
     const el = log.current;
@@ -45,7 +80,7 @@ export function ConversacionTutor(p: Props) {
       top: el.scrollHeight,
       behavior: reducido ? "auto" : "smooth",
     });
-  }, [mensajes.length, p.pensando, p.pendiente]);
+  }, [mensajes.length, p.pensando, p.pendiente, p.evidencias?.[0]?.id]);
   const libre = !p.ocupado && !p.activa;
   const acciones = [
     {
@@ -73,7 +108,16 @@ export function ConversacionTutor(p: Props) {
   ];
   return (
     <section className="tc-chat" aria-label="Conversación con el tutor">
-      {p.activa && (
+      {p.nodo && (
+        <CaminoComprension nodo={p.nodo} evidencias={p.evidencias ?? []} />
+      )}
+      {p.onActualizarComprobacion && (
+        <ComprobacionTutor
+          activa={p.comprobacion ?? null}
+          onActualizar={p.onActualizarComprobacion}
+        />
+      )}
+      {p.activa && !p.comprobacion && (
         <p className="tc-banner" role="status">
           <Lightbulb size={18} aria-hidden="true" />
           <span>
@@ -126,15 +170,34 @@ export function ConversacionTutor(p: Props) {
           </div>
         )}
         {mensajes.map((m) => (
-          <div key={m.id} className={`tc-msg tc-msg--${m.rol}`}>
+          <div
+            key={m.id}
+            className={`tc-msg tc-msg--${m.rol}${nuevos.has(m.id) ? " tw-msg--nuevo" : ""}`}
+          >
             {m.rol === "tutor" ? (
-              <TutorAvatar small />
+              <TutorAvatar
+                small
+                estado={
+                  p.nodo?.estado === "fallo"
+                    ? "atento"
+                    : p.nodo?.estado === "aplicado"
+                      ? "celebrando"
+                      : "reposo"
+                }
+              />
             ) : (
               <span className="tc-me" aria-hidden="true">
                 Tú
               </span>
             )}
             <div className="tc-msg-body">
+              {m.rol === "tutor" && (
+                <PasosAgente
+                  pasos={m.pasos}
+                  nuevo={nuevos.has(m.id)}
+                  demo={p.demo}
+                />
+              )}
               <div className="tc-bubble">
                 <span className="tc-who">
                   {m.rol === "tutor" ? "Tu tutor CALIBRA" : "Tú"}
@@ -152,21 +215,42 @@ export function ConversacionTutor(p: Props) {
                 </p>
               )}
               {m.rol === "tutor" &&
-                m.bloques.map((b) => (
-                  <BloqueView
+                m.bloques.map((b, i) => (
+                  <div
                     key={b.id}
-                    bloque={b}
-                    arbolId={p.conv.arbol_id}
-                    comprobando={!!p.activa}
-                    alResponder={(t) => {
-                      if (t) p.onEnviar(t);
+                    className={`tw-pieza${i === 0 ? " tw-pieza--principal" : ""}`}
+                    style={{
+                      animationDelay: `${(i + 1) * 100 * (p.demo ? 1.25 : 1)}ms`,
                     }}
-                    onComprobar={p.onComprobar}
-                  />
+                  >
+                    {p.onAbrirArtefacto && esArtefactoGrande(b) ? (
+                      <ArtefactoCompacto
+                        bloque={b}
+                        activo={p.artefactoActivo === b.id}
+                        onAbrir={() => p.onAbrirArtefacto!(b)}
+                      />
+                    ) : (
+                      <BloqueView
+                        bloque={b}
+                        arbolId={p.conv.arbol_id}
+                        comprobando={!!p.activa}
+                        alResponder={(t) => {
+                          p.onRespuestaBloque?.();
+                          if (t) p.onEnviar(t);
+                        }}
+                        onComprobar={p.onComprobar}
+                      />
+                    )}
+                  </div>
                 ))}
             </div>
           </div>
         ))}
+        <MomentosComprension
+          grafo={p.grafo}
+          evidencias={p.evidencias}
+          arbolId={p.conv.arbol_id}
+        />
         {p.pendiente && (
           <div className="tc-msg tc-msg--estudiante">
             <span className="tc-me" aria-hidden="true">
@@ -182,7 +266,7 @@ export function ConversacionTutor(p: Props) {
         )}
         {p.pensando && (
           <div className="tc-msg">
-            <TutorAvatar small />
+            <TutorAvatar small estado="pensando" />
             <p role="status" className="tc-thinking">
               <span />
               <span />
