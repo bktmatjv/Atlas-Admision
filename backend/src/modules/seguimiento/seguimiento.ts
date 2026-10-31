@@ -171,8 +171,9 @@ export class SeguimientoController {
           ],
         );
       } else if (!ayuda.length) {
+        // Solo el último fallo aún no corregido cuenta: una corrección no se registra dos veces.
         const [ultimo] = await m.query(
-          "SELECT idea_clave FROM rastros_error WHERE arbol_id=$1 ORDER BY created_at DESC LIMIT 1",
+          "SELECT r.idea_clave FROM rastros_error r WHERE r.arbol_id=$1 AND NOT EXISTS (SELECT 1 FROM evidencias e WHERE e.arbol_id=r.arbol_id AND e.tipo='corrigio_tras_error' AND e.created_at>=r.created_at) ORDER BY r.created_at DESC LIMIT 1",
           [row.arbol_id],
         );
         if (ultimo) ideaDeCorreccion = ultimo.idea_clave ?? null;

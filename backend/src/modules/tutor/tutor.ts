@@ -92,8 +92,9 @@ export class TutorService {
       idea_clave: string | null;
       nodo_retorno_id: string | null;
       nivel_ayuda: "pista" | "ejemplo" | "explicacion_completa";
+      corregido: boolean;
     }>(
-      "SELECT c.actividad_id,r.respuesta,r.idea_clave,r.nodo_retorno_id,r.nivel_ayuda FROM rastros_error r JOIN comprobaciones c ON c.id=r.comprobacion_id WHERE r.arbol_id=$1 AND r.actor_id=$2 ORDER BY r.created_at DESC LIMIT 1",
+      "SELECT c.actividad_id,r.respuesta,r.idea_clave,r.nodo_retorno_id,r.nivel_ayuda,EXISTS(SELECT 1 FROM evidencias e WHERE e.arbol_id=r.arbol_id AND e.tipo='corrigio_tras_error' AND e.created_at>=r.created_at) AS corregido FROM rastros_error r JOIN comprobaciones c ON c.id=r.comprobacion_id WHERE r.arbol_id=$1 AND r.actor_id=$2 ORDER BY r.created_at DESC LIMIT 1",
       [id, actor],
     );
     return {
@@ -102,6 +103,7 @@ export class TutorService {
       ultimo_rastro: ultimo
         ? {
             ...construirRastro(ultimo),
+            corregido: ultimo.corregido,
             camino: caminoHasta(nodos, ultimo.nodo_retorno_id),
           }
         : null,

@@ -698,6 +698,39 @@ describe("Harness de comprensión: retropropagación del error", () => {
     const despues = await http("/evidencias", "GET", undefined, actor);
     expect(despues.data).toHaveLength(antes.data.length);
   });
+  it("corrigio_tras_error se registra una sola vez por fallo y el rastro queda marcado como corregido", async () => {
+    const alumno = (await http("/sesion", "POST", {}, "")).cookie!;
+    const propio = await crearArbol("porcentajes", alumno);
+    const tipos = async (id: string) =>
+      (
+        await db.query(
+          `SELECT tipo FROM ${schema}.evidencias WHERE comprobacion_id=$1 ORDER BY tipo`,
+          [id],
+        )
+      ).rows.map((e) => e.tipo);
+    const intentar = async (respuesta: string) => {
+      const c = await http(
+        "/comprobaciones",
+        "POST",
+        { arbol_id: propio },
+        alumno,
+      );
+      await responder(c.data.id, respuesta, alumno);
+      return c.data.id as string;
+    };
+    await intentar("100");
+    const antes = await http(`/arboles/${propio}`, "GET", undefined, alumno);
+    expect(antes.data.ultimo_rastro.corregido).toBe(false);
+    const corrige = await intentar("180");
+    expect(await tipos(corrige)).toEqual([
+      "corrigio_tras_error",
+      "resolvio_sin_ayuda",
+    ]);
+    const despues = await http(`/arboles/${propio}`, "GET", undefined, alumno);
+    expect(despues.data.ultimo_rastro.corregido).toBe(true);
+    const otroAcierto = await intentar("25");
+    expect(await tipos(otroAcierto)).toEqual(["resolvio_sin_ayuda"]);
+  });
 });
 
 describe("Harness de comprensión: nodos etiquetados y nodo faltante", () => {

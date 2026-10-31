@@ -37,7 +37,7 @@ La sesión usa cookie HttpOnly `atlas_sid`; la DB guarda solo el hash del token.
 | `POST /intentos/:id/preguntas/:pid/solucion` | Solo con respuesta guardada y modo permitido; registra consulta |
 | `GET /errores`, `/temas-frecuentes?area=A` | Cuaderno y frecuencia del banco |
 | `POST /arboles` | Solicitud + pregunta de intento propio, fragmento confirmado o concepto inicial admitido |
-| `GET /arboles`, `/arboles/:id` | Exploraciones propias. El detalle incluye `idea_clave` por nodo y `ultimo_rastro` (o `null`) con `camino` calculado en el servidor |
+| `GET /arboles`, `/arboles/:id` | Exploraciones propias. El detalle incluye `idea_clave` por nodo y `ultimo_rastro` (o `null`) con `camino` calculado en el servidor y `corregido` (si ya hubo una corrección posterior) |
 | `POST /arboles/:id/nodos/:nid/expandir` | Crea hijos pertinentes; máximo 30 nodos y profundidad 5. `idea_clave` opcional (del catálogo del concepto del árbol, si no 400) centra el hijo en esa idea y lo etiqueta |
 | `POST /arboles/:id/nodos/:nid/aclarar` | Ajusta el nodo y conserva revisión anterior; no agrega ramas |
 | `POST /comprobaciones` | `arbol_id`; selecciona actividad disponible aún no expuesta |
@@ -86,7 +86,7 @@ Cierra el ciclo explorar → comprobar → volver al nodo donde se rompió la id
 - **Nivel de ayuda** por fallos previos en el mismo árbol y la misma idea: 0 → `pista`, 1 → `ejemplo`, 2 o más → `explicacion_completa`.
 - **Persistencia**: tabla `rastros_error` (una fila por comprobación, `comprobacion_id` único); reenviar la misma entrega devuelve el resultado guardado y no duplica rastros ni evidencias. Migración `Harness1770000002000` (aditiva): `nodos.idea_clave`, `nodos.created_at` y `rastros_error`.
 - **Contrato**: `rastro = { respuesta, idea_clave, descripcion, explicacion, pista, nodo_retorno_id, nivel_ayuda, motivo }` (`null` si la respuesta fue correcta). `GET /arboles/:id` añade `ultimo_rastro` con los mismos campos más `camino` (ids desde la raíz hasta el nodo de retorno; `[]` si no hay nodo).
-- **Evidencia `corrigio_tras_error`**: un acierto sin ayuda en un árbol con algún rastro previo registra, además de `resolvio_sin_ayuda`, esta evidencia con la `idea_clave` del último rastro. Abrir o leer nodos no crea evidencias.
+- **Evidencia `corrigio_tras_error`**: un acierto sin ayuda en un árbol cuyo último rastro de error aún no fue corregido registra, además de `resolvio_sin_ayuda`, esta evidencia con la `idea_clave` de ese rastro. Se registra una sola vez por fallo: los aciertos siguientes no la repiten hasta que haya un fallo nuevo. Abrir o leer nodos no crea evidencias.
 - **Etiquetado de nodos**: la IA puede proponer `idea_clave` (prompt `tutor-v2`, que recibe las claves permitidas). El servidor la conserva solo si pertenece al catálogo del concepto del árbol; si no, guarda `NULL` sin fallar.
 
 Alcance: solo el flujo de conceptos de aritmética con comprobación revisada. «Mis cursos» no tiene mapas de error. El resultado no es un porcentaje de comprensión ni certifica dominio.
