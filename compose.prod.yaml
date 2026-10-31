@@ -1,0 +1,35 @@
+# Override de producción: docker compose -f compose.yaml -f compose.prod.yaml up -d --build --wait
+# Lee POSTGRES_PASSWORD y CALIBRA_DOMAIN de ./.env (junto a este archivo, permisos 600, fuera del repo).
+services:
+  db:
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    ports: !reset []
+  backend:
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: >-
+        postgresql://atlas:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}@db:5432/atlas
+      NODE_ENV: production
+    ports:
+      - "127.0.0.1:3000:3000"
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      CALIBRA_DOMAIN: ${CALIBRA_DOMAIN:?Define CALIBRA_DOMAIN en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+volumes:
+  caddy-data:
+  caddy-config:

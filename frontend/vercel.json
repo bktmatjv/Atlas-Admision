@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd .. && npm ci",
+  "buildCommand": "cd .. && npm run build:web",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://calibra-demo.chilecentral.cloudapp.azure.com/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
