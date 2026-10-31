@@ -9,8 +9,8 @@ API NestJS independiente del frontend. Monolito modular con PostgreSQL/TypeORM y
 | `identidad` | Sesiones invitadas, validación de identidad y protección de solicitudes |
 | `contenido` | Banco, metadatos UNMSM, cursos propios, documentos y prácticas generadas |
 | `practica` | Intentos, snapshots, respuestas versionadas, corrección y repasos |
-| `tutor` | Árboles, contexto, idempotencia y proveedor IA |
-| `seguimiento` | Comprobaciones y evidencias creadas por el servidor |
+| `tutor` | Árboles, contexto, idempotencia, proveedor IA (`proveedor.ts`), agente conversacional (`agente.ts`), respuestas a bloques (`bloques.ts`) y validadores de artefactos (`artefactos.ts`) |
+| `seguimiento` | Comprobaciones, evidencias, grafo de comprensión (`grafo.ts`), plantillas paramétricas (`plantillas.ts`) y normalización numérica (`numeros.ts`) |
 
 Los servicios usan `Database`, que centraliza TypeORM y normaliza el resultado del driver PostgreSQL. Las consultas de dominio son parametrizadas; las escrituras relacionadas usan transacciones. El motor compartido vive en `packages/motor`.
 
@@ -40,8 +40,13 @@ La sesión usa cookie HttpOnly `atlas_sid`; la DB guarda solo el hash del token.
 | `GET /arboles`, `/arboles/:id` | Exploraciones propias. El detalle incluye `idea_clave` por nodo y `ultimo_rastro` (o `null`) con `camino` calculado en el servidor y `corregido` (si ya hubo una corrección posterior) |
 | `POST /arboles/:id/nodos/:nid/expandir` | Crea hijos pertinentes; máximo 30 nodos y profundidad 5. `idea_clave` opcional (del catálogo del concepto del árbol, si no 400) centra el hijo en esa idea y lo etiqueta |
 | `POST /arboles/:id/nodos/:nid/aclarar` | Ajusta el nodo y conserva revisión anterior; no agrega ramas |
-| `POST /comprobaciones` | `arbol_id`; selecciona actividad disponible aún no expuesta |
-| `GET /comprobaciones/activa` | Permite retomar la comprobación |
+| `POST /comprobaciones` | `arbol_id`; elige primero una actividad curada no expuesta; si no queda ninguna, una instancia de plantilla del mismo concepto. Devuelve `origen` (`curada` o `plantilla`) |
+| `GET /comprobaciones/activa` | Permite retomar la comprobación; incluye `origen` |
+| `GET /grafo` | Grafo de comprensión del actor (ver «Tutor agente») |
+| `POST /conversaciones` | Crea una conversación con su árbol y raíz (sin llamar a la IA). Origen: `tema`, `fragmento_id` o `intento_id` + `pregunta_id` |
+| `GET /conversaciones`, `/conversaciones/:id` | Conversaciones propias y su historial de mensajes con bloques |
+| `POST /conversaciones/:id/mensajes` | `texto`; exige `Idempotency-Key`. Ejecuta un turno del agente (ver «Tutor agente») |
+| `POST /bloques/:id/respuesta` | `respuesta`; corrige prácticas y predicciones, o guarda texto libre con lectura provisional. Nunca crea evidencia |
 | `PUT /comprobaciones/:id/respuesta` | Resultado numérico y justificación; corrección numérica, no de comprensión profunda. Si es incorrecta, devuelve `rastro` (ver «Harness de comprensión») |
 | `POST /comprobaciones/:id/cancelar` | Regresa explícitamente al modo de ayuda |
 | `GET /evidencias` | Observaciones propias; abrir un nodo no genera aprendizaje demostrado |
@@ -91,10 +96,40 @@ Cierra el ciclo explorar → comprobar → volver al nodo donde se rompió la id
 
 Alcance: solo el flujo de conceptos de aritmética con comprobación revisada. «Mis cursos» no tiene mapas de error. El resultado no es un porcentaje de comprensión ni certifica dominio.
 
+## Proveedor de IA
+
+`AI_PROVIDER` acepta `disabled | groq | anthropic | fake`. `groq` y `anthropic` exigen `AI_API_KEY` y `AI_MODEL` (se valida al arrancar); no hay ningún nombre de modelo fijo en el código. `fake` es solo para pruebas y está prohibido en producción. Las credenciales viven solo en el backend.
+
+- `proveedor.ts` define la interfaz propia `ProveedorIA` (`completar({ sistema, mensajes, herramientas, forzar })` → texto o llamadas a herramientas). Los adaptadores son `ProveedorGroq` (API compatible con OpenAI en `https://api.groq.com/openai/v1/chat/completions`, con `fetch` nativo y herramientas `tools`/`tool_calls`; sin SDK de OpenAI), `ProveedorAnthropic` y `ProveedorFake`.
+- Timeout de 30 s por llamada y sin reintentos automáticos. HTTP 429 del proveedor, timeout, fallos de red y respuestas inválidas se traducen a un error explícito (503 con mensaje comprensible); nunca se inventa una respuesta.
+- Las operaciones del tutor anteriores (explicar nodos, organizar documentos, proponer actividades) usan la misma interfaz, así que funcionan con cualquier proveedor. Con `fake` y `disabled` su comportamiento no cambió.
+- Las pruebas automáticas no llaman a Groq: el adaptador se prueba con un `fetch` simulado (respuesta válida, `tool_calls`, JSON inválido, 429, timeout y caída de red).
+- El plan gratuito de Groq tiene límites por minuto que pueden cortar con varios estudiantes a la vez.
+
+## Tutor agente (sistema + consciencia)
+
+Diseño en `diseno_tutor_agente.md`; plan en `odd/tasks/tutor-agente.md`. El LLM conversa y propone; el sistema valida, corrige lo calculable y decide qué queda demostrado.
+
+- **Migraciones aditivas** `Agente1770000003000` (tablas `conversaciones`, `mensajes`, `aristas`, `respuestas_bloque`; `nodos.senal`; tipos de nodo `concepto`, `idea`, `error`, `ejemplo`, `pregunta`; `actores.foco_nodo_id` y `grafo_version`) y `Plantillas1770000004000` (`rastros_error.origen`, `plantilla`, `parametros`).
+- **`GET /grafo`**: `{ version, foco, camino_error, nodos[], aristas[] }` con todos los nodos de todos los árboles del actor. Cada nodo trae `estado`, `senal`, `evidencias`, `idea_clave`, `concepto`, `origen` y `arbol_id`. Las aristas son las padre-hijo (`subtema`, id `p-…`, creadas por el sistema) más las de la tabla `aristas`.
+- **`estado` calculado, nunca guardado ni escrito por el LLM**: `fallo` si un rastro de error apunta al nodo y no hubo una corrección posterior; `aplicado` si hay una evidencia `corrigio_tras_error` con su `idea_clave` (o `resolvio_sin_ayuda` en una raíz); `explorado` si el estudiante expandió o aclaró el nodo; `sin_explorar` en los demás. Los hijos creados por el agente no cuentan como exploración.
+- **`senal`** (`posible_confusion`): pista visual provisional que nunca cambia el estado ni crea evidencia.
+- **Operaciones de grafo** (`crear_nodo`, `relacionar`, `editar_nodo` con revisión, `fusionar`, `enfocar`): viajan en la respuesta final del turno, se validan y se aplican en una transacción. Un nodo nuevo sin padre válido cuelga de la raíz de la conversación. `fusionar` rechaza nodos con rastros propios, hijos o raíces. Al registrar un rastro con idea clave, el sistema crea una arista `confusion_con` desde un nodo `error` existente con esa idea hacia el nodo de retorno.
+- **Turno** (`POST /conversaciones/:id/mensajes`): reserva idempotente del mensaje → contexto (grafo, último rastro, justificación de la última comprobación, evidencias recientes y últimos 12 mensajes; nunca la clave de una comprobación activa) → ciclo con herramientas `leer_grafo`, `leer_rastro`, `leer_evidencias`, `leer_intento`, `generar_practica`, `proponer_comprobacion` → validación → persistencia. Máximo 4 llamadas a herramientas, 60 s por turno, 40 turnos por conversación y 200 por actor (429). La llamada a la IA nunca ocurre dentro de una transacción. Si el proveedor falla, el mensaje del estudiante queda guardado y reintentar con la misma `Idempotency-Key` retoma el turno.
+- **Cierre estructurado**: el modelo responde con la herramienta `responder` `{ mensaje, bloques, grafo_ops }`. Si no pasa la forma se repara una sola vez devolviéndole el error; si vuelve a fallar, el turno se guarda como `degradado` con solo texto.
+- **Cinco capas de validación** (`artefactos.ts`): forma (zod; máximo 6 bloques y 8 operaciones), referencias (nodos propios, ideas clave del catálogo, sin ciclos en `subtema`/`requiere`, límites), matemática (visuales y cuentas de `contraste`/`ejemplo_paso_a_paso` con un evaluador propio, sin `eval`), atribución (lo atribuido al estudiante debe aparecer en lo que escribió) y filtración (con una comprobación activa se rechaza el valor correcto). Cada descarte queda registrado con su motivo.
+- **Con una comprobación activa** no se ofrecen `leer_intento` ni `generar_practica`, se descartan los bloques `practica` y `prediccion`, y `POST /bloques/:id/respuesta` devuelve 409.
+- **Bloques** (10 tipos): `pregunta_socratica`, `contraste`, `razonamiento_anotado`, `prediccion`, `ejemplo_paso_a_paso`, `visual` (`cadena_porcentual`, `barra_de_partes`, `tabla_proporcion`, `recta_numerica`), `practica`, `en_tus_palabras`, `invitacion_comprobar` y `cita`. Cada bloque guardado recibe un `id`; `practica` y `prediccion` se guardan con `enunciado` y `opciones` sin indicar cuál es correcta.
+- **Respuestas a bloques**: práctica y predicción se corrigen de forma determinista; si el distractor elegido tiene idea clave, se devuelve y se deja una `senal`. El texto libre (`pregunta_socratica`, `en_tus_palabras`, `ejemplo_paso_a_paso`) pide una lectura provisional al proveedor y la acepta solo si las ideas son del catálogo y `cita_del_estudiante` aparece literalmente en lo escrito; el mensaje «Me parece que…» lo redacta el sistema. Si no hay proveedor, falla o la cita no es literal, la respuesta se guarda sin lectura. Ninguna respuesta a un bloque crea evidencia ni cambia un estado.
+- **Plantillas paramétricas** (`plantillas.ts`): `porcentaje_encadenado`, `porcentaje_para_volver`, `complemento_de_fraccion`, `fraccion_de_cantidad`, `proporcion_inversa` y `proporcion_directa`. Con una semilla dan siempre el mismo resultado; los distractores nunca coinciden con la respuesta ni entre sí y cada uno trae su `idea_clave` del catálogo.
+- **Comprobaciones de plantilla**: solo cuando se agotan las actividades curadas. El enunciado es texto fijo del sistema (sin IA) y no se repite una combinación `(plantilla, parámetros)` ya expuesta en comprobaciones ni en prácticas de la charla. La corrección usa el normalizador numérico (`coma/punto`, `%`, `S/`, `cm`, `ml`, `litros`, fracciones `a/b`); un valor que no se puede leer responde 400 sin contarse como fallo. El rastro y la evidencia guardan `origen`, y `plantilla` y `parametros` cuando aplica. El bloqueo de ayudas, la idempotencia y la regla «una corrección por fallo» no cambian.
+
+Límites: la calidad pedagógica del agente con un proveedor real no está validada; los modelos abiertos pueden usar herramientas con menos consistencia (las capas de validación descartan o degradan lo que falle). Las plantillas cubren solo los tres conceptos actuales y sus enunciados no tienen revisión docente. «Mis cursos» solo tiene lectura provisional y citas, sin práctica verificada. No hay streaming.
+
 ## Pruebas y límites pendientes
 
 `npm run test:docker` inicia un contenedor PostgreSQL de pruebas con puerto aleatorio y un esquema propio; no reutiliza el volumen de Compose ni bases de otros proyectos. Lo elimina al finalizar. Las llamadas habituales usan `AI_PROVIDER=fake`, rotulado y prohibido en producción.
 
-Las pruebas cubren importación repetible, actor ajeno, guardado versionado y rollback, entrega concurrente, plazos, soluciones, idempotencia IA, aclaraciones, comprobaciones, rastros de error y etiquetado de nodos, prácticas documentales, PDF válido/corrupto, borrado de derivados, CORS, JSON inválido y reinicio de la API.
+Las pruebas cubren importación repetible, actor ajeno, guardado versionado y rollback, entrega concurrente, plazos, soluciones, idempotencia IA, aclaraciones, comprobaciones, rastros de error y etiquetado de nodos, prácticas documentales, PDF válido/corrupto, borrado de derivados, CORS, JSON inválido y reinicio de la API. Para el tutor agente: unitarias del adaptador Groq (con `fetch` simulado), normalizador y evaluador, plantillas y validadores de artefactos; de integración con el proveedor `fake` (ciclo con herramienta, idempotencia, reparación y turno degradado, bloqueo con comprobación activa, aislamiento entre sesiones, estados derivados, señales sin evidencia y comprobaciones de plantilla).
 
 No está validada todavía la calidad de respuestas con credenciales reales ni con usuarios. Faltan OCR, fuentes externas, recuperación de cuentas, edición avanzada de cursos y revisión pedagógica de las actividades. Antes de un servicio público: definir retención/respaldos, ajustar cuotas a costes reales y completar revisión de seguridad/operación. No se ha desplegado en Azure ni se configuró Vercel.
