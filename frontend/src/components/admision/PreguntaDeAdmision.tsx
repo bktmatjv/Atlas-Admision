@@ -220,7 +220,7 @@ export function PreguntaDeAdmision({
                   to={`/aprender?intento=${encodeURIComponent(intentoId)}&pregunta=${encodeURIComponent(pregunta.pregunta_id)}`}
                   className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-primary hover:bg-muted"
                 >
-                  <ListOrdered className="h-4 w-4" aria-hidden /> Entender esta pregunta con Atlas
+                  <ListOrdered className="h-4 w-4" aria-hidden /> Entender esta pregunta con CALIBRA
                 </Link>
               )}
             </section>
