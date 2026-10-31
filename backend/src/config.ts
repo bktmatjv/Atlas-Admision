@@ -35,6 +35,8 @@ const schema = z
     GROQ_API_KEY: z.string().optional(),
     CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
     CLOUDFLARE_API_TOKEN: z.string().optional(),
+    FOUNDRY_ENDPOINT: z.string().optional(),
+    FOUNDRY_API_KEY: z.string().optional(),
     AI_TIMEOUT_MS: entero(1000, 120000, 20000),
     AI_TIMEOUT_TOTAL_MS: entero(1000, 300000, 45000),
     AI_MAX_CONCURRENCIA: entero(1, 50, 4),
@@ -88,6 +90,26 @@ const schema = z
             code: "custom",
             message: "CLOUDFLARE_ACCOUNT_ID tiene un formato inválido",
           });
+        if (usa("foundry") && !v.FOUNDRY_API_KEY)
+          c.addIssue({
+            code: "custom",
+            message:
+              "Falta FOUNDRY_API_KEY para los destinos de Foundry de AI_CADENA",
+          });
+        if (usa("foundry")) {
+          let https = false;
+          try {
+            https = new URL(v.FOUNDRY_ENDPOINT ?? "").protocol === "https:";
+          } catch {
+            https = false;
+          }
+          if (!https)
+            c.addIssue({
+              code: "custom",
+              message:
+                "FOUNDRY_ENDPOINT es obligatorio y debe ser una URL https para los destinos de Foundry de AI_CADENA",
+            });
+        }
         for (const id of listaDeIds(v.AI_SIN_HERRAMIENTAS))
           if (!cadena.destinos.some((d) => d.id === id))
             c.addIssue({
