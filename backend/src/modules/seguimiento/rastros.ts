@@ -1,4 +1,5 @@
 import { ACTIVIDADES, buscarError, ideaPorClave } from "./actividades.js";
+import { normalizarNumero } from "./numeros.js";
 export type NivelAyuda = "pista" | "ejemplo" | "explicacion_completa";
 export type RastroFila = {
   actividad_id: string;
@@ -12,7 +13,8 @@ export const nivelPorFallos = (previos: number): NivelAyuda =>
 // Devolución determinista: sale del mapa curado de la actividad, nunca de la IA.
 export function construirRastro(f: RastroFila) {
   const actividad = ACTIVIDADES.find((a) => a.id === f.actividad_id);
-  const num = Number(f.respuesta.trim().replace(",", "."));
+  const leido = normalizarNumero(f.respuesta);
+  const num = leido.legible ? leido.valor : Number.NaN;
   const tipico = actividad ? buscarError(actividad, num) : undefined;
   const base = {
     respuesta: f.respuesta,

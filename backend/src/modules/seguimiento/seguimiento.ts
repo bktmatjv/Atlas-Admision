@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   Req,
+  BadRequestException,
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
@@ -18,6 +19,7 @@ import { validate } from "../../http.js";
 import type { ActorRequest } from "../identidad/identidad.js";
 import { ACTIVIDADES, buscarError } from "./actividades.js";
 import { construirRastro, nivelPorFallos } from "./rastros.js";
+import { igualesNumeros, normalizarNumero } from "./numeros.js";
 @Controller()
 export class SeguimientoController {
   constructor(@Inject(Database) private db: Database) {}
@@ -124,8 +126,14 @@ export class SeguimientoController {
       if (!row) throw new NotFoundException("Comprobación no encontrada.");
       if (row.resultado) return row.resultado;
       const task = ACTIVIDADES.find((t) => t.id === row.actividad_id)!;
-      const num = Number(b.respuesta.trim().replace(",", "."));
-      const correcta = Number.isFinite(num) && num === task.respuesta;
+      const leido = normalizarNumero(b.respuesta);
+      // Un valor no interpretable no es un fallo: la comprobación sigue abierta.
+      if (!leido.legible)
+        throw new BadRequestException(
+          "No pude leer tu respuesta como número. Escribe solo el número (por ejemplo 96, 25% o 3/8).",
+        );
+      const num = leido.valor;
+      const correcta = igualesNumeros(num, task.respuesta);
       const ayuda = await m.query(
         "SELECT 1 FROM solicitudes_ia WHERE actor_id=$1 AND created_at>=$2 AND estado IN ('pendiente','completada') LIMIT 1",
         [r.actorId, row.created_at],
