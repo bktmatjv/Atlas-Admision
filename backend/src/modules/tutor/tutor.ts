@@ -28,6 +28,7 @@ import {
 } from "../seguimiento/actividades.js";
 import { caminoHasta, construirRastro } from "../seguimiento/rastros.js";
 import { TutorAI, PROMPT_VERSION } from "./ai.js";
+import { Proveedores } from "./proveedor.js";
 const createSchema = z
   .object({
     intento_id: z.string().uuid().optional(),
@@ -533,8 +534,8 @@ export class TutorController {
 }
 @Module({
   imports: [PracticaModule],
-  providers: [TutorAI, TutorService],
+  providers: [Proveedores, TutorAI, TutorService],
   controllers: [TutorController],
-  exports: [TutorAI, TutorService],
+  exports: [Proveedores, TutorAI, TutorService],
 })
 export class TutorModule {}

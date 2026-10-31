@@ -17,7 +17,9 @@ const schema = z
       .default("development"),
     FRONTEND_ORIGIN: z.string().url().default("http://localhost:8090"),
     COOKIE_SAME_SITE: z.enum(["strict", "lax", "none"]).default("lax"),
-    AI_PROVIDER: z.enum(["disabled", "anthropic", "fake"]).default("disabled"),
+    AI_PROVIDER: z
+      .enum(["disabled", "groq", "anthropic", "fake"])
+      .default("disabled"),
     AI_MODEL: z.string().optional(),
     AI_API_KEY: z.string().optional(),
     DATA_DIR: z.string().default(resolve(backendRoot, "data")),
@@ -28,6 +30,11 @@ const schema = z
       c.addIssue({
         code: "custom",
         message: "Configura AI_API_KEY y AI_MODEL para Anthropic",
+      });
+    if (v.AI_PROVIDER === "groq" && (!v.AI_API_KEY || !v.AI_MODEL))
+      c.addIssue({
+        code: "custom",
+        message: "Configura AI_API_KEY y AI_MODEL para Groq",
       });
     if (v.AI_PROVIDER === "fake" && v.NODE_ENV === "production")
       c.addIssue({
