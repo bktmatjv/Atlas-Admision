@@ -1,0 +1,11 @@
+# HTTPS automático (Let's Encrypt) para el dominio de CALIBRA_DOMAIN.
+# Solo se expone la API; el frontend vive en Vercel.
+{$CALIBRA_DOMAIN} {
+	encode zstd gzip
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+	handle {
+		respond "CALIBRA API" 404
+	}
+}
