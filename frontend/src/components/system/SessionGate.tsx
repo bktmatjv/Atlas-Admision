@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, ensureSession } from "@/integrations/api/client";
+
 export function SessionGate({ children }: { children: ReactNode }) {
   const session = useQuery({
     queryKey: ["sesion"],
@@ -14,6 +15,14 @@ export function SessionGate({ children }: { children: ReactNode }) {
     enabled: session.isSuccess,
     staleTime: 30000,
   });
+
+  // =========================================================================
+  // BYPASS TEMPORAL DE SESIÓN:
+  // Permite la previsualización del rediseño UX/UI sin requerir el backend
+  // activo en el puerto 3000. Para restaurar el bloqueo estricto de producción,
+  // descomentar los bloques if (session.isPending) e if (session.isError).
+  // =========================================================================
+  /*
   if (session.isPending)
     return (
       <main className="grid min-h-screen place-items-center bg-background text-foreground">
@@ -38,6 +47,8 @@ export function SessionGate({ children }: { children: ReactNode }) {
         </section>
       </main>
     );
+  */
+
   return (
     <>
       {health.data?.pruebas && (

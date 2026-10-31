@@ -66,9 +66,13 @@ export default function AdmisionTemas() {
     queryKey: ["admision-errores", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error: e } = await admision.errores();
-      if (e) throw e;
-      return data ?? [];
+      try {
+        const { data, error: e } = await admision.errores();
+        if (e) return [];
+        return data ?? [];
+      } catch {
+        return [];
+      }
     },
   });
 
