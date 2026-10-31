@@ -1,111 +1,165 @@
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import type { Visual } from "@/lib/tutor/chat";
+import {
+  marcasDeRecta,
+  posicionEnRecta,
+  tramosDeCadena,
+} from "@/lib/tutor/visual";
 const fmt = (n: number) => String(Math.round(n * 100) / 100).replace(".", ",");
-// Los datos ya fueron recalculados y verificados por el backend: aquí solo se dibujan.
-export function VisualView({ v }: { v: Visual }) {
-  if (v.forma === "cadena_porcentual")
-    return (
-      <ol
-        className="flex flex-wrap items-center gap-2"
-        aria-label="Cadena de cambios porcentuales"
+const ANCHO = 360;
+// Los datos ya fueron recalculados y verificados por el servidor: aquí solo se dibujan.
+function Cadena({ v }: { v: Extract<Visual, { forma: "cadena_porcentual" }> }) {
+  const tramos = tramosDeCadena(v.pasos);
+  const texto = `Cadena de cambios porcentuales: ${fmt(v.pasos[0].valor)}${tramos
+    .map((t) => `, ${t.op || "cambia"} a ${fmt(t.hasta)}`)
+    .join("")}`;
+  return (
+    <div className="tb-cadena" role="img" aria-label={texto}>
+      <span className="tb-cadena-valor">{fmt(v.pasos[0].valor)}</span>
+      {tramos.map((t, i) => (
+        <span key={i} className="tb-cadena-tramo">
+          <span
+            className={`tb-cadena-flecha ${t.sube ? "tb-sube" : "tb-baja"}`}
+          >
+            <small>{t.op}</small>
+            <svg viewBox="0 0 64 20" aria-hidden="true">
+              <path
+                d="M2 10h54m0 0-8-7m8 7-8 7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <span className="tb-cadena-valor">{fmt(t.hasta)}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+function Barra({ v }: { v: Extract<Visual, { forma: "barra_de_partes" }> }) {
+  const hueco = 4;
+  const ancho = (ANCHO - hueco * (v.partes - 1)) / v.partes;
+  return (
+    <figure className="tb-figura">
+      <svg
+        viewBox={`0 0 ${ANCHO} 74`}
+        className="tb-svg"
+        role="img"
+        aria-label={`Barra de ${v.partes} partes iguales con ${v.marcadas} marcadas${
+          v.fraccion ? ` (${v.fraccion})` : ""
+        }; total ${fmt(v.total)}`}
       >
-        {v.pasos.map((p, i) => (
-          <li key={i} className="flex items-center gap-2">
-            {p.op && (
-              <span className="rounded-full bg-muted px-2 py-1 text-xs font-bold">
-                {p.op}
-              </span>
-            )}
-            <span className="rounded-lg border border-border bg-background px-3 py-1 font-bold">
-              {fmt(p.valor)}
-            </span>
-          </li>
+        {Array.from({ length: v.partes }, (_, i) => (
+          <rect
+            key={i}
+            x={i * (ancho + hueco)}
+            y="8"
+            width={ancho}
+            height="34"
+            rx="6"
+            className={i < v.marcadas ? "tb-seg tb-seg--on" : "tb-seg"}
+          />
         ))}
-      </ol>
-    );
-  if (v.forma === "barra_de_partes")
-    return (
-      <figure>
-        <div
-          className="flex h-8 overflow-hidden rounded-lg border border-border"
-          role="img"
-          aria-label={`${v.marcadas} de ${v.partes} partes marcadas`}
-        >
-          {Array.from({ length: v.partes }, (_, i) => (
-            <div
-              key={i}
-              className={`flex-1 border-r border-border last:border-r-0 ${i < v.marcadas ? "bg-primary" : "bg-background"}`}
-            />
-          ))}
-        </div>
-        <figcaption className="mt-1 text-xs text-muted-foreground">
+        {v.marcadas > 0 && (
+          <path
+            d={`M0 54v6h${v.marcadas * (ancho + hueco) - hueco}v-6`}
+            fill="none"
+            className="tb-llave"
+          />
+        )}
+        <text x="0" y="72" className="tb-svg-texto">
           {v.marcadas} de {v.partes} partes
-          {v.fraccion ? ` (${v.fraccion})` : ""} · total {fmt(v.total)}
-        </figcaption>
-      </figure>
-    );
-  if (v.forma === "tabla_proporcion")
-    return (
-      <table className="w-full max-w-sm text-sm">
-        <caption className="mb-1 text-left text-xs text-muted-foreground">
+          {v.fraccion ? ` = ${v.fraccion}` : ""}
+        </text>
+      </svg>
+      <figcaption>Total: {fmt(v.total)}</figcaption>
+    </figure>
+  );
+}
+function Tabla({ v }: { v: Extract<Visual, { forma: "tabla_proporcion" }> }) {
+  const [a, b] = v.filas[0];
+  const directa = v.relacion === "directa";
+  const Flecha = directa ? ArrowUpRight : ArrowDownRight;
+  return (
+    <figure className="tb-figura">
+      <table className="tb-tabla">
+        <caption>
+          <Flecha size={18} aria-hidden="true" />
           Relación {v.relacion}
+          <small>
+            {directa
+              ? "Si una cantidad aumenta, la otra aumenta en la misma proporción."
+              : "Si una cantidad aumenta, la otra disminuye en la misma proporción."}
+          </small>
         </caption>
         <thead>
           <tr>
             {v.columnas.map((c) => (
-              <th key={c} className="border-b border-border p-2 text-left">
+              <th key={c} scope="col">
                 {c}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {v.filas.map(([a, b], i) => (
+          {v.filas.map(([x, y], i) => (
             <tr key={i}>
-              <td className="border-b border-border p-2">{fmt(a)}</td>
-              <td className="border-b border-border p-2">{fmt(b)}</td>
+              <td>{fmt(x)}</td>
+              <td>{fmt(y)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-    );
-  const ancho = 320,
-    x = (n: number) => 20 + ((n - v.min) / (v.max - v.min)) * (ancho - 40);
+      <figcaption>
+        {directa
+          ? `Constante: ${v.columnas[1]} ÷ ${v.columnas[0]} = ${fmt(b / a)}`
+          : `Constante: ${v.columnas[0]} × ${v.columnas[1]} = ${fmt(a * b)}`}
+      </figcaption>
+    </figure>
+  );
+}
+function Recta({ v }: { v: Extract<Visual, { forma: "recta_numerica" }> }) {
+  const x = (n: number) => 20 + posicionEnRecta(n, v.min, v.max) * (ANCHO - 40);
+  const marcas = marcasDeRecta(v.min, v.max);
   return (
-    <figure>
+    <figure className="tb-figura">
       <svg
-        viewBox={`0 0 ${ancho} 70`}
-        className="w-full max-w-md"
+        viewBox={`0 0 ${ANCHO} 96`}
+        className="tb-svg"
         role="img"
-        aria-label={`Recta numérica de ${fmt(v.min)} a ${fmt(v.max)} con los puntos ${v.puntos.map((p) => fmt(p.valor)).join(", ")}`}
+        aria-label={`Recta numérica de ${fmt(v.min)} a ${fmt(v.max)} con los puntos ${v.puntos
+          .map((p) =>
+            p.etiqueta ? `${p.etiqueta} (${fmt(p.valor)})` : fmt(p.valor),
+          )
+          .join(", ")}`}
       >
-        <line x1="20" y1="35" x2={ancho - 20} y2="35" stroke="currentColor" />
-        <text
-          x="20"
-          y="62"
-          fontSize="11"
-          textAnchor="middle"
-          fill="currentColor"
-        >
-          {fmt(v.min)}
-        </text>
-        <text
-          x={ancho - 20}
-          y="62"
-          fontSize="11"
-          textAnchor="middle"
-          fill="currentColor"
-        >
-          {fmt(v.max)}
-        </text>
+        <line x1="20" y1="52" x2={ANCHO - 20} y2="52" className="tb-eje" />
+        {marcas.map((m) => (
+          <g key={m}>
+            <line x1={x(m)} y1="46" x2={x(m)} y2="58" className="tb-eje" />
+            <text x={x(m)} y="76" textAnchor="middle" className="tb-svg-texto">
+              {fmt(m)}
+            </text>
+          </g>
+        ))}
         {v.puntos.map((p, i) => (
           <g key={i}>
-            <circle cx={x(p.valor)} cy="35" r="5" fill="currentColor" />
+            <line
+              x1={x(p.valor)}
+              y1="26"
+              x2={x(p.valor)}
+              y2="52"
+              className="tb-pin-tallo"
+            />
+            <circle cx={x(p.valor)} cy="52" r="6" className="tb-pin" />
             <text
               x={x(p.valor)}
-              y="20"
-              fontSize="11"
+              y="16"
               textAnchor="middle"
-              fill="currentColor"
+              className="tb-svg-texto tb-svg-texto--punto"
             >
               {p.etiqueta ? `${p.etiqueta} (${fmt(p.valor)})` : fmt(p.valor)}
             </text>
@@ -114,4 +168,16 @@ export function VisualView({ v }: { v: Visual }) {
       </svg>
     </figure>
   );
+}
+export function VisualView({ v }: { v: Visual }) {
+  switch (v.forma) {
+    case "cadena_porcentual":
+      return <Cadena v={v} />;
+    case "barra_de_partes":
+      return <Barra v={v} />;
+    case "tabla_proporcion":
+      return <Tabla v={v} />;
+    case "recta_numerica":
+      return <Recta v={v} />;
+  }
 }

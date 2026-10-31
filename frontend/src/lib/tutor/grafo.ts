@@ -62,9 +62,17 @@ export function aristasCamino(camino: string[]) {
     claves.add(`${camino[i]}>${camino[i + 1]}`);
   return claves;
 }
+// Un nodo de error nuevo todavía no se comprobó: no se presenta como «Sin explorar».
+// El estado real no cambia; solo el texto con el que se muestra.
+export function textoEstado(n: NodoGrafo) {
+  const base =
+    n.tipo === "error" && n.estado === "sin_explorar"
+      ? "Error por comprobar"
+      : ESTADO_TEXTO[n.estado];
+  return n.senal ? `${base} · posible confusión (provisional)` : base;
+}
 export const descripcionNodo = (n: NodoGrafo) =>
-  `${n.titulo}. Estado: ${ESTADO_TEXTO[n.estado]}.` +
-  (n.senal ? " Posible confusión (lectura provisional)." : "") +
+  `${n.titulo}. Estado: ${textoEstado(n)}.` +
   (n.evidencias ? ` Evidencias: ${n.evidencias}.` : "");
 export type NodoArbol = {
   nodo: NodoGrafo;

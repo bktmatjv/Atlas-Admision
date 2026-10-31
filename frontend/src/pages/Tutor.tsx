@@ -7,77 +7,134 @@ import {
 } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowRight,
-  BookOpen,
   ChevronLeft,
-  FlaskConical,
-  Lightbulb,
-  MessageCircle,
+  History,
+  Moon,
   Network,
-  Paperclip,
   Search,
-  Send,
-  Sparkles,
-  TriangleAlert,
+  SquarePen,
+  Sun,
   UserRound,
 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { ThemeToggle } from "@/components/system/ThemeToggle";
-import { MathMarkdown } from "@/components/shared/MathMarkdown";
-import { BloqueView } from "@/components/tutor/Bloques";
+import { ConversacionTutor } from "@/components/tutor/ConversacionTutor";
 import { GrafoComprension } from "@/components/tutor/GrafoComprension";
-import { TutorAvatar } from "@/components/tutor/TutorAvatar";
+import { HistorialPanel } from "@/components/tutor/HistorialPanel";
+import { InicioTutor } from "@/components/tutor/InicioTutor";
 import { TutorProgress } from "@/components/tutor/TutorProgress";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { api, post } from "@/integrations/api/client";
-import type { Bloque, Conversacion } from "@/lib/tutor/chat";
+import type { Conversacion } from "@/lib/tutor/chat";
 import type { Grafo } from "@/lib/tutor/grafo";
-import mountainTrail from "@/assets/tutor/mountain-trail.svg";
+import type { ItemHistorial } from "@/lib/tutor/historial";
+import {
+  TEMAS_SOPORTADOS,
+  cuerpoDeCreacion,
+  opcionesDeContexto,
+  ordenarTemas,
+  ultimaPracticaFallada,
+  type Contexto,
+  type Intencion,
+  type OpcionDeContexto,
+} from "@/lib/tutor/inicio";
 import "@/components/tutor/tutor.css";
-
-const TEMAS = [
-  { id: "porcentajes", nombre: "Porcentajes" },
-  { id: "proporciones", nombre: "Proporciones" },
-  { id: "fracciones", nombre: "Fracciones" },
-];
-const FRAME: Partial<
-  Record<
-    Bloque["tipo"],
-    { titulo: string; icon: typeof BookOpen; tono: string }
-  >
-> = {
-  contraste: {
-    titulo: "Tu razonamiento vs. el correcto",
-    icon: TriangleAlert,
-    tono: "wine",
-  },
-  visual: { titulo: "Visual matemático", icon: FlaskConical, tono: "violet" },
-  ejemplo_paso_a_paso: {
-    titulo: "Una idea, paso a paso",
-    icon: Lightbulb,
-    tono: "amber",
-  },
-  razonamiento_anotado: {
-    titulo: "La evidencia en tus pasos",
-    icon: Search,
-    tono: "wine",
-  },
-  practica: {
-    titulo: "Ahora, intenta aplicarlo",
-    icon: BookOpen,
-    tono: "violet",
-  },
+import "@/components/tutor/tutor-chat.css";
+type IntentoLite = { id: string; estado: string };
+type RespuestaLite = { pregunta_id: string; correcta: boolean | null };
+async function cargarUltimaPractica() {
+  const intentos = await api<IntentoLite[]>("/intentos");
+  const recientes = intentos
+    .filter((i) => i.estado === "entregado")
+    .slice(0, 3);
+  const respuestas = Object.fromEntries(
+    await Promise.all(
+      recientes.map(
+        async (i) =>
+          [
+            i.id,
+            await api<RespuestaLite[]>(`/intentos/${i.id}/respuestas`),
+          ] as const,
+      ),
+    ),
+  );
+  return ultimaPracticaFallada(recientes, (id) => respuestas[id] ?? []);
+}
+async function cargarMaterial() {
+  const cursos = await api<{ id: string }[]>("/cursos");
+  for (const c of cursos) {
+    const curso = await api<{
+      documentos: { id: string; nombre: string; estado: string }[];
+    }>(`/cursos/${c.id}`);
+    const doc = curso.documentos.find((d) => d.estado === "listo");
+    if (!doc) continue;
+    const detalle = await api<{ fragmentos: { id: string }[] }>(
+      `/documentos/${doc.id}`,
+    );
+    if (detalle.fragmentos[0])
+      return { fragmento_id: detalle.fragmentos[0].id, nombre: doc.nombre };
+  }
+  return null;
+}
+const anchoGrande = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(min-width: 1100px)").matches;
+const CLAVE_MODO = "calibra-tutor-modo";
+const modoGuardado = () => {
+  try {
+    return localStorage.getItem(CLAVE_MODO) === "claro";
+  } catch {
+    return false;
+  }
 };
 export default function Tutor() {
   const { id } = useParams(),
-    [search] = useSearchParams(),
+    [search, setSearch] = useSearchParams(),
     nav = useNavigate(),
     client = useQueryClient();
-  const [tema, setTema] = useState("porcentajes"),
-    [texto, setTexto] = useState(""),
+  const vistaGrafo = search.get("vista") === "grafo" && !id;
+  const [borrador, setBorrador] = useState(""),
+    [inicio, setInicio] = useState(""),
+    [intencion, setIntencion] = useState<Intencion["id"] | null>(null),
     [elegido, setElegido] = useState<string | null>(null),
-    [busqueda, setBusqueda] = useState("");
-  const clave = useRef<{ texto: string; key: string } | null>(null);
-  const historial = useRef<HTMLDivElement>(null);
+    [busqueda, setBusqueda] = useState(""),
+    [mapaAbierto, setMapaAbierto] = useState(anchoGrande),
+    [historialAbierto, setHistorialAbierto] = useState(false);
+  const deUrl: OpcionDeContexto | null = search.get("fragmento")
+    ? {
+        clave: "url",
+        etiqueta: "Material que elegiste",
+        contexto: { fragmento_id: search.get("fragmento")! },
+      }
+    : search.get("intento") && search.get("pregunta")
+      ? {
+          clave: "url",
+          etiqueta: "Pregunta que elegiste",
+          contexto: {
+            intento_id: search.get("intento")!,
+            pregunta_id: search.get("pregunta")!,
+          },
+        }
+      : null;
+  const [contextoClave, setContextoClave] = useState(deUrl ? "url" : "");
+  // Apariencia propia del tutor: noche CALIBRA por defecto, con variante clara.
+  const [claro, setClaro] = useState(modoGuardado);
+  const alternarModo = () =>
+    setClaro((c) => {
+      try {
+        localStorage.setItem(CLAVE_MODO, c ? "noche" : "claro");
+      } catch {
+        // Sin almacenamiento, el modo vale solo para esta visita.
+      }
+      return !c;
+    });
+  const claveCrear = useRef<{ huella: string; key: string } | null>(null);
+  const claveEnvio = useRef<{ texto: string; key: string } | null>(null);
   useEffect(() => {
     document.title = "Conversar con el tutor | CALIBRA";
   }, []);
@@ -100,40 +157,70 @@ export default function Tutor() {
     queryFn: () => api<{ ia: string; ok: boolean; pruebas: boolean }>("/salud"),
     staleTime: 30000,
   });
+  const historial = useQuery({
+    queryKey: ["conversaciones"],
+    queryFn: () => api<ItemHistorial[]>("/conversaciones"),
+  });
+  const practica = useQuery({
+    queryKey: ["ultima-practica"],
+    queryFn: () => cargarUltimaPractica().catch(() => null),
+    enabled: !id,
+    staleTime: 60000,
+  });
+  const material = useQuery({
+    queryKey: ["material-tutor"],
+    queryFn: () => cargarMaterial().catch(() => null),
+    enabled: !id,
+    staleTime: 60000,
+  });
   const foco = grafo.data?.foco ?? null;
   useEffect(() => {
     if (foco) setElegido(foco);
   }, [foco]);
+  const base = opcionesDeContexto({
+    practica: practica.data,
+    material: material.data,
+  });
+  const contextos = deUrl ? [deUrl, ...base] : base;
+  const contextoElegido =
+    contextos.find((c) => c.clave === contextoClave)?.contexto ?? null;
+  const temas = ordenarTemas(grafo.data);
   const crear = useMutation({
-    mutationFn: () =>
-      post<{ id: string }>(
+    mutationFn: (v: { texto: string; contexto: Contexto | null }) => {
+      // La misma clave en cada reintento del mismo pedido: no se duplica la conversación.
+      const huella = JSON.stringify(v);
+      if (claveCrear.current?.huella !== huella)
+        claveCrear.current = { huella, key: crypto.randomUUID() };
+      return post<{ id: string }>(
         "/conversaciones",
-        search.get("fragmento")
-          ? { fragmento_id: search.get("fragmento") }
-          : search.get("intento") && search.get("pregunta")
-            ? {
-                intento_id: search.get("intento"),
-                pregunta_id: search.get("pregunta"),
-              }
-            : { tema },
-      ),
-    onSuccess: (r) => nav(`/tutor/${r.id}`),
+        cuerpoDeCreacion(v.contexto, v.texto),
+        claveCrear.current.key,
+      );
+    },
+    onSuccess: (r) => {
+      claveCrear.current = null;
+      setInicio("");
+      setIntencion(null);
+      void client.invalidateQueries({ queryKey: ["conversaciones"] });
+      nav(`/tutor/${r.id}`);
+    },
   });
   const enviar = useMutation({
     mutationFn: (t: string) => {
-      if (clave.current?.texto !== t)
-        clave.current = { texto: t, key: crypto.randomUUID() };
+      if (claveEnvio.current?.texto !== t)
+        claveEnvio.current = { texto: t, key: crypto.randomUUID() };
       return post(
         `/conversaciones/${id}/mensajes`,
         { texto: t },
-        clave.current.key,
+        claveEnvio.current.key,
       );
     },
-    onSuccess: () => {
-      clave.current = null;
-      setTexto("");
+    onSuccess: (_r, t) => {
+      claveEnvio.current = null;
+      setBorrador((b) => (b.trim() === t ? "" : b));
       void conv.refetch();
       void grafo.refetch();
+      void historial.refetch();
     },
   });
   const comprobar = useMutation({
@@ -144,25 +231,26 @@ export default function Tutor() {
       nav(`/aprender/${conv.data!.arbol_id}`);
     },
   });
-  const mensajes = conv.data?.mensajes ?? [];
-  useEffect(() => {
-    const el = historial.current;
-    if (el)
-      el.scrollTo?.({
-        top: el.scrollHeight,
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-      });
-  }, [mensajes.length, enviar.isPending]);
-  const error = crear.error ?? enviar.error ?? comprobar.error ?? conv.error;
-  const pensando = enviar.isPending;
-  const ocupado = pensando || comprobar.isPending;
-  const puedeActuar = !!conv.data && !ocupado && !activa.data;
-  const temaActual =
-    grafo.data?.nodos.find((n) => n.id === elegido)?.titulo ??
-    TEMAS.find((t) => t.id === tema)?.nombre ??
-    "esta idea";
+  const empezar = (texto: string, contexto = contextoElegido) =>
+    crear.mutate({ texto: texto.trim(), contexto });
+  const alElegirIntencion = (i: Intencion) => {
+    setIntencion(i.id);
+    if (i.accion === "texto") setInicio(i.precarga);
+    else if (i.accion === "grafo") setSearch({ vista: "grafo" });
+    else {
+      const tema =
+        contextoElegido && "tema" in contextoElegido
+          ? TEMAS_SOPORTADOS.find((t) => t.id === contextoElegido.tema)
+          : temas[0];
+      if (tema)
+        empezar(
+          `Quiero practicar ${tema.nombre}. Dame un ejercicio para empezar.`,
+          {
+            tema: tema.id,
+          },
+        );
+    }
+  };
   const estado = salud.isError
     ? "Sin conexión"
     : !salud.data
@@ -172,27 +260,51 @@ export default function Tutor() {
         : salud.data.ia === "disabled"
           ? "IA sin configurar"
           : "IA configurada";
-  const tonoEstado =
-    salud.data?.pruebas || salud.data?.ia === "disabled" || salud.isError
-      ? "muted"
-      : "ready";
-  const contextual = Boolean(search.get("fragmento") || search.get("intento"));
+  const listo =
+    !!salud.data && !salud.data.pruebas && salud.data.ia !== "disabled";
+  const titulo =
+    historial.data?.find((c) => c.id === id)?.titulo ?? "Conversación";
+  const nodoActual = grafo.data?.nodos.find((n) => n.id === elegido);
+  const temaActual =
+    nodoActual?.titulo ??
+    TEMAS_SOPORTADOS.find((t) => t.id === nodoActual?.concepto)?.nombre ??
+    "esta idea";
+  const errorHistorial = historial.isError ? historial.error.message : null;
+  const panelHistorial = (acople: boolean, alElegir?: () => void) => (
+    <HistorialPanel
+      items={historial.data}
+      activoId={id}
+      cargando={historial.isPending}
+      error={errorHistorial}
+      onReintentar={() => void historial.refetch()}
+      onElegir={alElegir}
+      acople={acople}
+    />
+  );
+  const botonHistorial = (
+    <button
+      type="button"
+      className="tc-btn tc-btn--line"
+      onClick={() => setHistorialAbierto(true)}
+    >
+      <History size={18} aria-hidden="true" /> Historial
+    </button>
+  );
   return (
     <ResponsiveLayout
       appearance="tutor"
       headerTools={
         <>
-          <label className="tutor-header-search">
-            <Search size={17} />
-            <span className="sr-only">Buscar en tu mapa de comprensión</span>
-            <input
-              type="search"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar ideas en tu mapa…"
-            />
-          </label>
-          <ThemeToggle />
+          <button
+            type="button"
+            className="tc-modo"
+            aria-pressed={claro}
+            aria-label={claro ? "Cambiar a modo noche" : "Cambiar a modo claro"}
+            onClick={alternarModo}
+          >
+            {claro ? <Moon size={16} /> : <Sun size={16} />}
+            {claro ? "Noche" : "Claro"}
+          </button>
           <span className="tutor-guest">
             <UserRound size={17} />
             <span>Invitado</span>
@@ -200,429 +312,178 @@ export default function Tutor() {
         </>
       }
     >
-      <main className="tutor-page">
-        <header className="tutor-hero">
-          <img
-            src={mountainTrail}
-            className="tutor-hero-art"
-            alt=""
-            aria-hidden="true"
-          />
-          <div className="tutor-hero-copy">
-            <p className="tutor-eyebrow">CALIBRA · conversar para comprender</p>
-            <h1>Entiende el porqué de tus errores</h1>
-            <p>
-              Conversa con tu tutor, analiza tu razonamiento y conecta lo que
-              aprendes.
-              <br className="tutor-desktop-break" /> Una pregunta abre el
-              camino. Lo que haces después aporta la evidencia.
-            </p>
-          </div>
-          <blockquote className="tutor-hero-quote">
-            <span aria-hidden="true">“</span>
-            <div>
+      <main className="tc-page">
+        {claro && <span className="tc-claro" hidden />}
+        {vistaGrafo ? (
+          <div className="tc-vista-grafo">
+            <div className="tc-conv-bar">
+              <Link to="/tutor" className="tc-btn tc-btn--line">
+                <ChevronLeft size={18} aria-hidden="true" /> Volver al tutor
+              </Link>
+              <h1>Tu grafo de comprensión</h1>
+            </div>
+            <section className="tc-map" aria-label="Grafo de comprensión">
               <p>
-                No se trata de tener todas las respuestas, sino de hacer mejores
-                preguntas y entender tu razonamiento.
+                Los estados salen de tus comprobaciones, no de lo que diga la
+                IA.
               </p>
-              <cite>CALIBRA</cite>
-            </div>
-          </blockquote>
-        </header>
-        {error && (
-          <div role="alert" className="tutor-page-error">
-            <TriangleAlert size={19} />
-            <p>{error.message}</p>
-            {conv.isError && (
-              <button type="button" onClick={() => void conv.refetch()}>
-                Reintentar conversación
-              </button>
-            )}
-          </div>
-        )}
-        <div className="tutor-workspace">
-          <section
-            className="tutor-panel tutor-chat"
-            aria-labelledby="chat-title"
-          >
-            <header className="tutor-panel-header tutor-chat-header">
-              <TutorAvatar />
-              <div className="tutor-chat-heading">
-                <div className="tutor-heading-line">
-                  <h2 id="chat-title">Charla con tu tutor</h2>
-                  <span
-                    className={`tutor-connection tutor-connection--${tonoEstado}`}
-                  >
-                    <i />
-                    {estado}
-                  </span>
-                </div>
-                <p>Una ayuda para entender, no solo para resolver.</p>
-              </div>
-              <div className="tutor-chat-actions">
-                <button
-                  type="button"
-                  disabled={!puedeActuar}
-                  onClick={() =>
-                    enviar.mutate(
-                      "Ayúdame a analizar mi error y el razonamiento que compartí, sin asumir causas que no puedas observar.",
-                    )
-                  }
-                >
-                  <Search />
-                  <span>
-                    Analizar
-                    <br />
-                    error
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  disabled={!puedeActuar}
-                  onClick={() =>
-                    enviar.mutate(
-                      `Explícame el concepto de ${temaActual} de una forma más sencilla.`,
-                    )
-                  }
-                >
-                  <BookOpen />
-                  <span>
-                    Explicar
-                    <br />
-                    concepto
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  disabled={!puedeActuar}
-                  onClick={() => comprobar.mutate()}
-                >
-                  <Lightbulb />
-                  <span>
-                    Dame una
-                    <br />
-                    comprobación
-                  </span>
-                </button>
-              </div>
-            </header>
-            {activa.data && (
-              <p className="tutor-active-check" role="status">
-                Hay una comprobación sin ayudas en curso. El tutor no resolverá
-                ni confirmará su resultado y no habrá prácticas.{" "}
-                <Link to={`/aprender/${activa.data.arbol_id}`}>
-                  Ir a la comprobación <ArrowRight size={14} />
-                </Link>
-              </p>
-            )}
-            <div
-              ref={historial}
-              role="log"
-              aria-live="polite"
-              aria-label="Mensajes de la charla"
-              className="tutor-chat-log"
-            >
-              {!id && (
-                <div className="tutor-start">
-                  <div className="tutor-message tutor-message--tutor">
-                    <TutorAvatar small />
-                    <div className="tutor-message-bubble">
-                      <span className="tutor-message-label">Para empezar</span>
-                      <p>
-                        ¡Hola! Soy tu tutor de CALIBRA. Podemos explorar una
-                        idea, revisar un ejercicio o descubrir en qué paso te
-                        trabaste.
-                      </p>
-                      <p>También puedes decir «no sé por dónde empezar».</p>
-                    </div>
-                  </div>
-                  <div className="tutor-start-options">
-                    <h3>¿Sobre qué quieres conversar?</h3>
-                    {contextual ? (
-                      <p>
-                        Usaremos{" "}
-                        {search.get("fragmento")
-                          ? "el fragmento de tu material"
-                          : "la pregunta y tu intento"}{" "}
-                        que elegiste como punto de partida.
-                      </p>
-                    ) : (
-                      <fieldset>
-                        <legend className="sr-only">
-                          Tema de la conversación
-                        </legend>
-                        {TEMAS.map((t) => (
-                          <label key={t.id}>
-                            <input
-                              type="radio"
-                              name="tema"
-                              checked={tema === t.id}
-                              onChange={() => setTema(t.id)}
-                            />
-                            <span>{t.nombre}</span>
-                          </label>
-                        ))}
-                      </fieldset>
-                    )}
-                    <button
-                      type="button"
-                      className="tutor-button"
-                      disabled={crear.isPending}
-                      onClick={() => crear.mutate()}
-                    >
-                      {crear.isPending ? (
-                        <Sparkles size={17} />
-                      ) : (
-                        <MessageCircle size={17} />
-                      )}{" "}
-                      {crear.isPending
-                        ? "Preparando conversación…"
-                        : "Empezar a conversar"}
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
-              {id && conv.isPending && (
-                <p role="status" className="tutor-chat-notice">
-                  Cargando tu conversación…
-                </p>
-              )}
-              {id && conv.isSuccess && !mensajes.length && !pensando && (
-                <div className="tutor-message tutor-message--tutor">
-                  <TutorAvatar small />
-                  <div className="tutor-message-bubble">
-                    <span className="tutor-message-label">
-                      Tu espacio para preguntar
-                    </span>
-                    <p>
-                      Cuéntame qué quieres entender, cómo pensaste tu ejercicio
-                      y en qué parte te resultó difícil.
-                    </p>
-                    <p>
-                      Las explicaciones, los ejemplos y las comprobaciones
-                      aparecerán aquí según lo que necesites.
-                    </p>
-                  </div>
-                </div>
-              )}
-              {mensajes.map((m) => (
-                <div
-                  key={m.id}
-                  className={`tutor-message tutor-message--${m.rol}`}
-                >
-                  {m.rol === "tutor" ? (
-                    <TutorAvatar small />
-                  ) : (
-                    <span className="tutor-student-avatar" aria-hidden="true">
-                      Tú
-                    </span>
-                  )}
-                  <div className="tutor-message-content">
-                    <div className="tutor-message-bubble">
-                      <span className="tutor-message-label">
-                        {m.rol === "estudiante"
-                          ? "Tu razonamiento"
-                          : "Tutor de CALIBRA"}
-                      </span>
-                      {m.rol === "tutor" ? (
-                        <MathMarkdown content={m.texto} />
-                      ) : (
-                        <p>{m.texto}</p>
-                      )}
-                    </div>
-                    {m.degradado && (
-                      <p className="tutor-chat-notice">
-                        Respuesta simplificada: solo se pudo preparar el texto,
-                        sin ejercicios ni cambios en el mapa.
-                      </p>
-                    )}
-                    {m.rol === "tutor" && m.bloques.length > 0 && (
-                      <div className="tutor-rich-blocks">
-                        {m.bloques.map((b) => {
-                          const frame = FRAME[b.tipo],
-                            Icon = frame?.icon;
-                          return (
-                            <div
-                              key={b.id}
-                              className={`tutor-block tutor-block--${b.tipo}`}
-                            >
-                              {frame && Icon && (
-                                <h3
-                                  className={`tutor-block-heading tutor-block-heading--${frame.tono}`}
-                                >
-                                  <span>
-                                    <Icon size={20} />
-                                  </span>
-                                  {frame.titulo}
-                                </h3>
-                              )}
-                              <BloqueView
-                                bloque={b}
-                                arbolId={conv.data!.arbol_id}
-                                comprobando={!!activa.data}
-                                alResponder={(t) => {
-                                  void grafo.refetch();
-                                  if (t) enviar.mutate(t);
-                                }}
-                                onComprobar={() => comprobar.mutate()}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {pensando && (
-                <div className="tutor-message tutor-message--tutor">
-                  <TutorAvatar small />
-                  <p role="status" className="tutor-typing">
-                    <span />
-                    <span />
-                    <span />
-                    <span className="sr-only">
-                      El tutor está pensando… tu mensaje queda guardado.
-                    </span>
-                  </p>
-                </div>
-              )}
-            </div>
-            {id && conv.data && (
-              <div className="tutor-quick-check">
-                <span className="tutor-quick-icon">
-                  <BookOpen size={22} />
-                </span>
-                <div>
-                  <h3>Comprobación rápida</h3>
-                  <p>
-                    Pon a prueba la idea con una situación diferente, sin ayudas
-                    de CALIBRA.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="tutor-button tutor-button--soft"
-                  disabled={!puedeActuar}
-                  onClick={() => comprobar.mutate()}
-                >
-                  Resolver ejercicio <ArrowRight size={17} />
-                </button>
-              </div>
-            )}
-            <form
-              className="tutor-composer"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (id && texto.trim()) enviar.mutate(texto.trim());
-              }}
-            >
-              <label className="sr-only" htmlFor="tutor-message">
-                Tu mensaje
-              </label>
-              <div className="tutor-composer-input">
-                <Link
-                  to="/cursos"
-                  aria-label="Importar material en Mis cursos"
-                  title="Importar material en Mis cursos"
-                >
-                  <Paperclip size={20} />
-                </Link>
-                <textarea
-                  id="tutor-message"
-                  rows={1}
-                  value={texto}
-                  maxLength={2000}
-                  disabled={!id || conv.isPending}
-                  onChange={(e) => setTexto(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (
-                      (e.ctrlKey || e.metaKey) &&
-                      e.key === "Enter" &&
-                      texto.trim() &&
-                      !ocupado
-                    ) {
-                      e.preventDefault();
-                      enviar.mutate(texto.trim());
-                    }
-                  }}
-                  placeholder={
-                    id
-                      ? "Escribe tu mensaje aquí…"
-                      : "Elige un tema para iniciar la conversación"
-                  }
-                />
-              </div>
-              <button
-                type="submit"
-                className="tutor-button"
-                disabled={!id || ocupado || !texto.trim()}
-              >
-                <Send size={18} />
-                <span>Enviar</span>
-              </button>
-            </form>
-            {texto.length > 1800 && (
-              <p className="tutor-composer-count">
-                {texto.length} / 2000 caracteres
-              </p>
-            )}
-          </section>
-          <section
-            className="tutor-panel tutor-map-panel"
-            aria-labelledby="mapa-title"
-          >
-            <header className="tutor-panel-header">
-              <span className="tutor-icon-tile">
-                <Network size={29} />
-              </span>
-              <div>
-                <h2 id="mapa-title">Tu mapa de comprensión</h2>
-                <p>
-                  Así se conectan tus ideas. Explora cada nodo para ver más
-                  detalles.
-                </p>
-              </div>
-            </header>
-            {grafo.isPending ? (
-              <div className="tutor-map-empty" role="status">
-                <Network size={40} />
-                <p>Preparando tu mapa…</p>
-              </div>
-            ) : grafo.isError ? (
-              <div className="tutor-map-empty">
-                <TriangleAlert size={30} />
-                <h3>No pudimos consultar tu mapa</h3>
+              {grafo.isError ? (
                 <p role="alert">{grafo.error.message}</p>
-                <button
-                  type="button"
-                  className="tutor-button tutor-button--secondary"
-                  onClick={() => void grafo.refetch()}
-                >
-                  Reintentar mapa
-                </button>
-              </div>
-            ) : (
-              grafo.data && (
+              ) : grafo.data ? (
                 <GrafoComprension
                   grafo={grafo.data}
                   seleccionado={elegido}
                   onSeleccionar={setElegido}
-                  busqueda={busqueda}
                 />
-              )
-            )}
-          </section>
-        </div>
-        <TutorProgress grafo={grafo.data} arbolId={conv.data?.arbol_id} />
-        {id && (
-          <Link to="/tutor" className="tutor-new-conversation">
-            <ChevronLeft size={15} />
-            Empezar otra conversación
-          </Link>
+              ) : (
+                <p role="status">Preparando tu mapa…</p>
+              )}
+            </section>
+            <TutorProgress grafo={grafo.data} />
+          </div>
+        ) : !id ? (
+          <>
+            <div className="tc-only-narrow" style={{ marginBottom: 12 }}>
+              {botonHistorial}
+            </div>
+            <div className="tc-home-grid">
+              <InicioTutor
+                temas={temas}
+                contextos={contextos}
+                contextoClave={contextoClave}
+                onContexto={setContextoClave}
+                valor={inicio}
+                onCambio={(v) => {
+                  setInicio(v);
+                  if (!v) setIntencion(null);
+                }}
+                onEnviar={() => empezar(inicio)}
+                onIntencion={alElegirIntencion}
+                intencionActiva={intencion}
+                ocupado={crear.isPending}
+                error={crear.error?.message ?? null}
+                onReintentar={() =>
+                  crear.variables && crear.mutate(crear.variables)
+                }
+              />
+              <div className="tc-only-wide">{panelHistorial(true)}</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="tc-conv-bar">
+              <Link to="/tutor" className="tc-btn tc-btn--line">
+                <SquarePen size={18} aria-hidden="true" /> Nueva
+              </Link>
+              <h1 title={titulo}>{titulo}</h1>
+              <span className={`tc-status${listo ? " tc-status--ready" : ""}`}>
+                <i /> {estado}
+              </span>
+              {botonHistorial}
+              <button
+                type="button"
+                className="tc-btn tc-btn--soft"
+                aria-pressed={mapaAbierto}
+                onClick={() => setMapaAbierto((a) => !a)}
+              >
+                <Network size={18} aria-hidden="true" />
+                {mapaAbierto ? "Ocultar mapa" : "Ver mapa"}
+              </button>
+            </div>
+            <div
+              className={`tc-conv${mapaAbierto ? " tc-conv--con-mapa" : ""}`}
+            >
+              {conv.isError ? (
+                <div className="tc-banner tc-banner--error" role="alert">
+                  <span>{conv.error.message}</span>
+                  <button type="button" onClick={() => void conv.refetch()}>
+                    Reintentar conversación
+                  </button>
+                </div>
+              ) : (
+                <ConversacionTutor
+                  conv={conv.data ?? { id: id, arbol_id: "", mensajes: [] }}
+                  cargando={conv.isPending}
+                  pensando={enviar.isPending}
+                  pendiente={
+                    enviar.isPending ? (enviar.variables ?? null) : null
+                  }
+                  error={enviar.error ?? comprobar.error}
+                  onReintentar={() =>
+                    enviar.isError && enviar.variables
+                      ? enviar.mutate(enviar.variables)
+                      : comprobar.mutate()
+                  }
+                  borrador={borrador}
+                  onBorrador={setBorrador}
+                  onEnviar={(t) => t && enviar.mutate(t)}
+                  activa={activa.data ?? null}
+                  ocupado={
+                    enviar.isPending || comprobar.isPending || !conv.data
+                  }
+                  temaActual={temaActual}
+                  onComprobar={() => comprobar.mutate()}
+                />
+              )}
+              {mapaAbierto && (
+                <aside className="tc-map" aria-labelledby="tc-mapa-titulo">
+                  <h2 id="tc-mapa-titulo">Tu mapa de comprensión</h2>
+                  <p>
+                    Así se conectan tus ideas. El estado de cada nodo sale de
+                    tus comprobaciones.
+                  </p>
+                  <label className="tc-search">
+                    <Search size={17} aria-hidden="true" />
+                    <span className="sr-only">Buscar ideas en tu mapa</span>
+                    <input
+                      type="search"
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                      placeholder="Buscar ideas en tu mapa…"
+                    />
+                  </label>
+                  {grafo.isPending ? (
+                    <p role="status">Preparando tu mapa…</p>
+                  ) : grafo.isError ? (
+                    <div role="alert">
+                      <p>{grafo.error.message}</p>
+                      <button
+                        type="button"
+                        className="tc-btn tc-btn--line"
+                        onClick={() => void grafo.refetch()}
+                      >
+                        Reintentar mapa
+                      </button>
+                    </div>
+                  ) : (
+                    <GrafoComprension
+                      grafo={grafo.data}
+                      seleccionado={elegido}
+                      onSeleccionar={setElegido}
+                      busqueda={busqueda}
+                    />
+                  )}
+                </aside>
+              )}
+            </div>
+          </>
         )}
       </main>
+      <Sheet open={historialAbierto} onOpenChange={setHistorialAbierto}>
+        <SheetContent
+          side="right"
+          className={`tc-sheet tutor-layout${claro ? " tc-modo-claro" : ""}`}
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Historial de conversaciones</SheetTitle>
+            <SheetDescription>
+              Tus conversaciones con el tutor, de la más reciente a la más
+              antigua.
+            </SheetDescription>
+          </SheetHeader>
+          {panelHistorial(false, () => setHistorialAbierto(false))}
+        </SheetContent>
+      </Sheet>
     </ResponsiveLayout>
   );
 }

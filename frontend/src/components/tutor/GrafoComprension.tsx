@@ -19,11 +19,13 @@ import {
   descripcionNodo,
   jerarquia,
   radioNodo,
+  textoEstado,
   type Estado,
   type Grafo,
   type NodoArbol,
 } from "@/lib/tutor/grafo";
 import { buscarNodos, disponerMapa } from "@/lib/tutor/presentacion";
+import { pluralizar } from "@/lib/tutor/chat";
 
 type Props = {
   grafo: Grafo;
@@ -51,8 +53,8 @@ function Fila({ n, props }: { n: NodoArbol; props: Props }) {
         <span>
           <strong>{n.nodo.titulo}</strong>
           <small>
-            {ESTADO_TEXTO[n.nodo.estado]}
-            {n.nodo.senal ? " · posible confusión, provisional" : ""}
+            {textoEstado(n.nodo)}
+            {props.grafo.foco === n.nodo.id ? " · en foco del tutor" : ""}
           </small>
         </span>
       </button>
@@ -176,6 +178,17 @@ function Mapa({ grafo, seleccionado, onSeleccionar }: Props) {
                 stroke="white"
                 strokeOpacity=".18"
               />
+              {grafo.foco === n.id && (
+                <circle
+                  className="tc-foco-ring"
+                  cx={n.x}
+                  cy={n.y}
+                  r={r + 11}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+              )}
               {n.senal && (
                 <circle
                   cx={n.x}
@@ -217,7 +230,12 @@ function Mapa({ grafo, seleccionado, onSeleccionar }: Props) {
       </svg>
       {layout.omitidos > 0 && (
         <p className="tutor-map-scope">
-          Vista de relaciones cercanas · {layout.omitidos} ideas más disponibles
+          Vista de relaciones cercanas ·{" "}
+          {pluralizar(
+            layout.omitidos,
+            "idea más disponible",
+            "ideas más disponibles",
+          )}{" "}
           en la lista.
         </p>
       )}
@@ -263,6 +281,9 @@ function Detalle({ grafo, seleccionado }: Props) {
           {ESTADO_GLIFO[n.estado]}
         </span>
         <h3>{n.titulo}</h3>
+        {grafo.foco === n.id && (
+          <span className="tc-foco-badge">En foco del tutor</span>
+        )}
       </header>
       <div
         className="tutor-detail-tabs"
@@ -373,7 +394,7 @@ function Detalle({ grafo, seleccionado }: Props) {
         <h4>Tu estado</h4>
         <span className={`tutor-state-pill tutor-state-pill--${n.estado}`}>
           {n.estado === "aplicado" ? <Check size={14} /> : <Circle size={12} />}{" "}
-          {ESTADO_TEXTO[n.estado]}
+          {textoEstado(n)}
         </span>
         <small>
           {n.evidencias}{" "}

@@ -129,19 +129,19 @@ describe("render de los diez bloques", () => {
     for (const t of ["prediccion", "practica"] as const) {
       const html = vista(bloques[t]);
       expect(html).toContain('type="radio"');
-      expect(html).toContain("<button");
+      expect(html).toContain(t === "practica" ? "<button" : 'type="radio"');
       expect(html).not.toMatch(/correct|checked/i);
     }
     expect(vista(bloques.prediccion)).toContain("112,5");
     expect(vista(bloques.practica)).toContain("Una tienda ajusta sus precios.");
-    expect(vista(bloques.practica)).toContain("verificada por CALIBRA");
+    expect(vista(bloques.practica)).toContain("Verificada por CALIBRA");
   });
   it("ejemplo_paso_a_paso revela solo el primer paso y ofrece un intento opcional", () => {
     const html = vista(bloques.ejemplo_paso_a_paso);
     expect(html).toContain("Calcula el aumento");
     expect(html).toContain("100 × 20% = 20");
     expect(html).not.toContain("Calcula la baja sobre la nueva base");
-    expect(html).toContain("Mostrar el siguiente paso (1 de 2)");
+    expect(html).toContain("¿Cuál sería el siguiente? (1 de 2)");
     expect(html).toContain("(opcional)");
   });
   it("en_tus_palabras pide texto libre", () => {
@@ -186,8 +186,8 @@ describe("render de las cuatro formas de visual", () => {
       marcadas: 3,
       fraccion: "3/8",
     });
-    expect(html.match(/bg-primary/g)).toHaveLength(3);
-    expect(html).toContain("3 de 8 partes marcadas");
+    expect(html.match(/tb-seg--on/g)).toHaveLength(3);
+    expect(html).toContain("3 marcadas");
     expect(html).toContain("(3/8)");
   });
   it("tabla_proporcion muestra columnas, filas y la relación", () => {

@@ -5,6 +5,7 @@ import {
   descripcionNodo,
   jerarquia,
   radioNodo,
+  textoEstado,
   type Grafo,
 } from "./grafo";
 const nodo = (id: string, extra: Partial<Grafo["nodos"][number]> = {}) => ({
@@ -98,5 +99,29 @@ describe("presentación de nodos", () => {
     expect(d).toContain(ESTADO_TEXTO.fallo);
     expect(d).toMatch(/posible confusión/i);
     expect(d).toContain("2");
+  });
+});
+describe("estado a la vista de un nodo de error (S5)", () => {
+  it("un error nuevo no se presenta como «Sin explorar»", () => {
+    const e = nodo("e", { tipo: "error", estado: "sin_explorar" });
+    expect(textoEstado(e)).toBe("Error por comprobar");
+    expect(descripcionNodo(e)).toContain("Error por comprobar");
+  });
+  it("la señal se dice como posible confusión provisional", () => {
+    const e = nodo("e", { tipo: "idea", senal: "posible_confusion" });
+    expect(textoEstado(e)).toBe(
+      "Sin explorar · posible confusión (provisional)",
+    );
+  });
+  it("el estado real no se disfraza: un error con fallo o aplicado conserva su texto", () => {
+    expect(textoEstado(nodo("e", { tipo: "error", estado: "fallo" }))).toBe(
+      ESTADO_TEXTO.fallo,
+    );
+    expect(textoEstado(nodo("e", { tipo: "error", estado: "aplicado" }))).toBe(
+      ESTADO_TEXTO.aplicado,
+    );
+    expect(textoEstado(nodo("i", { tipo: "idea", estado: "explorado" }))).toBe(
+      ESTADO_TEXTO.explorado,
+    );
   });
 });
