@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BookOpen,
   Lightbulb,
+  ArrowDown,
   Search,
   TriangleAlert,
 } from "lucide-react";
-import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import { ApiError } from "@/integrations/api/client";
 import type { Bloque, Conversacion } from "@/lib/tutor/chat";
 import type { Grafo, NodoGrafo } from "@/lib/tutor/grafo";
@@ -21,7 +21,9 @@ import {
   type ResultadoComprobacion,
 } from "./ComprobacionTutor";
 import { BloqueView } from "./Bloques";
-import { ComposerTutor } from "./ComposerTutor";
+import { ComposerTutor, type ComposerRef } from "./ComposerTutor";
+import { Pensando } from "./Pensando";
+import { TextoEscrito } from "./TextoEscrito";
 import { ElegirTema } from "./ElegirTema";
 import { NotaDescartes } from "./NotaDescartes";
 import type { TemaId } from "@/lib/tutor/inicio";
@@ -75,6 +77,49 @@ export function ConversacionTutor(p: Props) {
     );
     conocidos.current = siguientes;
   }, [mensajes, p.cargando]);
+  // Mensajes del tutor que llegan mientras la charla está abierta: se revelan con ritmo y sus
+  // bloques esperan a que termine el texto. Al cargar o recargar, todo se muestra entero.
+  const animables = useRef<Set<string>>(new Set());
+  if (!p.cargando && conocidos.current)
+    for (const m of mensajes)
+      if (m.rol === "tutor" && !conocidos.current.has(m.id))
+        animables.current.add(m.id);
+  const [terminados, setTerminados] = useState<Set<string>>(new Set());
+  const marcarTerminado = useCallback(
+    (id: string) =>
+      setTerminados((s) => (s.has(id) ? s : new Set(s).add(id))),
+    [],
+  );
+  const escribiendo = (id: string) =>
+    animables.current.has(id) && !terminados.has(id);
+  const composer = useRef<ComposerRef>(null);
+  // Seguir el texto solo si la persona no subió a releer.
+  const cerca = useRef(true);
+  const [lejos, setLejos] = useState(false);
+  const seguir = useCallback(() => {
+    const el = log.current;
+    if (el && cerca.current) el.scrollTop = el.scrollHeight;
+  }, []);
+  const irAlFinal = () => {
+    const el = log.current;
+    if (!el) return;
+    cerca.current = true;
+    setLejos(false);
+    el.scrollTo?.({ top: el.scrollHeight, behavior: "smooth" });
+    composer.current?.enfocar();
+  };
+  // Al terminar de pensar, el cursor vuelve al campo si no hay otro control con el foco.
+  const estabaPensando = useRef(false);
+  useEffect(() => {
+    if (estabaPensando.current && !p.pensando) {
+      const a = document.activeElement;
+      if (!a || a === document.body) composer.current?.enfocar();
+    }
+    estabaPensando.current = p.pensando;
+  }, [p.pensando]);
+  useEffect(() => {
+    seguir();
+  }, [terminados, seguir]);
   const ultimaEvidenciaId = p.evidencias?.[0]?.id;
   // La última respuesta queda visible: al llegar un mensaje o empezar a pensar, baja al final.
   useEffect(() => {
@@ -162,6 +207,12 @@ export function ConversacionTutor(p: Props) {
       <div
         ref={log}
         className="tc-log"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const cercaAhora = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+          cerca.current = cercaAhora;
+          setLejos((l) => (l === !cercaAhora ? l : !cercaAhora));
+        }}
         role="log"
         aria-live="polite"
         aria-label="Mensajes de la charla"
@@ -213,19 +264,28 @@ export function ConversacionTutor(p: Props) {
                   {m.rol === "tutor" ? "Tu tutor CALIBRA" : "Tú"}
                 </span>
                 {m.rol === "tutor" ? (
-                  <MathMarkdown content={m.texto} />
+                  <TextoEscrito
+                    texto={m.texto}
+                    animar={animables.current.has(m.id)}
+                    demo={p.demo}
+                    onAvance={seguir}
+                    onTermina={() => marcarTerminado(m.id)}
+                  />
                 ) : (
                   m.texto
                 )}
               </div>
-              {m.degradado && (
+              {m.degradado && !escribiendo(m.id) && (
                 <p className="tc-note" role="status">
                   Respondí solo con texto esta vez: no pude preparar ejercicios
                   ni cambios en el mapa.
                 </p>
               )}
-              {m.rol === "tutor" && <NotaDescartes descartes={m.descartes} />}
+              {m.rol === "tutor" && !escribiendo(m.id) && (
+                <NotaDescartes descartes={m.descartes} />
+              )}
               {m.rol === "tutor" &&
+                !escribiendo(m.id) &&
                 m.bloques.map((b, i) => (
                   <div
                     key={b.id}
@@ -275,16 +335,16 @@ export function ConversacionTutor(p: Props) {
             </div>
           </div>
         )}
-        {p.pensando && (
-          <div className="tc-msg">
-            <TutorAvatar small estado="pensando" />
-            <p role="status" className="tc-thinking">
-              <span />
-              <span />
-              <span />
-              <span className="sr-only">El tutor está pensando…</span>
-            </p>
-          </div>
+        {p.pensando && <Pensando />}
+        {lejos && (
+          <button
+            type="button"
+            className="tw-ir-final"
+            onClick={irAlFinal}
+            aria-label="Ir al último mensaje"
+          >
+            <ArrowDown size={16} aria-hidden="true" /> Ir al final
+          </button>
         )}
       </div>
       <div className="tc-actions" role="group" aria-label="Acciones rápidas">
@@ -302,6 +362,7 @@ export function ConversacionTutor(p: Props) {
         ))}
       </div>
       <ComposerTutor
+        ref={composer}
         id="tc-mensaje"
         etiqueta="Tu mensaje"
         valor={p.borrador}
