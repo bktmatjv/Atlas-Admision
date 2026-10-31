@@ -68,6 +68,12 @@ Las operaciones de IA de árboles y generación formativa requieren `Idempotency
 
 Errores: `{ "error": { "codigo": "HTTP_400", "mensaje": "..." } }`. Entrada inválida: 400; sesión ausente: 401; origen no permitido: 403; recurso ajeno/inexistente: 404; conflicto de estado: 409; tamaño excedido: 413; límite de peticiones: 429; IA ausente/fallida: 503. No se devuelven SQL, prompts completos, claves ni rutas privadas en errores.
 
+## Eventos del sistema y árbol vivo
+
+- `POST /conversaciones/:id/eventos` con `{ tipo: "comprobacion_entregada", comprobacion_id }` e `Idempotency-Key`: el servidor arma el aviso desde lo guardado (resultado, rastro, nivel de ayuda y justificación como dato no confiable) y dispara un turno del agente. El mensaje se guarda con `mensajes.evento` y la interfaz solo recibe la marca, nunca la instrucción interna. Repetir la clave no duplica mensajes.
+- El prompt `tutor-agente-v6` pide construir el árbol con pocos nodos por turno (con ejemplos de `grafo_ops`), proponer `en_tus_palabras` en momentos naturales y reaccionar a los eventos sin dar la respuesta. Cada mensaje del tutor informa `ideas_nuevas` (nodos creados en ese turno).
+- Un 400 `tool_use_failed` de Groq (el modelo generó una llamada a herramienta que no cumple el esquema) se trata como salida inválida: el router pasa al siguiente destino. Cadena recomendada con Foundry como principal: `AI_CADENA=foundry:<despliegue>,groq:openai/gpt-oss-120b`.
+
 ## Cuentas y perfil
 
 - Usuario de 3 a 30 caracteres `[a-z0-9_.]` y contraseña de 8 a 128. No se pide nombre, fecha de nacimiento, DNI, colegio ni correo.
@@ -154,6 +160,7 @@ Nunca supera `AI_TIMEOUT_TOTAL_MS` por llamada al router, y cada destino se prue
 | `GROQ_API_KEY` | Clave de los destinos `groq:`. (`AI_API_KEY`/`AI_MODEL` son solo para `AI_PROVIDER=groq`) |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Credenciales de los destinos `cloudflare:` (endpoint compatible con OpenAI de Workers AI) |
 | `FOUNDRY_ENDPOINT`, `FOUNDRY_API_KEY` | Recurso (URL https, p. ej. `https://<recurso>.openai.azure.com`) y clave de los destinos `foundry:<despliegue>`; se exigen solo si la cadena incluye Foundry |
+| `FOUNDRY_REASONING_EFFORT` | Opcional: `minimal`, `low`, `medium` o `high`. Se envía como `reasoning_effort` a los destinos Foundry para bajar la latencia de los modelos de razonamiento (según Microsoft, gpt-5-mini lo admite; `minimal` solo en los GPT-5 originales y sin llamadas paralelas a herramientas). Vacío = el valor por defecto del modelo |
 | `AI_SIN_HERRAMIENTAS` | Destinos de la cadena sin function calling: solo reciben llamadas sin herramientas. Todo el tutor actual envía herramientas, así que es una salida de emergencia |
 | `AI_TIMEOUT_MS` (20000) / `AI_TIMEOUT_TOTAL_MS` (45000) | Tiempo por llamada a un destino / por llamada al router, sumando failovers |
 | `AI_MAX_CONCURRENCIA` (4) / `AI_MAX_ESPERA_COLA_MS` (5000) | Llamadas simultáneas por destino / espera máxima en su cola |

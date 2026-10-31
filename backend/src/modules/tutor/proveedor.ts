@@ -114,7 +114,13 @@ type OpcionesOpenAI = {
   cabeceraAuth?: (apiKey: string) => Record<string, string>;
   // Modelos de razonamiento: sin temperature y con max_completion_tokens en vez de max_tokens.
   razonamiento?: boolean;
+  // Esfuerzo de razonamiento (reasoning_effort); si no se configura, no se envía y manda el valor del modelo.
+  esfuerzo?: string;
 };
+// Groq responde 400 «tool_use_failed» cuando el modelo genera una llamada a herramienta que no
+// cumple el esquema: no es un bug de la solicitud, es una salida inválida del modelo.
+const LLAMADA_INVALIDA =
+  /tool_use_failed|tool call validation failed|Failed to call a function/i;
 // Llamada compartida por los adaptadores de la API compatible con OpenAI (Groq, Cloudflare, Foundry).
 async function completarOpenAI(
   o: OpcionesOpenAI,
@@ -125,8 +131,10 @@ async function completarOpenAI(
     model: o.model,
     messages: aMensajesOpenAI(e),
   };
-  if (o.razonamiento) cuerpo.max_completion_tokens = e.max_tokens ?? 4000;
-  else {
+  if (o.razonamiento) {
+    cuerpo.max_completion_tokens = e.max_tokens ?? 4000;
+    if (o.esfuerzo) cuerpo.reasoning_effort = o.esfuerzo;
+  } else {
     cuerpo.max_tokens = e.max_tokens ?? 4000;
     cuerpo.temperature = 0.3;
   }
@@ -175,6 +183,12 @@ async function completarOpenAI(
         "El proveedor de IA alcanzó su límite de uso. Espera un momento y reintenta.",
         429,
         { esperaMs: o.esperaLimite(respuesta.headers, texto) },
+      );
+    if (respuesta.status === 400 && LLAMADA_INVALIDA.test(texto))
+      throw new ErrorProveedor(
+        "respuesta_invalida",
+        "El modelo no generó una llamada válida a la herramienta.",
+        400,
       );
     throw new ErrorProveedor(
       "http",
@@ -252,6 +266,8 @@ type OpcionesFoundry = {
   model: string;
   fetch?: FetchFn;
   timeoutMs?: number;
+  // reasoning_effort de Chat Completions: minimal, low, medium o high (según el modelo desplegado).
+  esfuerzo?: string;
 };
 // Microsoft Foundry / Azure OpenAI mediante la API v1 compatible con OpenAI:
 // POST {recurso}/openai/v1/chat/completions con la clave en el encabezado «api-key».
@@ -272,6 +288,7 @@ export class ProveedorFoundry implements ProveedorIA {
         formatoJson: false,
         cabeceraAuth: (k) => ({ "api-key": k }),
         razonamiento: true,
+        esfuerzo: this.o.esfuerzo,
       },
       e,
       op,
@@ -746,6 +763,7 @@ function routerDeConfiguracion(c: Settings): RouterIA {
     c.CLOUDFLARE_API_TOKEN,
     c.FOUNDRY_ENDPOINT,
     c.FOUNDRY_API_KEY,
+    c.FOUNDRY_REASONING_EFFORT,
     c.AI_TIMEOUT_MS,
     c.AI_TIMEOUT_TOTAL_MS,
     c.AI_MAX_CONCURRENCIA,
@@ -772,6 +790,7 @@ function routerDeConfiguracion(c: Settings): RouterIA {
               apiKey: c.FOUNDRY_API_KEY!,
               model: d.modelo,
               timeoutMs: c.AI_TIMEOUT_MS,
+              esfuerzo: c.FOUNDRY_REASONING_EFFORT,
             })
           : new ProveedorGroq({
               apiKey: c.GROQ_API_KEY!,
