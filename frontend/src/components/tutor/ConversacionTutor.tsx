@@ -2,13 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  BookOpen,
   Lightbulb,
   ArrowDown,
   Check,
-  Search,
   TriangleAlert,
 } from "lucide-react";
+import { Ilustracion } from "@/components/arcade/Ilustracion";
 import { ApiError } from "@/integrations/api/client";
 import type { Bloque, Conversacion } from "@/lib/tutor/chat";
 import type { Grafo, NodoGrafo } from "@/lib/tutor/grafo";
@@ -139,7 +138,7 @@ export function ConversacionTutor(p: Props) {
   const acciones = [
     {
       id: "analizar",
-      icono: Search,
+      icono: "lupa" as const,
       texto: "Analizar error",
       accion: () =>
         p.onEnviar(
@@ -148,14 +147,14 @@ export function ConversacionTutor(p: Props) {
     },
     {
       id: "explicar",
-      icono: BookOpen,
+      icono: "libro" as const,
       texto: "Explicar concepto",
       accion: () =>
         p.onEnviar(`Explícame ${p.temaActual} de una forma más sencilla.`),
     },
     {
       id: "comprobar",
-      icono: Lightbulb,
+      icono: "diana-flecha" as const,
       texto: "Dame una comprobación",
       accion: p.onComprobar,
     },
@@ -371,7 +370,7 @@ export function ConversacionTutor(p: Props) {
             disabled={!libre}
             onClick={a.accion}
           >
-            <a.icono size={17} aria-hidden="true" />
+            <Ilustracion nombre={a.icono} className="tc-chip-dibujo" sizes="32px" />
             {a.texto}
           </button>
         ))}

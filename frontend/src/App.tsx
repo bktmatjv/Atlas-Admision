@@ -44,7 +44,7 @@ export default function App() {
         {showWelcome ? <WelcomeScreen onComplete={() => setShowWelcome(false)} /> : <BrowserRouter>
           <SessionGate><EntradaGate><Suspense fallback={<Cargando />}>
             <Routes>
-              <Route path="/" element={<Navigate to="/aprender" replace />} />
+              <Route path="/" element={<Navigate to="/admision" replace />} />
               <Route path="/aprender" element={<Aprender />} />
               <Route path="/aprender/:id" element={<Aprender />} />
               <Route path="/tutor" element={<Tutor />} />
