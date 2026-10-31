@@ -1,4 +1,4 @@
-# Atlas
+# CALIBRA
 
 Tutor y práctica para pasar de consultar una explicación a aplicar una idea. Incluye banco de admisión UNMSM, árbol de comprensión, comprobaciones y cursos personales con material propio.
 
