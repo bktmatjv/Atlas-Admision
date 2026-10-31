@@ -34,6 +34,7 @@ import type { Bloque, Conversacion } from "@/lib/tutor/chat";
 import { BloqueView } from "@/components/tutor/Bloques";
 import { PanelArtefactos } from "@/components/tutor/PanelArtefactos";
 import { transicionArtefacto } from "@/lib/tutor/transiciones";
+import { claveEvento } from "@/lib/tutor/eventos";
 import type {
   ComprobacionActiva,
   ResultadoComprobacion,
@@ -252,6 +253,21 @@ export default function Tutor() {
       void evidencias.refetch();
     },
   });
+  // Al entregar una comprobación el sistema avisa al agente: reacciona sin que el estudiante escriba.
+  const reaccionar = useMutation({
+    mutationFn: (comprobacionId: string) =>
+      post(
+        `/conversaciones/${id}/eventos`,
+        { tipo: "comprobacion_entregada", comprobacion_id: comprobacionId },
+        claveEvento(comprobacionId),
+      ),
+    onSuccess: () => {
+      void conv.refetch();
+      void grafo.refetch();
+      void historial.refetch();
+      void evidencias.refetch();
+    },
+  });
   const comprobar = useMutation({
     mutationFn: (tema?: TemaId) =>
       post("/comprobaciones", {
@@ -321,7 +337,14 @@ export default function Tutor() {
         : null,
     [grafo.data, fallo],
   );
-  const falloPendiente = !!fallo && !(evidencias.data ?? []).some(e => e.arbol_id === fallo.arbol_id && e.tipo === "corrigio_tras_error" && e.created_at >= fallo.created_at);
+  const falloPendiente =
+    !!fallo &&
+    !(evidencias.data ?? []).some(
+      (e) =>
+        e.arbol_id === fallo.arbol_id &&
+        e.tipo === "corrigio_tras_error" &&
+        e.created_at >= fallo.created_at,
+    );
   const bloquesDisponibles =
     conv.data?.mensajes.flatMap((m) => m.bloques).filter(esArtefactoGrande) ??
     [];
@@ -349,7 +372,10 @@ export default function Tutor() {
         0,
       );
     }, tabActivo);
-  const actualizarComprobacion = async (r?: ResultadoComprobacion) => {
+  const actualizarComprobacion = async (
+    r?: ResultadoComprobacion,
+    comprobacionId?: string,
+  ) => {
     await Promise.all([
       activa.refetch(),
       grafo.refetch(),
@@ -361,6 +387,11 @@ export default function Tutor() {
       setMapaAbierto(true);
       setEventoRetro(Boolean(r.rastro.nodo_retorno_id));
     }
+    if (r && comprobacionId) reaccionar.mutate(comprobacionId);
+  };
+  const abrirMapa = () => {
+    cambiarPreferencias({ ...preferencias, activo: "grafo" });
+    setMapaAbierto(true);
   };
   const temaActual =
     nodoActual?.titulo ??
@@ -382,7 +413,10 @@ export default function Tutor() {
     <button
       type="button"
       className="tc-btn tc-btn--line"
-      onClick={() => { if (!anchoGrande()) setMapaAbierto(false); setHistorialAbierto(true); }}
+      onClick={() => {
+        if (!anchoGrande()) setMapaAbierto(false);
+        setHistorialAbierto(true);
+      }}
     >
       <History size={18} aria-hidden="true" /> Historial
     </button>
@@ -501,17 +535,24 @@ export default function Tutor() {
                   key={id}
                   conv={conv.data ?? { id: id, arbol_id: "", mensajes: [] }}
                   cargando={conv.isPending}
-                  pensando={enviar.isPending}
+                  pensando={enviar.isPending || reaccionar.isPending}
                   pendiente={
                     enviar.isPending ? (enviar.variables ?? null) : null
                   }
-                  error={enviar.error ?? (eligeTema ? null : comprobar.error)}
+                  error={
+                    enviar.error ??
+                    reaccionar.error ??
+                    (eligeTema ? null : comprobar.error)
+                  }
+                  onAbrirMapa={abrirMapa}
                   eligeTema={!enviar.error && eligeTema}
                   onElegirTema={(tema) => comprobar.mutate(tema)}
                   onReintentar={() =>
                     enviar.isError && enviar.variables
                       ? enviar.mutate(enviar.variables)
-                      : comprobar.mutate(undefined)
+                      : reaccionar.isError && reaccionar.variables
+                        ? reaccionar.mutate(reaccionar.variables)
+                        : comprobar.mutate(undefined)
                   }
                   borrador={borrador}
                   onBorrador={setBorrador}
@@ -529,7 +570,10 @@ export default function Tutor() {
                   }}
                   demo={demo}
                   ocupado={
-                    enviar.isPending || comprobar.isPending || !conv.data
+                    enviar.isPending ||
+                    reaccionar.isPending ||
+                    comprobar.isPending ||
+                    !conv.data
                   }
                   temaActual={temaActual}
                   onComprobar={() => comprobar.mutate()}
@@ -591,17 +635,23 @@ export default function Tutor() {
                         </div>
                       ) : (
                         <>
-                        {falloPendiente && !plan && <p className="tw-retro-nota" role="status">{fallo.detalle.rastro?.idea_clave ? "El sistema identificó una idea para revisar, pero no hay una ruta válida de retorno en este mapa. No se dibuja un recorrido inventado." : "Sin evidencia suficiente para señalar una idea. Comparte un paso de tu razonamiento."}</p>}
-                        <GrafoComprension
-                          grafo={grafo.data}
-                          seleccionado={elegido}
-                          onSeleccionar={setElegido}
-                          busqueda={busqueda}
-                          plan={plan}
-                          eventoRetro={eventoRetro}
-                          onConsumirRetro={consumirRetro}
-                          demo={demo}
-                        />
+                          {falloPendiente && !plan && (
+                            <p className="tw-retro-nota" role="status">
+                              {fallo.detalle.rastro?.idea_clave
+                                ? "El sistema identificó una idea para revisar, pero no hay una ruta válida de retorno en este mapa. No se dibuja un recorrido inventado."
+                                : "Sin evidencia suficiente para señalar una idea. Comparte un paso de tu razonamiento."}
+                            </p>
+                          )}
+                          <GrafoComprension
+                            grafo={grafo.data}
+                            seleccionado={elegido}
+                            onSeleccionar={setElegido}
+                            busqueda={busqueda}
+                            plan={plan}
+                            eventoRetro={eventoRetro}
+                            onConsumirRetro={consumirRetro}
+                            demo={demo}
+                          />
                         </>
                       )}
                     </section>

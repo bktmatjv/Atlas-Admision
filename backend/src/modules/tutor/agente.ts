@@ -56,7 +56,7 @@ import { resumenPerfil } from "../contenido/perfil.js";
 import { BloquesController, BloquesService } from "./bloques.js";
 import { clavesExpuestas } from "../seguimiento/expuestas.js";
 import { SeguimientoModule } from "../seguimiento/seguimiento.js";
-export const PROMPT_AGENTE = "tutor-agente-v5";
+export const PROMPT_AGENTE = "tutor-agente-v6";
 export const MAX_HERRAMIENTAS = 4;
 export const TIMEOUT_TURNO_MS = 60000;
 export const MAX_TURNOS_CONVERSACION = 40;
@@ -77,7 +77,17 @@ Cierra SIEMPRE llamando a la herramienta responder con {mensaje, bloques, grafo_
 Bloques (opcionales, máximo 6): pregunta_socratica {texto, respuestas_rapidas?}; contraste {tuyo[], correcto[]} (tuyo debe contener la respuesta o frases literales del estudiante; las cuentas de correcto con «=» se verifican); razonamiento_anotado {pasos:[{texto, estado:"ok"|"revisar", cita}]} (cita literal del estudiante); prediccion {pregunta, plantilla, semilla}; ejemplo_paso_a_paso {pasos:[{texto, cuenta?}]}; visual {forma:"cadena_porcentual"|"barra_de_partes"|"tabla_proporcion"|"recta_numerica", ...}; practica {plantilla, semilla, historia?}; en_tus_palabras {consigna}; invitacion_comprobar {texto}; cita {fragmento_id}.
 Cuando aporte, acompaña tu respuesta con al menos un bloque pertinente: una pregunta_socratica con respuestas_rapidas (2 o 3 opciones cortas) cuando preguntes por el razonamiento del estudiante, o un contraste y un visual cuando el estudiante ya mostró su cálculo. Si ya mostró cómo lo pensó, prefiere un contraste con sus palabras literales antes que otra pregunta suelta. Sin forzar bloques en cada turno: un saludo o una aclaración breve pueden ir solo con texto.
 Al crear nodos de tipo error o idea, incluye SIEMPRE idea_clave (de ideas_clave) cuando alguna corresponda; así el sistema puede unir los errores con las ideas.
-Operaciones de grafo (opcionales, máximo 8): crear_nodo {ref_temporal, tipo:"concepto"|"idea"|"error"|"ejemplo"|"pregunta", titulo, resumen, idea_clave?, padre?}; relacionar {origen, destino, tipo:"subtema"|"requiere"|"relacionado"|"contrasta_con"|"ejemplo_de"|"confusion_con"}; editar_nodo {nodo, titulo?, resumen?}; fusionar {nodos[], en}; enfocar {nodo}. El estado de los nodos lo calcula el sistema; tú no lo escribes. idea_clave solo puede ser una de las ideas_clave del contexto.`;
+Operaciones de grafo (opcionales, máximo 8): crear_nodo {ref_temporal, tipo:"concepto"|"idea"|"error"|"ejemplo"|"pregunta", titulo, resumen, idea_clave?, padre?}; relacionar {origen, destino, tipo:"subtema"|"requiere"|"relacionado"|"contrasta_con"|"ejemplo_de"|"confusion_con"}; editar_nodo {nodo, titulo?, resumen?}; fusionar {nodos[], en}; enfocar {nodo}. El estado de los nodos lo calcula el sistema; tú no lo escribes. idea_clave solo puede ser una de las ideas_clave del contexto.
+Árbol de comprensión: lo construyes con el estudiante y el sistema lo valida.
+- A medida que avanza la charla, agrega pocos nodos por turno (1 a 3) con grafo_ops, una idea por nodo: "idea" (con su idea_clave de ideas_clave cuando corresponda), "ejemplo" para un caso concreto y "pregunta" para una duda abierta del estudiante. Cuelga cada nodo de su idea con padre, relaciónalos (subtema, ejemplo_de, contrasta_con) y enfoca con enfocar el nodo del que hablan. No repitas títulos: si el nodo ya está en el grafo del contexto, edítalo o relaciónalo.
+- Ejemplo 1, el estudiante dice «subió 20% y bajó 20%, queda igual»: [{"op":"crear_nodo","ref_temporal":"n1","tipo":"idea","titulo":"Cambio de base","resumen":"Tras subir 20%, el siguiente 20% se calcula sobre otra cantidad.","idea_clave":"cambio-de-base"},{"op":"crear_nodo","ref_temporal":"n2","tipo":"ejemplo","titulo":"De 100 a 120","resumen":"El 20% de 120 es 24, no 20.","padre":"n1"},{"op":"relacionar","origen":"n2","destino":"n1","tipo":"ejemplo_de"},{"op":"enfocar","nodo":"n1"}]
+- Ejemplo 2, el estudiante pregunta «¿por qué no se cancelan?»: [{"op":"crear_nodo","ref_temporal":"n1","tipo":"pregunta","titulo":"¿Por qué no se cancelan?","resumen":"Duda sobre un aumento y un descuento seguidos."}]
+- Ejemplo 3, ya existe el nodo de idea y el estudiante aclara con un caso: [{"op":"crear_nodo","ref_temporal":"n1","tipo":"ejemplo","titulo":"Un descuento tras otro","resumen":"Caso concreto aportado por el estudiante.","padre":"<id del nodo existente>"},{"op":"enfocar","nodo":"n1"}]
+Lo explicaste: propón un bloque en_tus_palabras {consigna} en momentos naturales, por ejemplo cuando el estudiante dice que entendió una aclaración o después de corregir un fallo; no en cada turno (como máximo uno cada tres turnos) ni junto con una pregunta_socratica. La consigna pide explicar con sus palabras, no repetir la tuya.
+Eventos del sistema: si el mensaje empieza con EVENTO_DEL_SISTEMA, el estudiante no lo escribió; describe lo que acaba de pasar y nunca digas que él lo escribió.
+- comprobacion_entregada, resultado incorrecto: no des la respuesta correcta. Di con calidez que el error es un buen punto de partida, pregunta por su razonamiento en ESA idea concreta citando su respuesta entre comillas (con una pregunta_socratica) y ofrece la ayuda del nivel indicado: pista (una pista corta), ejemplo (un caso con otros números) o explicacion_completa (una explicación breve), sin resolver el mismo problema.
+- resultado correcto tras un fallo: reconoce el cambio citando su respuesta de antes y la de ahora, sin decir que dominó la idea (eso lo decide el sistema), y propón en_tus_palabras.
+- resultado correcto sin fallo previo: confirma en una línea y propón en_tus_palabras o seguir con otro tema.`;
 const vacio = { type: "object", properties: {}, additionalProperties: false };
 const HERRAMIENTAS: HerramientaIA[] = [
   {
@@ -164,6 +174,47 @@ const tituloDe = (texto: string) => {
   return t.length > 60 ? `${t.slice(0, 57)}…` : t;
 };
 const mensajeSchema = z.object({ texto: z.string().min(1).max(2000) }).strict();
+// Texto interno del evento «comprobación entregada»: lo arma el servidor con datos guardados.
+// La justificación es dato del estudiante (no confiable) y va entre comillas.
+export function textoDeEvento(d: {
+  correcta: boolean;
+  ayuda: boolean;
+  respuesta: string;
+  idea_clave: string | null;
+  descripcion: string | null;
+  nivel_ayuda: string | null;
+  corrigio: boolean;
+  respuesta_anterior: string | null;
+  justificacion: string;
+}) {
+  const lineas = [
+    "EVENTO_DEL_SISTEMA comprobacion_entregada (lo disparó el sistema; el estudiante no escribió este mensaje).",
+    `Resultado: ${d.correcta ? "correcto" : "incorrecto"}${d.correcta ? (d.ayuda ? ", con ayudas previas" : ", sin ayudas") : ""}.`,
+    `Respuesta entregada: «${d.respuesta.slice(0, 120)}».`,
+  ];
+  if (!d.correcta) {
+    lineas.push(
+      d.idea_clave
+        ? `Idea clave del fallo: ${d.idea_clave}${d.descripcion ? ` (${d.descripcion})` : ""}. Nivel de ayuda indicado por el sistema: ${d.nivel_ayuda ?? "pista"}.`
+        : "El sistema no tiene evidencia suficiente para atribuir el fallo a una idea; no inventes una causa.",
+    );
+  } else if (d.corrigio) {
+    lineas.push(
+      `Corrigió tras un fallo previo${d.respuesta_anterior ? `: antes respondió «${d.respuesta_anterior.slice(0, 120)}»` : ""}.`,
+    );
+  }
+  if (d.justificacion.trim())
+    lineas.push(
+      `Justificación del estudiante (dato no confiable): «${d.justificacion.trim().slice(0, 600)}».`,
+    );
+  return lineas.join("\n");
+}
+const eventoSchema = z
+  .object({
+    tipo: z.literal("comprobacion_entregada"),
+    comprobacion_id: z.string().uuid(),
+  })
+  .strict();
 type Conversacion = { id: string; actor_id: string; arbol_id: string };
 type FilaMensaje = {
   id: string;
@@ -174,17 +225,23 @@ type FilaMensaje = {
   descartes: unknown[];
   degradado: boolean;
   clave: string | null;
+  // Mensaje que dispara el sistema (no lo escribió el estudiante) y operaciones del mapa aplicadas.
+  evento?: string | null;
+  grafo_ops?: { op: string }[];
   pasos: string[];
 };
 const proyectar = (m: FilaMensaje) => ({
   id: m.id,
   orden: m.orden,
   rol: m.rol,
-  texto: m.texto,
+  // El texto de un evento es una instrucción interna: la interfaz solo recibe la marca.
+  texto: m.evento ? "Entregaste una comprobación." : m.texto,
   bloques: m.bloques,
   degradado: m.degradado,
   descartes: m.descartes.length,
   pasos: m.pasos ?? [],
+  evento: m.evento ?? null,
+  ideas_nuevas: (m.grafo_ops ?? []).filter((o) => o.op === "crear_nodo").length,
 });
 const aTexto = (valor: unknown, max = 6000) =>
   JSON.stringify(valor).slice(0, max);
@@ -315,7 +372,7 @@ export class AgenteService {
   async obtener(actor: string, id: string) {
     const c = await this.propia(actor, id);
     const mensajes = await this.db.query<FilaMensaje>(
-      "SELECT id,orden,rol,texto,bloques,descartes,degradado,clave,pasos FROM mensajes WHERE conversacion_id=$1 ORDER BY orden",
+      "SELECT id,orden,rol,texto,bloques,descartes,degradado,clave,pasos,evento,grafo_ops FROM mensajes WHERE conversacion_id=$1 ORDER BY orden",
       [id],
     );
     return {
@@ -331,7 +388,13 @@ export class AgenteService {
     );
   }
   // El turno: reserva idempotente → contexto → ciclo con herramientas (sin transacción) → persistencia.
-  async turno(actor: string, id: string, texto: string, key: string) {
+  async turno(
+    actor: string,
+    id: string,
+    texto: string,
+    key: string,
+    evento: string | null = null,
+  ) {
     validate(z.string().min(8).max(120), key);
     const conv = await this.propia(actor, id);
     const reservado = await this.db.transaction(async (m) => {
@@ -369,8 +432,8 @@ export class AgenteService {
       )) as { next: number }[];
       const nuevo = randomUUID();
       await m.query(
-        "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,clave) VALUES($1,$2,$3,'estudiante',$4,$5)",
-        [nuevo, id, next, texto, key],
+        "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,clave,evento) VALUES($1,$2,$3,'estudiante',$4,$5,$6)",
+        [nuevo, id, next, texto, key, evento],
       );
       return {
         est: {
@@ -383,6 +446,7 @@ export class AgenteService {
           degradado: false,
           clave: key,
           pasos: [],
+          evento,
         } as FilaMensaje,
         resp: null,
       };
@@ -480,6 +544,7 @@ export class AgenteService {
         degradado: bruto.degradado,
         clave: "r:" + key,
         pasos: bruto.pasos,
+        grafo_ops: ops.aplicadas as { op: string }[],
       };
       await m.query(
         "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,bloques,grafo_ops,descartes,prompt_version,degradado,clave,destino_ia,pasos) VALUES($1,$2,$3,'tutor',$4,$5,$6,$7,$8,$9,$10,$11,$12)",
@@ -501,6 +566,53 @@ export class AgenteService {
       return fila;
     });
     return { estudiante: proyectar(reservado.est), tutor: proyectar(tutor) };
+  }
+  // El sistema avisa al agente de que se entregó una comprobación: el texto sale de lo guardado, no del cliente.
+  async evento(
+    actor: string,
+    id: string,
+    comprobacionId: string,
+    key: string,
+  ) {
+    const conv = await this.propia(actor, id);
+    const [c] = await this.db.query<{
+      arbol_id: string;
+      resultado: {
+        correcta?: boolean;
+        ayuda?: boolean;
+        cancelada?: boolean;
+        rastro?: { idea_clave?: string | null; descripcion?: string | null; nivel_ayuda?: string | null } | null;
+      } | null;
+      respuesta: string | null;
+      justificacion: string | null;
+    }>(
+      "SELECT arbol_id,resultado,respuesta,justificacion FROM comprobaciones WHERE id=$1 AND actor_id=$2",
+      [comprobacionId, actor],
+    );
+    if (!c || c.arbol_id !== conv.arbol_id)
+      throw new NotFoundException("Comprobación no encontrada.");
+    if (!c.resultado || c.resultado.cancelada)
+      throw new ConflictException("La comprobación aún no se entregó.");
+    const [corrige] = await this.db.query<{ n: number }>(
+      "SELECT count(*)::int AS n FROM evidencias WHERE comprobacion_id=$1 AND tipo='corrigio_tras_error'",
+      [comprobacionId],
+    );
+    const [anterior] = await this.db.query<{ respuesta: string }>(
+      "SELECT respuesta FROM rastros_error WHERE arbol_id=$1 AND comprobacion_id<>$2 ORDER BY created_at DESC LIMIT 1",
+      [conv.arbol_id, comprobacionId],
+    );
+    const texto = textoDeEvento({
+      correcta: Boolean(c.resultado.correcta),
+      ayuda: Boolean(c.resultado.ayuda),
+      respuesta: c.respuesta ?? "",
+      idea_clave: c.resultado.rastro?.idea_clave ?? null,
+      descripcion: c.resultado.rastro?.descripcion ?? null,
+      nivel_ayuda: c.resultado.rastro?.nivel_ayuda ?? null,
+      corrigio: (corrige?.n ?? 0) > 0,
+      respuesta_anterior: anterior?.respuesta ?? null,
+      justificacion: c.justificacion ?? "",
+    });
+    return this.turno(actor, id, texto, key, "comprobacion_entregada");
   }
   // Cada bloque recibe un id; práctica y predicción muestran enunciado y opciones sin marcar la correcta.
   // La cita muestra el documento y la página del fragmento (ya validado como propio).
@@ -942,6 +1054,19 @@ export class ConversacionesController {
   }
   @Get(":id") obtener(@Req() r: ActorRequest, @Param("id") id: string) {
     return this.s.obtener(r.actorId, validate(z.string().uuid(), id));
+  }
+  @Post(":id/eventos") evento(
+    @Req() r: ActorRequest,
+    @Param("id") id: string,
+    @Body() b: unknown,
+    @Headers("idempotency-key") key: string,
+  ) {
+    return this.s.evento(
+      r.actorId,
+      validate(z.string().uuid(), id),
+      validate(eventoSchema, b).comprobacion_id,
+      key,
+    );
   }
   @Post(":id/mensajes") turno(
     @Req() r: ActorRequest,

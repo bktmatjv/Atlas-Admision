@@ -37,6 +37,12 @@ const schema = z
     CLOUDFLARE_API_TOKEN: z.string().optional(),
     FOUNDRY_ENDPOINT: z.string().optional(),
     FOUNDRY_API_KEY: z.string().optional(),
+    // Esfuerzo de razonamiento de los destinos Foundry; vacío = el valor por defecto del modelo.
+    FOUNDRY_REASONING_EFFORT: z
+      .preprocess(
+        (v) => (v === "" ? undefined : v),
+        z.enum(["minimal", "low", "medium", "high"]).optional(),
+      ),
     AI_TIMEOUT_MS: entero(1000, 120000, 20000),
     AI_TIMEOUT_TOTAL_MS: entero(1000, 300000, 45000),
     AI_MAX_CONCURRENCIA: entero(1, 50, 4),

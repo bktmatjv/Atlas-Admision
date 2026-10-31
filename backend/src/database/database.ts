@@ -11,6 +11,7 @@ import { Revisiones1770000005000 } from "./revisiones.js";
 import { DestinoIa1770000006000 } from "./destino-ia.js";
 import { PasosAgente1770000007000 } from "./pasos-agente.js";
 import { Cuentas1770000008000 } from "./cuentas.js";
+import { EventoMensaje1770000009000 } from "./evento-mensaje.js";
 export const createDataSource = (url: string) => {
   const schema = process.env.DB_SCHEMA ?? "public";
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(schema))
@@ -31,6 +32,7 @@ export const createDataSource = (url: string) => {
       DestinoIa1770000006000,
       PasosAgente1770000007000,
       Cuentas1770000008000,
+      EventoMensaje1770000009000,
     ],
     logging: false,
     extra: { max: 10, options: `-c search_path=${schema}` },

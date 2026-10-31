@@ -23,7 +23,10 @@ export function ComprobacionTutor({
   onActualizar,
 }: {
   activa: ComprobacionActiva | null;
-  onActualizar: (resultado?: ResultadoComprobacion) => void;
+  onActualizar: (
+    resultado?: ResultadoComprobacion,
+    comprobacionId?: string,
+  ) => void;
 }) {
   const [respuesta, setRespuesta] = useState("");
   const [justificacion, setJustificacion] = useState("");
@@ -40,7 +43,7 @@ export function ComprobacionTutor({
       setResultado(r);
       setRespuesta("");
       setJustificacion("");
-      onActualizar(r);
+      onActualizar(r, activa!.id);
     },
   });
   const cancelar = useMutation({

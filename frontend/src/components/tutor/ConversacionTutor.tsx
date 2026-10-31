@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Lightbulb,
   ArrowDown,
+  Check,
   TriangleAlert,
 } from "lucide-react";
 import { Ilustracion } from "@/components/arcade/Ilustracion";
@@ -21,6 +22,7 @@ import {
 } from "./ComprobacionTutor";
 import { BloqueView } from "./Bloques";
 import { ComposerTutor, type ComposerRef } from "./ComposerTutor";
+import { ChipIdeas } from "./ChipIdeas";
 import { Pensando } from "./Pensando";
 import { TextoEscrito } from "./TextoEscrito";
 import { ElegirTema } from "./ElegirTema";
@@ -36,6 +38,7 @@ type Props = {
   error: Error | null;
   // La conversación libre aún no tiene tema: se pide en línea para crear la comprobación.
   eligeTema?: boolean;
+  onAbrirMapa?: () => void;
   onElegirTema?: (tema: TemaId) => void;
   onReintentar: () => void;
   borrador: string;
@@ -85,8 +88,7 @@ export function ConversacionTutor(p: Props) {
         animables.current.add(m.id);
   const [terminados, setTerminados] = useState<Set<string>>(new Set());
   const marcarTerminado = useCallback(
-    (id: string) =>
-      setTerminados((s) => (s.has(id) ? s : new Set(s).add(id))),
+    (id: string) => setTerminados((s) => (s.has(id) ? s : new Set(s).add(id))),
     [],
   );
   const escribiendo = (id: string) =>
@@ -208,7 +210,8 @@ export function ConversacionTutor(p: Props) {
         className="tc-log"
         onScroll={(e) => {
           const el = e.currentTarget;
-          const cercaAhora = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+          const cercaAhora =
+            el.scrollHeight - el.scrollTop - el.clientHeight < 120;
           cerca.current = cercaAhora;
           setLejos((l) => (l === !cercaAhora ? l : !cercaAhora));
         }}
@@ -229,93 +232,105 @@ export function ConversacionTutor(p: Props) {
             </span>
           </div>
         )}
-        {mensajes.map((m) => (
-          <div
-            key={m.id}
-            className={`tc-msg tc-msg--${m.rol}${nuevos.has(m.id) ? " tw-msg--nuevo" : ""}`}
-          >
-            {m.rol === "tutor" ? (
-              <TutorAvatar
-                small
-                estado={
-                  p.nodo?.estado === "fallo"
-                    ? "atento"
-                    : p.nodo?.estado === "aplicado"
-                      ? "celebrando"
-                      : "reposo"
-                }
-              />
-            ) : (
-              <span className="tc-me" aria-hidden="true">
-                Tú
-              </span>
-            )}
-            <div className="tc-msg-body">
-              {m.rol === "tutor" && (
-                <PasosAgente
-                  pasos={m.pasos}
-                  nuevo={nuevos.has(m.id)}
-                  demo={p.demo}
+        {mensajes.map((m) =>
+          m.evento ? (
+            <p key={m.id} className="tw-evento" role="status">
+              <Check size={15} aria-hidden="true" /> Entregaste tu comprobación.
+            </p>
+          ) : (
+            <div
+              key={m.id}
+              className={`tc-msg tc-msg--${m.rol}${nuevos.has(m.id) ? " tw-msg--nuevo" : ""}`}
+            >
+              {m.rol === "tutor" ? (
+                <TutorAvatar
+                  small
+                  estado={
+                    p.nodo?.estado === "fallo"
+                      ? "atento"
+                      : p.nodo?.estado === "aplicado"
+                        ? "celebrando"
+                        : "reposo"
+                  }
                 />
-              )}
-              <div className="tc-bubble">
-                <span className="tc-who">
-                  {m.rol === "tutor" ? "Tu tutor CALIBRA" : "Tú"}
+              ) : (
+                <span className="tc-me" aria-hidden="true">
+                  Tú
                 </span>
-                {m.rol === "tutor" ? (
-                  <TextoEscrito
-                    texto={m.texto}
-                    animar={animables.current.has(m.id)}
+              )}
+              <div className="tc-msg-body">
+                {m.rol === "tutor" && (
+                  <PasosAgente
+                    pasos={m.pasos}
+                    nuevo={nuevos.has(m.id)}
                     demo={p.demo}
-                    onAvance={seguir}
-                    onTermina={() => marcarTerminado(m.id)}
                   />
-                ) : (
-                  m.texto
                 )}
+                <div className="tc-bubble">
+                  <span className="tc-who">
+                    {m.rol === "tutor" ? "Tu tutor CALIBRA" : "Tú"}
+                  </span>
+                  {m.rol === "tutor" ? (
+                    <TextoEscrito
+                      texto={m.texto}
+                      animar={animables.current.has(m.id)}
+                      demo={p.demo}
+                      onAvance={seguir}
+                      onTermina={() => marcarTerminado(m.id)}
+                    />
+                  ) : (
+                    m.texto
+                  )}
+                </div>
+                {m.degradado && !escribiendo(m.id) && (
+                  <p className="tc-note" role="status">
+                    Respondí solo con texto esta vez: no pude preparar
+                    ejercicios ni cambios en el mapa.
+                  </p>
+                )}
+                {m.rol === "tutor" && !escribiendo(m.id) && (
+                  <NotaDescartes descartes={m.descartes} />
+                )}
+                {m.rol === "tutor" && !escribiendo(m.id) && (
+                  <ChipIdeas
+                    ideas={m.ideas_nuevas ?? 0}
+                    onAbrir={p.onAbrirMapa}
+                  />
+                )}
+                {m.rol === "tutor" &&
+                  !escribiendo(m.id) &&
+                  m.bloques.map((b, i) => (
+                    <div
+                      key={b.id}
+                      className={`tw-pieza${i === 0 ? " tw-pieza--principal" : ""}`}
+                      style={{
+                        animationDelay: `${(i + 1) * 100 * (p.demo ? 1.25 : 1)}ms`,
+                      }}
+                    >
+                      {p.onAbrirArtefacto && esArtefactoGrande(b) ? (
+                        <ArtefactoCompacto
+                          bloque={b}
+                          activo={p.artefactoActivo === b.id}
+                          onAbrir={() => p.onAbrirArtefacto!(b)}
+                        />
+                      ) : (
+                        <BloqueView
+                          bloque={b}
+                          arbolId={p.conv.arbol_id}
+                          comprobando={!!p.activa}
+                          alResponder={(t) => {
+                            p.onRespuestaBloque?.();
+                            if (t) p.onEnviar(t);
+                          }}
+                          onComprobar={p.onComprobar}
+                        />
+                      )}
+                    </div>
+                  ))}
               </div>
-              {m.degradado && !escribiendo(m.id) && (
-                <p className="tc-note" role="status">
-                  Respondí solo con texto esta vez: no pude preparar ejercicios
-                  ni cambios en el mapa.
-                </p>
-              )}
-              {m.rol === "tutor" && !escribiendo(m.id) && (
-                <NotaDescartes descartes={m.descartes} />
-              )}
-              {m.rol === "tutor" &&
-                !escribiendo(m.id) &&
-                m.bloques.map((b, i) => (
-                  <div
-                    key={b.id}
-                    className={`tw-pieza${i === 0 ? " tw-pieza--principal" : ""}`}
-                    style={{
-                      animationDelay: `${(i + 1) * 100 * (p.demo ? 1.25 : 1)}ms`,
-                    }}
-                  >
-                    {p.onAbrirArtefacto && esArtefactoGrande(b) ? (
-                      <ArtefactoCompacto
-                        bloque={b}
-                        activo={p.artefactoActivo === b.id}
-                        onAbrir={() => p.onAbrirArtefacto!(b)}
-                      />
-                    ) : (
-                      <BloqueView
-                        bloque={b}
-                        arbolId={p.conv.arbol_id}
-                        comprobando={!!p.activa}
-                        alResponder={(t) => {
-                          p.onRespuestaBloque?.();
-                          if (t) p.onEnviar(t);
-                        }}
-                        onComprobar={p.onComprobar}
-                      />
-                    )}
-                  </div>
-                ))}
             </div>
-          </div>
-        ))}
+          ),
+        )}
         <MomentosComprension
           grafo={p.grafo}
           evidencias={p.evidencias}

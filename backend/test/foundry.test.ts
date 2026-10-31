@@ -444,3 +444,80 @@ describe("Foundry dentro del router", () => {
     expect(urls).toEqual(["https://api.groq.com/openai/v1/chat/completions"]);
   });
 });
+
+describe("esfuerzo de razonamiento de Foundry y llamadas inválidas de Groq", () => {
+  const cuerpoDe = (init: RequestInit) =>
+    JSON.parse(String(init.body)) as Record<string, unknown>;
+  const ok = () =>
+    http(200, { choices: [{ message: { content: "listo" } }] });
+  it("sin esfuerzo configurado no envía reasoning_effort", async () => {
+    let init: RequestInit | undefined;
+    const f = (async (_u: string, i: RequestInit) => {
+      init = i;
+      return ok();
+    }) as unknown as typeof fetch;
+    await fo(f).completar({ sistema: "S", mensajes: [{ rol: "user", texto: "hola" }] });
+    const cuerpo = cuerpoDe(init!);
+    expect(cuerpo).not.toHaveProperty("reasoning_effort");
+    expect(cuerpo).not.toHaveProperty("temperature");
+    expect(cuerpo).toHaveProperty("max_completion_tokens");
+  });
+  it("con esfuerzo configurado lo envía tal cual", async () => {
+    let init: RequestInit | undefined;
+    const f = (async (_u: string, i: RequestInit) => {
+      init = i;
+      return ok();
+    }) as unknown as typeof fetch;
+    const p = new ProveedorFoundry({
+      endpoint: ENDPOINT,
+      apiKey: CLAVE,
+      model: DESPLIEGUE,
+      fetch: f,
+      esfuerzo: "low",
+    });
+    await p.completar({ sistema: "S", mensajes: [{ rol: "user", texto: "hola" }] });
+    expect(cuerpoDe(init!).reasoning_effort).toBe("low");
+  });
+  it("la configuración acepta solo valores conocidos y trata vacío como sin configurar", () => {
+    const previo = { ...process.env };
+    try {
+      process.env.DATABASE_URL = "postgres://u:p@localhost:5432/x";
+      process.env.NODE_ENV = "test";
+      process.env.FOUNDRY_REASONING_EFFORT = "enorme";
+      expect(() => settings()).toThrow();
+      process.env.FOUNDRY_REASONING_EFFORT = "";
+      expect(settings().FOUNDRY_REASONING_EFFORT).toBeUndefined();
+      process.env.FOUNDRY_REASONING_EFFORT = "minimal";
+      expect(settings().FOUNDRY_REASONING_EFFORT).toBe("minimal");
+    } finally {
+      for (const k of Object.keys(process.env)) delete process.env[k];
+      Object.assign(process.env, previo);
+    }
+  });
+  it("un 400 tool_use_failed de Groq es una salida inválida del modelo, no un bug de la solicitud", async () => {
+    const f = (async () =>
+      http(400, {
+        error: {
+          message:
+            "Failed to call a function. Please adjust your prompt. See 'failed_generation' for more details.",
+          type: "invalid_request_error",
+          code: "tool_use_failed",
+          failed_generation: "{ ... }",
+        },
+      })) as unknown as typeof fetch;
+    const g = new ProveedorGroq({ apiKey: "k", model: "m", fetch: f });
+    const e = await falla(g.completar(entrada));
+    expect(e).toBeInstanceOf(ErrorProveedor);
+    expect(e.codigo).toBe("respuesta_invalida");
+    expect(e.message).not.toContain("failed_generation");
+  });
+  it("otros 400 de Groq siguen siendo un error HTTP de la solicitud", async () => {
+    const f = (async () =>
+      http(400, { error: { message: "parámetro desconocido" } })) as unknown as typeof fetch;
+    const e = await falla(
+      new ProveedorGroq({ apiKey: "k", model: "m", fetch: f }).completar(entrada),
+    );
+    expect(e.codigo).toBe("http");
+    expect(e.estado).toBe(400);
+  });
+});
