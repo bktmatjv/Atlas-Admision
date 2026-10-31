@@ -8,6 +8,8 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
+      "**/dist/**",
+      "backend/uploads/**",
       "remotion",
       // Lo genera Lovable y lo reescribe en cada sincronización: el arreglo de `f9d09ca7`
       // duró hasta el siguiente «Work in progress». Corregirlo aquí no sirve de nada.
@@ -37,7 +39,7 @@ export default tseslint.config(
     // Los componentes de shadcn/ui exportan su componente y sus variantes juntos (`buttonVariants`,
     // `badgeVariants`, `useSidebar`, `toast`): moverlas cambiaría decenas de imports por un aviso
     // de la recarga en caliente.
-    files: ["src/components/ui/**/*.{ts,tsx}"],
+    files: ["frontend/src/components/ui/**/*.{ts,tsx}"],
     rules: { "react-refresh/only-export-components": "off" },
   },
 );

@@ -1,0 +1,44 @@
+name: atlas
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atlas_local_only}
+      POSTGRES_DB: atlas
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - atlas-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    init: true
+    stop_grace_period: 75s
+    env_file:
+      - path: backend/.env
+        required: false
+    environment:
+      DATABASE_URL: >-
+        postgresql://atlas:${POSTGRES_PASSWORD:-atlas_local_only}@db:5432/atlas
+      NODE_ENV: ${ATLAS_NODE_ENV:-development}
+      HOST: 0.0.0.0
+      PORT: 3000
+      UPLOAD_DIR: /app/backend/uploads
+      DATA_DIR: /app/backend/data
+    ports:
+      - "127.0.0.1:${ATLAS_API_PORT:-3000}:3000"
+    volumes:
+      - atlas-uploads:/app/backend/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  atlas-db:
+  atlas-uploads:
