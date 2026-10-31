@@ -153,7 +153,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 420px) {
+@media (max-width: 340px) {
   .tc-cards {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -317,7 +317,7 @@
 .tc-context select {
   min-width: 0;
   max-width: 220px;
-  min-height: 40px;
+  min-height: 44px;
   border: 0;
   font: inherit;
   color: inherit;
@@ -1057,4 +1057,48 @@
 }
 .tc-bubble .prose :is(code, .katex) {
   color: inherit;
+}
+
+/* ---------- Móvil (375 px): barra compacta y acciones en una sola fila ---------- */
+@media (max-width: 640px) {
+  .tc-conv-bar {
+    gap: 8px;
+  }
+  .tc-conv-bar h1 {
+    order: -1;
+    flex: 1 1 100%;
+    font-size: 20px;
+  }
+  .tc-conv-bar .tc-btn {
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+  .tc-status {
+    display: none;
+  }
+  .tc-chat {
+    height: calc(100dvh - 150px);
+    min-height: 480px;
+  }
+  .tc-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tc-actions::-webkit-scrollbar {
+    display: none;
+  }
+  .tc-actions .tc-chip {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+  .tc-msg-body {
+    max-width: 100%;
+  }
+  .tc-log {
+    padding-inline: 10px;
+  }
 }
