@@ -2133,3 +2133,44 @@ describe("Conversación con mensaje inicial y sin contexto (S6)", () => {
     ).toBe(true);
   });
 });
+
+describe("Fallos del proveedor durante un turno", () => {
+  let a: string, conv: string;
+  const decir = (texto: string, key = randomUUID()) =>
+    http(`/conversaciones/${conv}/mensajes`, "POST", { texto }, a, key);
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    conv = (await http("/conversaciones", "POST", { tema: "porcentajes" }, a))
+      .data.id;
+  });
+  it("el límite de uso del proveedor es un 503 comprensible, no un error interno", async () => {
+    const r = await decir("[[error-limite]] hola");
+    expect(r.status).toBe(503);
+    expect(r.data.error.mensaje).toMatch(/límite de uso/);
+    expect(r.data.error.mensaje).toMatch(/puedes reintentar/);
+  });
+  it("una caída del proveedor también es un 503 con mensaje claro", async () => {
+    const r = await decir("[[error-red]] hola");
+    expect(r.status).toBe(503);
+    expect(r.data.error.mensaje).toMatch(/proveedor de IA/);
+  });
+  it("el mensaje del estudiante queda guardado y reintentar con la misma clave retoma el turno", async () => {
+    const key = randomUUID();
+    const texto = "[[error-una-vez]] repasemos";
+    const falla = await decir(texto, key);
+    expect(falla.status).toBe(503);
+    const guardado = await db.query(
+      `SELECT count(*)::int AS n FROM ${schema}.mensajes WHERE conversacion_id=$1 AND texto=$2 AND rol='estudiante'`,
+      [conv, texto],
+    );
+    expect(guardado.rows[0].n).toBe(1);
+    const ok = await decir(texto, key);
+    expect(ok.status).toBe(201);
+    expect(ok.data.tutor.degradado).toBe(false);
+    const total = await db.query(
+      `SELECT count(*)::int AS n FROM ${schema}.mensajes WHERE conversacion_id=$1 AND texto=$2 AND rol='estudiante'`,
+      [conv, texto],
+    );
+    expect(total.rows[0].n).toBe(1);
+  });
+});

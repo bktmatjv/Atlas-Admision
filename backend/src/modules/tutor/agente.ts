@@ -393,7 +393,21 @@ export class AgenteService {
         "El tutor IA no está configurado. Configura AI_PROVIDER, AI_MODEL y AI_API_KEY en el servidor.",
       );
     const contexto = await this.armarContexto(actor, conv, id);
-    const bruto = await this.ciclo(proveedor, contexto, texto, actor, conv);
+    // Si el proveedor falla (límite de uso, timeout, caída), el mensaje del estudiante ya está
+    // guardado: se informa con claridad y reintentar con la misma clave retoma el turno.
+    const bruto = await this.ciclo(
+      proveedor,
+      contexto,
+      texto,
+      actor,
+      conv,
+    ).catch((e: unknown) => {
+      if (e instanceof ErrorProveedor)
+        throw new ServiceUnavailableException(
+          `${e.message} Tu mensaje quedó guardado; puedes reintentar.`,
+        );
+      throw e;
+    });
     const validado = bruto.degradado
       ? {
           mensaje: bruto.mensaje,
