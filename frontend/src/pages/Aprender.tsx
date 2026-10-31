@@ -67,7 +67,12 @@ type Ayuda = {
   modo?: "aclarar" | "expandir";
   idea?: string;
 };
-type Check = { id: string; enunciado: string; arbol_id?: string };
+type Check = {
+  id: string;
+  enunciado: string;
+  arbol_id?: string;
+  origen?: "curada" | "plantilla";
+};
 type Result = {
   correcta: boolean;
   solucion: string;
@@ -341,6 +346,12 @@ export default function Aprender() {
                 ? "Explora una idea a la vez. Después, descubre qué puedes aplicar por tu cuenta."
                 : "Descubre qué puedes hacer con lo que aprendes. Parte de una duda, conecta ideas y ponlas a prueba."}
             </p>
+            <Link
+              to="/tutor"
+              className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline"
+            >
+              Conversar con el tutor y ver tu mapa de comprensión
+            </Link>
           </div>
           <ThemeToggle />
         </header>
@@ -373,6 +384,11 @@ export default function Aprender() {
               Una situación diferente
             </h2>
             <p className="mt-3">{active.data.enunciado}</p>
+            {active.data.origen === "plantilla" && (
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                Problema generado y verificado por Atlas
+              </p>
+            )}
             <p className="mt-3 text-xs text-muted-foreground">
               Sin ayudas de Atlas hasta entregar. No detectamos herramientas
               externas; la justificación queda guardada sin calificación
