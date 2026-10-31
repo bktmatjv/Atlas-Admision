@@ -83,7 +83,7 @@ React + Vite ──HTTP──▶ API NestJS (monolito modular) ──▶ Postgre
 | Frontend | React 18, TypeScript, Vite, Tailwind, TanStack Query, `react-force-graph-2d` para el grafo |
 | Backend | NestJS, TypeORM 0.3 (migraciones), validación con Zod, Node 22 |
 | Base de datos | PostgreSQL 16 |
-| IA | Groq (API compatible con OpenAI) por defecto; router opcional que pasa al siguiente modelo (Groq o Cloudflare Workers AI) cuando uno agota su cuota o falla; adaptador Anthropic como alternativa; proveedor de pruebas para tests |
+| IA | Groq (API compatible con OpenAI) por defecto; router opcional que pasa al siguiente modelo (Groq, Cloudflare Workers AI o Microsoft Foundry) cuando uno agota su cuota o falla; adaptador Anthropic como alternativa; proveedor de pruebas para tests |
 | Infraestructura local | Docker Compose para API y base de datos |
 | Pruebas | Vitest, integración con PostgreSQL real en Docker |
 
@@ -149,7 +149,7 @@ Si un modelo agota su límite o falla, el tutor puede pasar solo al siguiente de
 
 1. `AI_PROVIDER=router`
 2. `AI_CADENA=groq:<modelo 1>,groq:<modelo 2>,cloudflare:<modelo>` (se prueba en ese orden)
-3. `GROQ_API_KEY`, y `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN` si la cadena incluye Cloudflare.
+3. `GROQ_API_KEY`, y `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN` si la cadena incluye Cloudflare, o `FOUNDRY_ENDPOINT` y `FOUNDRY_API_KEY` si incluye Microsoft Foundry (`foundry:<nombre del despliegue>`; ver `backend/README.md`).
 4. Recrea el backend: `docker compose up --build -d --force-recreate --wait backend`.
 
 El estado de cada modelo (cerrado, abierto hasta cuándo, ocupado) se ve en `curl http://127.0.0.1:3000/api/v1/salud`. Detalles, variables y cómo funciona el failover en `backend/README.md`. Con `AI_PROVIDER=groq` todo sigue funcionando como antes.

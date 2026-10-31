@@ -1,5 +1,5 @@
 // Lectura pura de AI_CADENA. No importa config.ts: config.ts la usa para validar al arrancar.
-export const PROVEEDORES_ROUTER = ["groq", "cloudflare"] as const;
+export const PROVEEDORES_ROUTER = ["groq", "cloudflare", "foundry"] as const;
 export type ProveedorRouter = (typeof PROVEEDORES_ROUTER)[number];
 export type DestinoConfig = {
   proveedor: ProveedorRouter;

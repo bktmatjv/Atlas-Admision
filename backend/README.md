@@ -109,7 +109,7 @@ Alcance: solo el flujo de conceptos de aritmética con comprobación revisada. �
 
 ### Router de modelos con failover (`AI_PROVIDER=router`)
 
-El router (`modules/tutor/router.ts`) es un `ProveedorIA` más: el agente y `TutorAI` lo llaman igual que a Groq. Recibe una cadena ordenada de destinos `proveedor:modelo` (`groq` o `cloudflare`) y, cuando uno agota su cuota o falla, pasa al siguiente. Con `groq`, `anthropic`, `fake` y `disabled` nada cambia. Todo su estado vive en memoria (una sola instancia del backend; no hay Redis): al reiniciar, los disyuntores vuelven a `CERRADO`.
+El router (`modules/tutor/router.ts`) es un `ProveedorIA` más: el agente y `TutorAI` lo llaman igual que a Groq. Recibe una cadena ordenada de destinos `proveedor:modelo` (`groq`, `cloudflare` o `foundry`) y, cuando uno agota su cuota o falla, pasa al siguiente. Con `groq`, `anthropic`, `fake` y `disabled` nada cambia. Todo su estado vive en memoria (una sola instancia del backend; no hay Redis): al reiniciar, los disyuntores vuelven a `CERRADO`.
 
 **Cómo decide.** En cada llamada recorre la cadena en orden (el primero siempre se prueba antes que los de respaldo) y salta los destinos con el disyuntor abierto. Cada llamada recibe el contexto completo (mensajes, herramientas y esquema), así que un turno del agente puede usar destinos distintos entre vueltas del ciclo de herramientas; el historial `tool_calls`/resultado es del mismo formato OpenAI en Groq y Cloudflare.
 
@@ -137,12 +137,15 @@ Nunca supera `AI_TIMEOUT_TOTAL_MS` por llamada al router, y cada destino se prue
 | `AI_CADENA` | Lista ordenada `proveedor:modelo` separada por comas (máx. 8, sin repetidos). El modelo se parte en el primer `:` |
 | `GROQ_API_KEY` | Clave de los destinos `groq:`. (`AI_API_KEY`/`AI_MODEL` son solo para `AI_PROVIDER=groq`) |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Credenciales de los destinos `cloudflare:` (endpoint compatible con OpenAI de Workers AI) |
+| `FOUNDRY_ENDPOINT`, `FOUNDRY_API_KEY` | Recurso (URL https, p. ej. `https://<recurso>.openai.azure.com`) y clave de los destinos `foundry:<despliegue>`; se exigen solo si la cadena incluye Foundry |
 | `AI_SIN_HERRAMIENTAS` | Destinos de la cadena sin function calling: solo reciben llamadas sin herramientas. Todo el tutor actual envía herramientas, así que es una salida de emergencia |
 | `AI_TIMEOUT_MS` (20000) / `AI_TIMEOUT_TOTAL_MS` (45000) | Tiempo por llamada a un destino / por llamada al router, sumando failovers |
 | `AI_MAX_CONCURRENCIA` (4) / `AI_MAX_ESPERA_COLA_MS` (5000) | Llamadas simultáneas por destino / espera máxima en su cola |
 | `AI_ENFRIAMIENTO_MS` (60000) / `AI_FALLOS_DISYUNTOR` (3) | Apertura sin dato del proveedor / fallos seguidos que abren un destino |
 
 **Observabilidad.** Una línea de log JSON por llamada (`[RouterIA]`): destino usado, intentos, motivo de cada failover, latencia, tokens si el proveedor los informa, espera en cola y estado de cada disyuntor. Nunca incluye prompts, mensajes del estudiante, documentos ni claves. Cada turno del tutor guarda en `mensajes.destino_ia` qué destino respondió (`NULL` con otros proveedores), para comparar la calidad por modelo.
+
+**Microsoft Foundry como respaldo.** (1) En el portal de Azure/Foundry crea un recurso de Azure OpenAI (Foundry) y, dentro, un despliegue de un modelo con function calling (recomendado: `gpt-5-mini`; revisa región y cuota de tu suscripción). (2) Copia el endpoint del recurso, el **nombre del despliegue** y una clave (en el portal: el recurso → «Keys and Endpoint» / «Claves y punto de conexión»). `FOUNDRY_ENDPOINT` acepta `https://<recurso>.openai.azure.com` o `https://<recurso>.services.ai.azure.com`, con o sin `/openai/v1` al final (se normaliza). Si el recurso tiene la autenticación por clave desactivada («Disable local authentication»), hay que reactivarla; la VM no usa Entra ID. (3) En `backend/.env`: `FOUNDRY_ENDPOINT=...`, `FOUNDRY_API_KEY=...` y pon `foundry:<nombre del despliegue>` en `AI_CADENA`, por ejemplo `groq:<modelo>,foundry:<despliegue>,cloudflare:<modelo>`. (4) Recrea el backend. El adaptador llama a `{FOUNDRY_ENDPOINT}/openai/v1/chat/completions` con el encabezado `api-key`, usa el despliegue como `model` y, por ser un modelo de razonamiento, envía `max_completion_tokens` sin `temperature`. Un 401/403 deja el destino `mal_configurado` en `/salud`; `mensajes.destino_ia` guarda `foundry:<despliegue>` cuando responde.
 
 **Cómo leer `GET /api/v1/salud`.** Con el router activo agrega `router`, un arreglo con un objeto por destino:
 

@@ -110,8 +110,12 @@ type OpcionesOpenAI = {
   esperaLimite: (h: Headers, cuerpo: string) => number | undefined;
   // Pide response_format=json_object cuando no hay herramientas.
   formatoJson: boolean;
+  // Cómo se envía la credencial; por defecto «Authorization: Bearer».
+  cabeceraAuth?: (apiKey: string) => Record<string, string>;
+  // Modelos de razonamiento: sin temperature y con max_completion_tokens en vez de max_tokens.
+  razonamiento?: boolean;
 };
-// Llamada compartida por los adaptadores de la API compatible con OpenAI (Groq, Cloudflare).
+// Llamada compartida por los adaptadores de la API compatible con OpenAI (Groq, Cloudflare, Foundry).
 async function completarOpenAI(
   o: OpcionesOpenAI,
   e: EntradaIA,
@@ -120,9 +124,12 @@ async function completarOpenAI(
   const cuerpo: Record<string, unknown> = {
     model: o.model,
     messages: aMensajesOpenAI(e),
-    max_tokens: e.max_tokens ?? 4000,
-    temperature: 0.3,
   };
+  if (o.razonamiento) cuerpo.max_completion_tokens = e.max_tokens ?? 4000;
+  else {
+    cuerpo.max_tokens = e.max_tokens ?? 4000;
+    cuerpo.temperature = 0.3;
+  }
   if (e.herramientas?.length) {
     cuerpo.tools = e.herramientas.map((h) => ({
       type: "function",
@@ -144,7 +151,9 @@ async function completarOpenAI(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${o.apiKey}`,
+        ...(o.cabeceraAuth?.(o.apiKey) ?? {
+          Authorization: `Bearer ${o.apiKey}`,
+        }),
       },
       body: JSON.stringify(cuerpo),
       signal: AbortSignal.timeout(op?.timeoutMs ?? o.timeoutMs),
@@ -230,6 +239,39 @@ export class ProveedorCloudflare implements ProveedorIA {
         esperaLimite: (h, cuerpo) => esperaCloudflare(h, cuerpo),
         // response_format no está verificado para los modelos de Workers AI.
         formatoJson: false,
+      },
+      e,
+      op,
+    );
+  }
+}
+type OpcionesFoundry = {
+  endpoint: string;
+  apiKey: string;
+  // Nombre del despliegue (Foundry lo usa como «model»).
+  model: string;
+  fetch?: FetchFn;
+  timeoutMs?: number;
+};
+// Microsoft Foundry / Azure OpenAI mediante la API v1 compatible con OpenAI:
+// POST {recurso}/openai/v1/chat/completions con la clave en el encabezado «api-key».
+// No hay encabezados de límite documentados para el 429: solo se respeta «retry-after» si llega.
+export class ProveedorFoundry implements ProveedorIA {
+  constructor(private o: OpcionesFoundry) {}
+  completar(e: EntradaIA, op?: OpcionesLlamada): Promise<RespuestaIA> {
+    return completarOpenAI(
+      {
+        // Acepta el recurso con o sin «/openai/v1» (el portal muestra la forma completa).
+        url: `${this.o.endpoint.replace(/\/+$/, "").replace(/\/openai\/v1$/, "")}/openai/v1/chat/completions`,
+        apiKey: this.o.apiKey,
+        model: this.o.model,
+        fetch: this.o.fetch,
+        timeoutMs: this.o.timeoutMs ?? TIMEOUT_LLAMADA_MS,
+        esperaLimite: (h) => leerRetryAfter(h.get("retry-after")),
+        // response_format no está verificado en la documentación de la API v1.
+        formatoJson: false,
+        cabeceraAuth: (k) => ({ "api-key": k }),
+        razonamiento: true,
       },
       e,
       op,
@@ -702,6 +744,8 @@ function routerDeConfiguracion(c: Settings): RouterIA {
     c.GROQ_API_KEY,
     c.CLOUDFLARE_ACCOUNT_ID,
     c.CLOUDFLARE_API_TOKEN,
+    c.FOUNDRY_ENDPOINT,
+    c.FOUNDRY_API_KEY,
     c.AI_TIMEOUT_MS,
     c.AI_TIMEOUT_TOTAL_MS,
     c.AI_MAX_CONCURRENCIA,
@@ -722,11 +766,18 @@ function routerDeConfiguracion(c: Settings): RouterIA {
             model: d.modelo,
             timeoutMs: c.AI_TIMEOUT_MS,
           })
-        : new ProveedorGroq({
-            apiKey: c.GROQ_API_KEY!,
-            model: d.modelo,
-            timeoutMs: c.AI_TIMEOUT_MS,
-          }),
+        : d.proveedor === "foundry"
+          ? new ProveedorFoundry({
+              endpoint: c.FOUNDRY_ENDPOINT!,
+              apiKey: c.FOUNDRY_API_KEY!,
+              model: d.modelo,
+              timeoutMs: c.AI_TIMEOUT_MS,
+            })
+          : new ProveedorGroq({
+              apiKey: c.GROQ_API_KEY!,
+              model: d.modelo,
+              timeoutMs: c.AI_TIMEOUT_MS,
+            }),
   }));
   const router = new RouterIA({
     destinos,
