@@ -1870,7 +1870,12 @@ describe("Matriz de artefactos: integración con PostgreSQL real y proveedor fak
   });
   it("cita acepta solo fragmentos del propio estudiante", async () => {
     const ok = await emitir(`cita:${propio}`);
-    expect(ok.bloques[0]).toMatchObject({ tipo: "cita", fragmento_id: propio });
+    expect(ok.bloques[0]).toMatchObject({
+      tipo: "cita",
+      fragmento_id: propio,
+      documento: "doc.txt",
+      pagina: 1,
+    });
     const no = await emitir(`cita:${ajeno}`);
     expect(no.bloques).toEqual([]);
     expect(no.descartes).toBe(1);
@@ -2050,13 +2055,14 @@ describe("Conversación con mensaje inicial y sin contexto (S6)", () => {
       randomUUID(),
     );
     expect(r.status).toBe(201);
-    expect(
-      (
-        await filas(`SELECT concepto FROM $S.arboles WHERE id=$1`, [
-          r.data.arbol_id,
-        ])
-      )[0].concepto,
-    ).toBe("fracciones");
+    const arbol = (
+      await filas(`SELECT concepto,titulo FROM $S.arboles WHERE id=$1`, [
+        r.data.arbol_id,
+      ])
+    )[0];
+    expect(arbol.concepto).toBe("fracciones");
+    // El historial muestra el mensaje, no solo el nombre del concepto.
+    expect(arbol.titulo).toBe("Fracciones, por favor");
   });
   it("repetir la misma clave recupera la misma conversación y el mismo turno", async () => {
     const key = randomUUID();

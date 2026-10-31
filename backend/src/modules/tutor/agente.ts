@@ -253,6 +253,9 @@ export class AgenteService {
           citas: [] as unknown[],
           concepto: null as string | null,
         };
+    // Con un tema pelado y un mensaje, el título del historial es el mensaje, no el nombre del concepto.
+    if (inicial && !b.intento_id && !b.fragmento_id)
+      source.titulo = tituloDe(inicial);
     const arbol = randomUUID(),
       raiz = randomUUID();
     try {
@@ -453,7 +456,7 @@ export class AgenteService {
         orden: next,
         rol: "tutor",
         texto: validado.mensaje,
-        bloques: this.enriquecer(bloques),
+        bloques: this.enriquecer(await this.conCitas(bloques)),
         descartes,
         degradado: bruto.degradado,
         clave: "r:" + key,
@@ -478,6 +481,28 @@ export class AgenteService {
     return { estudiante: proyectar(reservado.est), tutor: proyectar(tutor) };
   }
   // Cada bloque recibe un id; práctica y predicción muestran enunciado y opciones sin marcar la correcta.
+  // La cita muestra el documento y la página del fragmento (ya validado como propio).
+  private async conCitas(bloques: Bloque[]) {
+    const ids = bloques.flatMap((b) =>
+      b.tipo === "cita" ? [b.fragmento_id] : [],
+    );
+    if (!ids.length) return bloques;
+    const filas = await this.db.query<{
+      id: string;
+      pagina: number;
+      nombre: string;
+    }>(
+      "SELECT f.id,f.pagina,d.nombre FROM fragmentos f JOIN documentos d ON d.id=f.documento_id WHERE f.id::text = ANY($1::text[])",
+      [ids],
+    );
+    return bloques.map((b) => {
+      const f =
+        b.tipo === "cita"
+          ? filas.find((x) => x.id === b.fragmento_id)
+          : undefined;
+      return f ? { ...b, documento: f.nombre, pagina: f.pagina } : b;
+    });
+  }
   private enriquecer(bloques: Bloque[]) {
     return bloques.map((b) => {
       const base = { ...b, id: randomUUID() };
