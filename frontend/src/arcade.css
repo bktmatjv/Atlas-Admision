@@ -26,10 +26,10 @@
      ========================================================================= */
   --arc-primary: 345 65% 35%;
   --arc-primary-hover: 346 67% 28%;
-  --arc-background: 35 52% 94%;
-  --arc-surface: 38 100% 98%;
+  --arc-background: 36 48% 94%;
+  --arc-surface: 0 0% 100%;
   --arc-surface-secondary: 25 39% 90%;
-  --arc-text-primary: 333 13% 17%;
+  --arc-text-primary: 300 8% 15%;
   --arc-text-secondary: 332 7% 41%;
   --arc-border: 18 28% 86%;
   --arc-accent: 348 44% 73%;
@@ -42,9 +42,9 @@
   --arc-marino: 333 13% 17%;
   --arc-crema: 25 39% 90%;
 
-  --arc-superficie: 38 100% 98%;
-  --arc-lienzo: 35 52% 94%;
-  --arc-texto: 333 13% 17%;
+  --arc-superficie: 0 0% 100%;
+  --arc-lienzo: 36 48% 94%;
+  --arc-texto: 300 8% 15%;
   --arc-texto-suave: 332 7% 41%;
 
   --arc-leccion-cuerpo: 333 13% 17%;
@@ -90,12 +90,12 @@
      Surface Secondary #32232B, Text Primary #F7F0E6, Text Secondary #C8B9BE,
      Border #46343D, Accent #D89AA6
      ========================================================================= */
-  --arc-primary: 349 80% 71%;
+  --arc-primary: 348 70% 66%;
   --arc-primary-hover: 349 84% 76%;
-  --arc-background: 300 9% 9%;
-  --arc-surface: 293 11% 15%;
+  --arc-background: 310 10% 12%;
+  --arc-surface: 318 12% 17%;
   --arc-surface-secondary: 328 18% 17%;
-  --arc-text-primary: 35 52% 94%;
+  --arc-text-primary: 36 48% 94%;
   --arc-text-secondary: 340 12% 75%;
   --arc-border: 330 15% 24%;
   --arc-accent: 348 44% 73%;
@@ -108,9 +108,9 @@
   --arc-marino: 35 52% 94%;
   --arc-crema: 328 18% 17%;
 
-  --arc-superficie: 293 11% 15%;
-  --arc-lienzo: 300 9% 9%;
-  --arc-texto: 35 52% 94%;
+  --arc-superficie: 318 12% 17%;
+  --arc-lienzo: 310 10% 12%;
+  --arc-texto: 36 48% 94%;
   --arc-texto-suave: 340 12% 75%;
 
   --arc-leccion-cuerpo: 35 52% 94%;
@@ -603,11 +603,11 @@
 
 /* La tarjeta. Clara en los dos temas, con el texto de la nueva paleta. */
 .arc-flashcard {
-  --arc-texto: 333 13% 17%;
+  --arc-texto: 300 8% 15%;
   --arc-texto-suave: 332 7% 41%;
   --arc-azul-texto: 345 65% 35%;
   --arc-borde-suave: 18 28% 86%;
-  --arc-superficie: 38 100% 98%;
+  --arc-superficie: 0 0% 100%;
   /* Y los de la app que usan las piezas de la lección que viven dentro (la tabla del
      material): sus valores claros, porque en oscuro se invertirían sobre fondo blanco. */
   --foreground: 333 13% 17%;

@@ -30,7 +30,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     <div
       role="group"
       aria-label="Tema"
-      className={cn("inline-flex gap-0.5 rounded-xl bg-secondary p-0.5", className)}
+      className={cn("inline-flex gap-0.5 rounded-xl border border-border/60 bg-muted/60 p-0.5", className)}
     >
       {([["light", "Claro", Sun], ["dark", "Oscuro", Moon]] as const).map(([value, label, Icon]) => {
         const selected = (value === "dark") === isDark;

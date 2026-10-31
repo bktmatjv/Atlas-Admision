@@ -127,6 +127,13 @@ export default {
         '5xl': ['3rem', { lineHeight: '1.15', letterSpacing: '-0.025em' }],
       },
       colors: {
+        // Colores semánticos de identidad CALIBRA
+        "carmesi-principal": "hsl(var(--carmesi-principal))",
+        "carmesi-secundario": "hsl(var(--carmesi-secundario))",
+        fondo: "hsl(var(--fondo))",
+        superficie: "hsl(var(--superficie))",
+        surface: "hsl(var(--superficie))",
+        texto: "hsl(var(--texto))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

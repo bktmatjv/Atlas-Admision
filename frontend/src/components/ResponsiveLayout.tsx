@@ -50,7 +50,7 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
   }
   return (
     // `overflow-x-clip` y no `-hidden`: con `hidden` la barra del examen (sticky, con su reloj) no se pega.
-    <div className="flex min-h-screen w-full flex-col overflow-x-clip bg-background">
+    <div className="flex min-h-screen w-full flex-col overflow-x-clip bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/30 bg-card/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] backdrop-blur-xl dark:shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
         <div className="px-4 md:px-6 lg:px-8"><div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3">
           <NavLink to="/admision" end className="flex items-center">
