@@ -98,7 +98,7 @@ Alcance: solo el flujo de conceptos de aritmética con comprobación revisada. �
 
 ## Proveedor de IA
 
-`AI_PROVIDER` acepta `disabled | groq | anthropic | fake`. `groq` y `anthropic` exigen `AI_API_KEY` y `AI_MODEL` (se valida al arrancar); no hay ningún nombre de modelo fijo en el código. `fake` es solo para pruebas y está prohibido en producción. Las credenciales viven solo en el backend.
+`AI_PROVIDER` acepta `disabled | groq | anthropic | fake | router`. `groq` y `anthropic` exigen `AI_API_KEY` y `AI_MODEL` (se valida al arrancar); `router` usa una cadena de modelos con failover (ver más abajo) y sus propias variables. No hay ningún nombre de modelo fijo en el código. `fake` es solo para pruebas y está prohibido en producción. Las credenciales viven solo en el backend.
 
 - `proveedor.ts` define la interfaz propia `ProveedorIA` (`completar({ sistema, mensajes, herramientas, forzar })` → texto o llamadas a herramientas). Los adaptadores son `ProveedorGroq` (API compatible con OpenAI en `https://api.groq.com/openai/v1/chat/completions`, con `fetch` nativo y herramientas `tools`/`tool_calls`; sin SDK de OpenAI), `ProveedorAnthropic` y `ProveedorFake`.
 - Timeout de 30 s por llamada y sin reintentos automáticos. HTTP 429 del proveedor, timeout, fallos de red y respuestas inválidas se traducen a un error explícito (503 con mensaje comprensible); nunca se inventa una respuesta.
@@ -106,6 +106,57 @@ Alcance: solo el flujo de conceptos de aritmética con comprobación revisada. �
 - `ATLAS_LIMITE_IA` (opcional, por defecto 40) sube el tope de peticiones por minuto de `/conversaciones` y `/bloques`; las pruebas lo usan.
 - Las pruebas automáticas no llaman a Groq: el adaptador se prueba con un `fetch` simulado (respuesta válida, `tool_calls`, JSON inválido, 429, timeout y caída de red).
 - El plan gratuito de Groq tiene límites por minuto que pueden cortar con varios estudiantes a la vez.
+
+### Router de modelos con failover (`AI_PROVIDER=router`)
+
+El router (`modules/tutor/router.ts`) es un `ProveedorIA` más: el agente y `TutorAI` lo llaman igual que a Groq. Recibe una cadena ordenada de destinos `proveedor:modelo` (`groq` o `cloudflare`) y, cuando uno agota su cuota o falla, pasa al siguiente. Con `groq`, `anthropic`, `fake` y `disabled` nada cambia. Todo su estado vive en memoria (una sola instancia del backend; no hay Redis): al reiniciar, los disyuntores vuelven a `CERRADO`.
+
+**Cómo decide.** En cada llamada recorre la cadena en orden (el primero siempre se prueba antes que los de respaldo) y salta los destinos con el disyuntor abierto. Cada llamada recibe el contexto completo (mensajes, herramientas y esquema), así que un turno del agente puede usar destinos distintos entre vueltas del ciclo de herramientas; el historial `tool_calls`/resultado es del mismo formato OpenAI en Groq y Cloudflare.
+
+| Situación | Qué hace el router |
+| --- | --- |
+| HTTP 429 o cuota agotada | No reintenta en el mismo destino; abre el destino y pasa al siguiente |
+| 5xx (500, 502, 503, 504…), timeout, error de red | Un reintento en el mismo destino con backoff exponencial con jitter (respeta `retry-after` si cabe en el tiempo total); si vuelve a fallar, pasa al siguiente |
+| Respuesta vacía o ilegible | Pasa al siguiente, sin reintento |
+| 401, 403, 404 | Marca el destino como mal configurado **hasta reiniciar** (clave inválida, sin permiso o modelo inexistente) y pasa al siguiente; sin reintentos |
+| 400 por contexto demasiado largo (o 413) | Prueba el siguiente destino; no cuenta como falla del destino |
+| Cualquier otro 400/4xx | Es un bug de la solicitud: se registra en nivel `error` y se propaga, sin failover ni reintento |
+| Todos abiertos | `ErrorProveedor` de tipo `limite` de inmediato, con el tiempo estimado de recuperación más cercano (el agente lo responde como 503 con mensaje claro y el mensaje del estudiante queda guardado) |
+
+Nunca supera `AI_TIMEOUT_TOTAL_MS` por llamada al router, y cada destino se prueba como máximo una vez más su único reintento. La validación del contenido (zod, reparación, turno degradado) sigue siendo del agente.
+
+**Disyuntor por destino** (`CERRADO` → `ABIERTO` → `SEMIABIERTO`). Un 429 abre el destino hasta el momento que informa la respuesta: `retry-after` y, en Groq, `x-ratelimit-reset-requests` (límite diario de requests) o `x-ratelimit-reset-tokens` (límite por minuto de tokens) cuando su contador `x-ratelimit-remaining-*` quedó en cero; se usa el mayor. Si el proveedor no informa nada útil, se abre `AI_ENFRIAMIENTO_MS`; no se inventan cuotas. En Cloudflare, un 429 con código 3036 (cuota diaria gratuita) abre hasta las 00:00 UTC. Tras `AI_FALLOS_DISYUNTOR` fallos transitorios seguidos también se abre. Al vencer pasa a `SEMIABIERTO`: deja pasar **una** llamada de prueba (las demás siguen al respaldo); si sale bien se cierra y el destino principal vuelve a usarse, si falla se vuelve a abrir. En Groq los límites son por modelo, por lo que otro modelo de Groq es un respaldo válido.
+
+**Concurrencia.** Cada destino tiene un semáforo de `AI_MAX_CONCURRENCIA` llamadas simultáneas con cola FIFO. Si la espera supera `AI_MAX_ESPERA_COLA_MS`, se prueba el siguiente destino; si ninguno tiene lugar, `limite` («ocupados»). La saturación no abre el disyuntor. El throttler por actor del agente se mantiene.
+
+**Variables** (`backend/.env.example`; se validan al arrancar y los errores nombran la variable que falta, nunca su valor):
+
+| Variable | Significado |
+| --- | --- |
+| `AI_PROVIDER=router` | Activa el router |
+| `AI_CADENA` | Lista ordenada `proveedor:modelo` separada por comas (máx. 8, sin repetidos). El modelo se parte en el primer `:` |
+| `GROQ_API_KEY` | Clave de los destinos `groq:`. (`AI_API_KEY`/`AI_MODEL` son solo para `AI_PROVIDER=groq`) |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Credenciales de los destinos `cloudflare:` (endpoint compatible con OpenAI de Workers AI) |
+| `AI_SIN_HERRAMIENTAS` | Destinos de la cadena sin function calling: solo reciben llamadas sin herramientas. Todo el tutor actual envía herramientas, así que es una salida de emergencia |
+| `AI_TIMEOUT_MS` (20000) / `AI_TIMEOUT_TOTAL_MS` (45000) | Tiempo por llamada a un destino / por llamada al router, sumando failovers |
+| `AI_MAX_CONCURRENCIA` (4) / `AI_MAX_ESPERA_COLA_MS` (5000) | Llamadas simultáneas por destino / espera máxima en su cola |
+| `AI_ENFRIAMIENTO_MS` (60000) / `AI_FALLOS_DISYUNTOR` (3) | Apertura sin dato del proveedor / fallos seguidos que abren un destino |
+
+**Observabilidad.** Una línea de log JSON por llamada (`[RouterIA]`): destino usado, intentos, motivo de cada failover, latencia, tokens si el proveedor los informa, espera en cola y estado de cada disyuntor. Nunca incluye prompts, mensajes del estudiante, documentos ni claves. Cada turno del tutor guarda en `mensajes.destino_ia` qué destino respondió (`NULL` con otros proveedores), para comparar la calidad por modelo.
+
+**Cómo leer `GET /api/v1/salud`.** Con el router activo agrega `router`, un arreglo con un objeto por destino:
+
+```json
+{ "ok": true, "ia": "router", "pruebas": false,
+  "router": [
+    { "id": "groq:<modelo>", "proveedor": "groq", "modelo": "<modelo>", "herramientas": true,
+      "estado": "ABIERTO", "hasta": "2026-11-01T12:07:12.000Z", "motivo": "limite",
+      "ocupados": 0, "en_cola": 0 } ] }
+```
+
+`estado` es el del disyuntor; `hasta` es la hora (ISO) hasta la que está abierto (`null` si está cerrado o si no se recuperará solo); `motivo` es `limite`, `fallos` o `mal_configurado` (este último dura hasta reiniciar el backend y suele indicar una clave inválida o un modelo inexistente); `ocupados` y `en_cola` son las llamadas en curso y esperando. No se muestran claves ni datos de cuentas. Con otro proveedor, `router` es `null`.
+
+**Pruebas.** `test/router.test.ts` (failover, reintentos, disyuntor, concurrencia y configuración, con relojes simulados), `test/cloudflare.test.ts` (adaptador de Cloudflare y cadena mixta) y el describe «Router de modelos con el agente» de `test/system.test.ts` (ciclo de herramientas con failover, reparación sin bucle, idempotencia y `/salud`). Todas usan `fetch` simulado: ninguna llama a Groq ni a Cloudflare. La calidad pedagógica de cada modelo real y la disponibilidad de los modelos en cada plan solo se verifican con claves reales (ver «Prueba manual con APIs reales» en `odd/tasks/llm-router.md`).
 
 ## Tutor agente (sistema + consciencia)
 

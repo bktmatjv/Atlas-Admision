@@ -75,7 +75,7 @@ Con el proyecto levantado (ver [Instrucciones de ejecución](#-instrucciones-de-
 ```text
 React + Vite ──HTTP──▶ API NestJS (monolito modular) ──▶ PostgreSQL 16
                                │
-                               └──▶ Proveedor de IA (Groq) detrás de una interfaz propia
+                               └──▶ Proveedor de IA (Groq, o un router con failover Groq/Cloudflare) detrás de una interfaz propia
 ```
 
 | Capa | Tecnología |
@@ -83,7 +83,7 @@ React + Vite ──HTTP──▶ API NestJS (monolito modular) ──▶ Postgre
 | Frontend | React 18, TypeScript, Vite, Tailwind, TanStack Query, `react-force-graph-2d` para el grafo |
 | Backend | NestJS, TypeORM 0.3 (migraciones), validación con Zod, Node 22 |
 | Base de datos | PostgreSQL 16 |
-| IA | Groq (API compatible con OpenAI) por defecto; adaptador Anthropic como alternativa; proveedor de pruebas para tests |
+| IA | Groq (API compatible con OpenAI) por defecto; router opcional que pasa al siguiente modelo (Groq o Cloudflare Workers AI) cuando uno agota su cuota o falla; adaptador Anthropic como alternativa; proveedor de pruebas para tests |
 | Infraestructura local | Docker Compose para API y base de datos |
 | Pruebas | Vitest, integración con PostgreSQL real en Docker |
 
@@ -135,6 +135,17 @@ Sin configuración, `AI_PROVIDER=disabled`: la práctica funciona y el tutor res
 
 Las claves van **solo** en el backend.
 
+#### Varios modelos con respaldo (router)
+
+Si un modelo agota su límite o falla, el tutor puede pasar solo al siguiente de una cadena (modelos de Groq y, como respaldo, Cloudflare Workers AI). En `backend/.env`:
+
+1. `AI_PROVIDER=router`
+2. `AI_CADENA=groq:<modelo 1>,groq:<modelo 2>,cloudflare:<modelo>` (se prueba en ese orden)
+3. `GROQ_API_KEY`, y `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN` si la cadena incluye Cloudflare.
+4. Recrea el backend: `docker compose up --build -d --force-recreate --wait backend`.
+
+El estado de cada modelo (cerrado, abierto hasta cuándo, ocupado) se ve en `curl http://127.0.0.1:3000/api/v1/salud`. Detalles, variables y cómo funciona el failover en `backend/README.md`. Con `AI_PROVIDER=groq` todo sigue funcionando como antes.
+
 ### Comandos útiles
 
 | Comando | Función |
@@ -160,9 +171,9 @@ compose.yaml       API + PostgreSQL para desarrollo local
 
 ## 🧪 Calidad
 
-- **410 pruebas** en el frontend y el motor compartido, y **247 pruebas** del backend, incluidas pruebas de integración con PostgreSQL real.
+- **410 pruebas** en el frontend y el motor compartido, y **310 pruebas** del backend, incluidas pruebas de integración con PostgreSQL real.
 - Cada artefacto del tutor tiene tres niveles de prueba: validador (acepta lo válido, descarta lo inválido con su motivo), integración con la API y render en la interfaz.
-- Las pruebas automáticas nunca llaman a la IA real: el adaptador de Groq se prueba con respuestas simuladas, incluidos errores, límites de uso (HTTP 429) y timeouts.
+- Las pruebas automáticas nunca llaman a la IA real: los adaptadores de Groq y Cloudflare y el router de modelos se prueban con respuestas simuladas, incluidos errores, límites de uso (HTTP 429), timeouts y failover entre modelos.
 
 ---
 
@@ -172,7 +183,7 @@ compose.yaml       API + PostgreSQL para desarrollo local
 - **Sin validación con usuarios reales todavía:** no hay evidencia de eficacia pedagógica; no se promete ingreso ni mejora de puntaje.
 - **«Sin ayuda» significa sin ayudas de CALIBRA** durante la comprobación. No es una evaluación vigilada: no se detecta ayuda externa.
 - **Cobertura del tutor:** las ideas clave, el mapa de errores y las plantillas cubren solo Aritmética (porcentajes, proporciones y fracciones). Los enunciados de las plantillas no tienen revisión docente; sus cuentas sí están verificadas.
-- **Calidad de la IA:** se probó con casos reales en Groq, pero los modelos abiertos pueden usar herramientas con menos consistencia; las validaciones descartan o degradan lo que falle. El plan gratuito de Groq tiene límites por minuto.
+- **Calidad de la IA:** se probó con casos reales en Groq, pero los modelos abiertos pueden usar herramientas con menos consistencia; las validaciones descartan o degradan lo que falle. El plan gratuito de Groq tiene límites por minuto y por día; el router de modelos reparte la carga entre varios modelos, pero no está probado con las APIs reales ni se verificó qué modelos de Cloudflare con herramientas están disponibles en su plan gratuito.
 - **Material generado por IA** no equivale a contenido revisado académicamente y no cuenta como evidencia.
 - **Mis cursos:** sin OCR para PDF escaneados ni búsqueda en fuentes externas.
 - **Cuentas:** la sesión invitada dura 30 días y no se recupera si se borran las cookies.

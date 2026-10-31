@@ -8,6 +8,7 @@ import { Harness1770000002000 } from "./harness.js";
 import { Agente1770000003000 } from "./agente.js";
 import { Plantillas1770000004000 } from "./plantillas.js";
 import { Revisiones1770000005000 } from "./revisiones.js";
+import { DestinoIa1770000006000 } from "./destino-ia.js";
 export const createDataSource = (url: string) => {
   const schema = process.env.DB_SCHEMA ?? "public";
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(schema))
@@ -25,6 +26,7 @@ export const createDataSource = (url: string) => {
       Agente1770000003000,
       Plantillas1770000004000,
       Revisiones1770000005000,
+      DestinoIa1770000006000,
     ],
     logging: false,
     extra: { max: 10, options: `-c search_path=${schema}` },

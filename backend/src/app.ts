@@ -13,15 +13,21 @@ import { AgenteModule } from "./modules/tutor/agente.js";
 import { SeguimientoModule } from "./modules/seguimiento/seguimiento.js";
 import { DocumentosModule } from "./modules/contenido/documentos.js";
 import { settings } from "./config.js";
+import { Proveedores } from "./modules/tutor/proveedor.js";
 @Controller()
 class Health {
-  constructor(@Inject(Database) private db: Database) {}
+  constructor(
+    @Inject(Database) private db: Database,
+    @Inject(Proveedores) private proveedores: Proveedores,
+  ) {}
   @Get("salud") async get() {
     await this.db.query("SELECT 1");
     return {
       ok: true,
       ia: settings().AI_PROVIDER,
       pruebas: settings().AI_PROVIDER === "fake",
+      // Estado del router de modelos (disyuntor por destino); null si no se usa.
+      router: this.proveedores.estadoRouter(),
     };
   }
 }
