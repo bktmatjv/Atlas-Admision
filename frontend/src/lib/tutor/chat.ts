@@ -31,7 +31,12 @@ export type Bloque = BloqueBase &
     | ({ tipo: "visual" } & Visual)
     | { tipo: "en_tus_palabras"; consigna: string }
     | { tipo: "invitacion_comprobar"; texto: string }
-    | { tipo: "cita"; fragmento_id: string }
+    | {
+        tipo: "cita";
+        fragmento_id: string;
+        documento?: string;
+        pagina?: number;
+      }
   );
 export type Visual =
   | {
@@ -130,3 +135,15 @@ const TITULOS: Record<TipoBloque, string> = {
   cita: "Fuente",
 };
 export const tituloAccesible = (t: TipoBloque) => TITULOS[t];
+export const pluralizar = (n: number, uno: string, varios: string) =>
+  `${n} ${n === 1 ? uno : varios}`;
+type Tecla = {
+  key: string;
+  shiftKey: boolean;
+  isComposing?: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+};
+// Enter envía; Shift+Enter hace salto de línea; no se envía mientras se compone con un IME.
+export const teclaEnvia = (e: Tecla) =>
+  e.key === "Enter" && !e.isComposing && !e.shiftKey;

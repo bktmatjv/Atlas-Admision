@@ -281,6 +281,8 @@ export class ProveedorAnthropic implements ProveedorIA {
 }
 // Guion determinista solo para pruebas. Con herramientas disponibles llama a la
 // primera que no sea la forzada; con sus resultados (o sin herramientas) responde.
+// Mensajes que ya fallaron una vez (error-una-vez): el reintento sí responde.
+const YA_FALLO = new Set<string>();
 const ARTEFACTOS_FAKE: Record<string, unknown> = {
   pregunta_socratica: {
     tipo: "pregunta_socratica",
@@ -453,6 +455,25 @@ export class ProveedorFake implements ProveedorIA {
       return final({
         mensaje: `${e.sistema.includes('"comprobacion_activa":{"enunciado"') ? "con-enunciado" : "sin-enunciado"};clave:${/\b96\b/.test(e.sistema.split("CONTEXTO")[1] ?? "") ? "filtrada" : "oculta"}`,
       });
+    // Fallos del proveedor, para probar que el turno no termina en un error interno.
+    if (tiene("error-limite"))
+      throw new ErrorProveedor(
+        "limite",
+        "El proveedor de IA alcanzó su límite de uso. Espera un momento y reintenta.",
+        429,
+      );
+    if (tiene("error-red"))
+      throw new ErrorProveedor(
+        "red",
+        "No se pudo contactar al proveedor de IA.",
+      );
+    if (tiene("error-una-vez") && !YA_FALLO.has(original)) {
+      YA_FALLO.add(original);
+      throw new ErrorProveedor(
+        "timeout",
+        "El proveedor de IA tardó demasiado en responder.",
+      );
+    }
     if (tiene("sin-forma")) return { texto: "esto no es json", llamadas: [] };
     if (tiene("reparable"))
       return reparando

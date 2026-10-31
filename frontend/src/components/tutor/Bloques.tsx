@@ -1,5 +1,22 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  CircleCheck,
+  CircleX,
+  Eye,
+  FileText,
+  Lightbulb,
+  MessageCircleQuestion,
+  PenLine,
+  Scale,
+  Search,
+  Shapes,
+  ShieldCheck,
+  Sparkles,
+  Target,
+} from "lucide-react";
+import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import { post, ApiError } from "@/integrations/api/client";
 import {
   formatearOpcion,
@@ -7,21 +24,66 @@ import {
   tituloAccesible,
   type Bloque,
   type RespuestaBloque,
+  type TipoBloque,
 } from "@/lib/tutor/chat";
+import { primeraDivergencia } from "@/lib/tutor/visual";
 import { VisualView } from "./Visual";
-const caja = "rounded-xl border border-border bg-background p-4 space-y-3";
-const boton =
-  "inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50";
-const secundario =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-50";
+import "./tutor-bloques.css";
 type Props = {
   bloque: Bloque;
   arbolId: string;
-  // Lo que cambia tras responder: el grafo (señales) y las interacciones.
+  // Lo que cambia tras responder: el grafo (señales) y, si es texto libre, la charla.
   alResponder: (respuesta?: string) => void;
   comprobando: boolean;
   onComprobar: () => void;
 };
+const ICONOS: Record<TipoBloque, typeof Search> = {
+  pregunta_socratica: MessageCircleQuestion,
+  contraste: Scale,
+  razonamiento_anotado: Search,
+  prediccion: Eye,
+  ejemplo_paso_a_paso: Lightbulb,
+  visual: Shapes,
+  practica: Sparkles,
+  en_tus_palabras: PenLine,
+  invitacion_comprobar: Target,
+  cita: FileText,
+};
+const TITULOS_VISIBLES: Record<TipoBloque, string> = {
+  pregunta_socratica: "Para pensar",
+  contraste: "Tu razonamiento vs. el correcto",
+  razonamiento_anotado: "La evidencia en tus pasos",
+  prediccion: "Predice antes de ver",
+  ejemplo_paso_a_paso: "Una idea, paso a paso",
+  visual: "Visual matemático",
+  practica: "Ahora, intenta aplicarlo",
+  en_tus_palabras: "En tus palabras",
+  invitacion_comprobar: "Ponte a prueba",
+  cita: "Fuente",
+};
+function Tarjeta({
+  tipo,
+  etiqueta,
+  children,
+}: {
+  tipo: TipoBloque;
+  etiqueta?: ReactNode;
+  children: ReactNode;
+}) {
+  const Icono = ICONOS[tipo];
+  return (
+    <section className={`tb tb--${tipo}`} aria-label={tituloAccesible(tipo)}>
+      <header className="tb-head">
+        <span className="tb-icono" aria-hidden="true">
+          <Icono size={19} />
+        </span>
+        <h4>{TITULOS_VISIBLES[tipo]}</h4>
+        {etiqueta && <span className="tb-tag">{etiqueta}</span>}
+      </header>
+      <div className="tb-body">{children}</div>
+    </section>
+  );
+}
 function useRespuesta(
   id: string,
   alResponder: (respuesta?: string) => void,
@@ -49,6 +111,7 @@ function useRespuesta(
   }
   return { res, error, enviando, enviar };
 }
+// Lo verificado por el sistema y la lectura provisional se ven distintos.
 function Resultado({
   res,
   error,
@@ -57,28 +120,47 @@ function Resultado({
   error: string | null;
 }) {
   return (
-    <div aria-live="polite" className="space-y-1 text-sm">
+    <div aria-live="polite" className="tb-resultados">
       {error && (
-        <p role="alert" className="text-destructive">
+        <p role="alert" className="tb-res tb-res--error">
           {error}
         </p>
       )}
       {res?.correcta === true && (
-        <p className="font-semibold">Correcto. {res.solucion ?? ""}</p>
-      )}
-      {res?.correcta === false && (
-        <p>
-          <span className="font-semibold">Todavía no. </span>
-          {res.descripcion
-            ? `Revisa esta idea: ${res.descripcion}`
-            : "Revisa tu cálculo e inténtalo de nuevo."}
+        <p className="tb-res tb-res--ok tb-reveal">
+          <CircleCheck size={19} aria-hidden="true" />
+          <span>
+            <strong>Verificado por CALIBRA: correcto.</strong>{" "}
+            {res.solucion ?? ""}
+          </span>
         </p>
       )}
-      {res?.mensaje && <p className="font-semibold">{res.mensaje}</p>}
-      {res?.guardada && !res.mensaje && (
-        <p>Guardamos tu respuesta en la charla.</p>
+      {res?.correcta === false && (
+        <p className="tb-res tb-res--no tb-reveal">
+          <CircleX size={19} aria-hidden="true" />
+          <span>
+            <strong>Verificado por CALIBRA: todavía no.</strong>{" "}
+            {res.descripcion
+              ? `Revisa esta idea: ${res.descripcion}`
+              : "Revisa tu cálculo e inténtalo de nuevo."}
+          </span>
+        </p>
       )}
-      {res && <p className="text-xs text-muted-foreground">{res.nota}</p>}
+      {res?.mensaje && (
+        <p className="tb-res tb-res--lectura tb-reveal">
+          <Eye size={19} aria-hidden="true" />
+          <span>
+            <strong>Lectura provisional</strong>
+            {res.mensaje}
+          </span>
+        </p>
+      )}
+      {res?.guardada && !res.mensaje && (
+        <p className="tb-res tb-reveal">
+          <span>Guardamos tu respuesta en la charla.</span>
+        </p>
+      )}
+      {res && <p className="tb-nota">{res.nota}</p>}
     </div>
   );
 }
@@ -87,17 +169,19 @@ function TextoLibre({
   etiqueta,
   rapidas,
   alResponder,
+  grande = false,
 }: {
   id: string;
   etiqueta: string;
   rapidas?: string[];
   alResponder: (respuesta?: string) => void;
+  grande?: boolean;
 }) {
   const [texto, setTexto] = useState("");
   const { res, error, enviando, enviar } = useRespuesta(id, alResponder, true);
   return (
     <form
-      className="space-y-3"
+      className="tb-form"
       onSubmit={(e) => {
         e.preventDefault();
         const t = textoParaEnviar(texto);
@@ -105,12 +189,16 @@ function TextoLibre({
       }}
     >
       {rapidas && rapidas.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div
+          className="tb-rapidas"
+          role="group"
+          aria-label="Respuestas rápidas"
+        >
           {rapidas.map((r) => (
             <button
               key={r}
               type="button"
-              className={secundario}
+              className="tb-chip"
               disabled={enviando}
               onClick={() => void enviar(r)}
             >
@@ -119,16 +207,17 @@ function TextoLibre({
           ))}
         </div>
       )}
-      <label className="block text-sm font-semibold">
+      <label className="tb-label">
         {etiqueta}
         <textarea
           value={texto}
+          rows={grande ? 5 : 3}
           maxLength={2000}
           onChange={(e) => setTexto(e.target.value)}
-          className="mt-2 min-h-20 w-full rounded-lg border bg-background p-3 font-normal"
+          className="tb-textarea"
         />
       </label>
-      <button className={boton} disabled={enviando || !textoParaEnviar(texto)}>
+      <button className="tb-btn" disabled={enviando || !textoParaEnviar(texto)}>
         Enviar mi respuesta
       </button>
       <Resultado res={res} error={error} />
@@ -140,43 +229,52 @@ function Opciones({
   enunciado,
   opciones,
   alResponder,
+  inmediata = false,
 }: {
   id: string;
   enunciado: string;
   opciones: number[];
   alResponder: (respuesta?: string) => void;
+  // Elegir una opción la envía al instante (predicción); si no, se confirma con un botón.
+  inmediata?: boolean;
 }) {
   const [elegida, setElegida] = useState<number | null>(null);
   const { res, error, enviando, enviar } = useRespuesta(id, alResponder);
   return (
     <form
-      className="space-y-3"
+      className="tb-form"
       onSubmit={(e) => {
         e.preventDefault();
         if (elegida !== null) void enviar(String(elegida));
       }}
     >
-      <p>{enunciado}</p>
-      <fieldset className="space-y-2">
+      <p className="tb-enunciado">{enunciado}</p>
+      <fieldset className="tb-opciones">
         <legend className="sr-only">Opciones de respuesta</legend>
         {opciones.map((o) => (
           <label
             key={o}
-            className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border px-3"
+            className={`tb-opcion${elegida === o ? " tb-opcion--on" : ""}`}
           >
             <input
               type="radio"
               name={`op-${id}`}
               checked={elegida === o}
-              onChange={() => setElegida(o)}
+              disabled={enviando}
+              onChange={() => {
+                setElegida(o);
+                if (inmediata) void enviar(String(o));
+              }}
             />
-            {formatearOpcion(o)}
+            <span>{formatearOpcion(o)}</span>
           </label>
         ))}
       </fieldset>
-      <button className={boton} disabled={enviando || elegida === null}>
-        Comprobar en la charla
-      </button>
+      {!inmediata && (
+        <button className="tb-btn" disabled={enviando || elegida === null}>
+          Comprobar en la charla
+        </button>
+      )}
       <Resultado res={res} error={error} />
     </form>
   );
@@ -192,26 +290,30 @@ function PasoAPaso({
 }) {
   const [visibles, setVisibles] = useState(1);
   return (
-    <div className="space-y-3">
-      <ol className="list-decimal space-y-2 pl-5">
+    <div className="tb-form">
+      <ol className="tb-pasos">
         {pasos.slice(0, visibles).map((p, i) => (
-          <li key={i}>
-            {p.texto}
-            {p.cuenta && (
-              <code className="ml-2 rounded bg-muted px-2 py-0.5 text-sm">
-                {p.cuenta}
-              </code>
-            )}
+          <li key={i} className="tb-reveal">
+            <span className="tb-paso-n" aria-hidden="true">
+              {i + 1}
+            </span>
+            <span>
+              {p.texto}
+              {p.cuenta && <code className="tb-cuenta">{p.cuenta}</code>}
+            </span>
           </li>
         ))}
       </ol>
-      {visibles < pasos.length && (
+      {visibles < pasos.length ? (
         <button
-          className={secundario}
+          type="button"
+          className="tb-btn tb-btn--suave"
           onClick={() => setVisibles(visibles + 1)}
         >
-          Mostrar el siguiente paso ({visibles} de {pasos.length})
+          ¿Cuál sería el siguiente? ({visibles} de {pasos.length})
         </button>
+      ) : (
+        <p className="tb-nota">Ya viste todos los pasos.</p>
       )}
       <TextoLibre
         id={id}
@@ -219,6 +321,37 @@ function PasoAPaso({
         alResponder={alResponder}
       />
     </div>
+  );
+}
+function Contraste({ tuyo, correcto }: { tuyo: string[]; correcto: string[] }) {
+  const aqui = primeraDivergencia(tuyo, correcto);
+  const n = Math.max(tuyo.length, correcto.length);
+  return (
+    <table className="tb-contraste">
+      <thead>
+        <tr>
+          <th scope="col">Lo que hiciste</th>
+          <th scope="col">Lo correcto</th>
+        </tr>
+      </thead>
+      <tbody>
+        {Array.from({ length: n }, (_, i) => (
+          <tr key={i} className={i === aqui ? "tb-diverge" : undefined}>
+            <td>
+              {i === aqui && (
+                <span className="tb-tag tb-tag--alerta">Aquí se separan</span>
+              )}
+              {tuyo[i] !== undefined && <MathMarkdown content={tuyo[i]} />}
+            </td>
+            <td>
+              {correcto[i] !== undefined && (
+                <MathMarkdown content={correcto[i]} />
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 export function BloqueView({
@@ -231,150 +364,133 @@ export function BloqueView({
   switch (b.tipo) {
     case "pregunta_socratica":
       return (
-        <section
-          className={caja}
-          aria-label={tituloAccesible("pregunta_socratica")}
-        >
-          <p className="font-semibold">{b.texto}</p>
+        <Tarjeta tipo="pregunta_socratica">
+          <p className="tb-pregunta">{b.texto}</p>
           <TextoLibre
             id={b.id}
-            etiqueta="Tu respuesta"
+            etiqueta="O escribe tu propia respuesta"
             rapidas={b.respuestas_rapidas}
             alResponder={alResponder}
           />
-        </section>
+        </Tarjeta>
       );
     case "contraste":
       return (
-        <section className={caja} aria-label={tituloAccesible("contraste")}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <h4 className="text-sm font-bold">Lo que hiciste</h4>
-              <ul className="mt-1 list-disc space-y-1 pl-5">
-                {b.tuyo.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold">Lo correcto</h4>
-              <ul className="mt-1 list-disc space-y-1 pl-5">
-                {b.correcto.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
+        <Tarjeta tipo="contraste">
+          <Contraste tuyo={b.tuyo} correcto={b.correcto} />
+        </Tarjeta>
       );
     case "razonamiento_anotado":
       return (
-        <section
-          className={caja}
-          aria-label={tituloAccesible("razonamiento_anotado")}
-        >
-          <ol className="space-y-2">
+        <Tarjeta tipo="razonamiento_anotado">
+          <ol className="tb-anotado">
             {b.pasos.map((p, i) => (
-              <li key={i} className="rounded-lg border border-border p-3">
-                <p className="text-xs italic text-muted-foreground">
-                  Escribiste: «{p.cita}»
-                </p>
-                <p>
-                  <span className="mr-2 rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
-                    {p.estado === "ok" ? "Bien" : "Para revisar"}
-                  </span>
-                  {p.texto}
-                </p>
+              <li
+                key={i}
+                className={p.estado === "ok" ? "tb-paso-ok" : "tb-paso-revisar"}
+              >
+                <span className="tb-marca">
+                  {p.estado === "ok" ? (
+                    <CircleCheck size={18} aria-hidden="true" />
+                  ) : (
+                    <CircleX size={18} aria-hidden="true" />
+                  )}
+                  {p.estado === "ok" ? "Bien" : "Para revisar"}
+                </span>
+                <blockquote>Escribiste: «{p.cita}»</blockquote>
+                <p>{p.texto}</p>
               </li>
             ))}
           </ol>
-        </section>
+        </Tarjeta>
       );
     case "prediccion":
       return (
-        <section className={caja} aria-label={tituloAccesible("prediccion")}>
-          <p className="font-semibold">{b.pregunta}</p>
+        <Tarjeta tipo="prediccion">
+          <p className="tb-pregunta">{b.pregunta}</p>
           <Opciones
             id={b.id}
             enunciado={b.enunciado}
             opciones={b.opciones}
             alResponder={alResponder}
+            inmediata
           />
-        </section>
+        </Tarjeta>
       );
     case "practica":
       return (
-        <section className={caja} aria-label={tituloAccesible("practica")}>
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">
-            Práctica generada y verificada por CALIBRA
-          </p>
-          {b.historia && <p>{b.historia}</p>}
+        <Tarjeta
+          tipo="practica"
+          etiqueta={
+            <>
+              <ShieldCheck size={14} aria-hidden="true" /> Verificada por
+              CALIBRA
+            </>
+          }
+        >
+          {b.historia && <p className="tb-historia">{b.historia}</p>}
           <Opciones
             id={b.id}
             enunciado={b.enunciado}
             opciones={b.opciones}
             alResponder={alResponder}
           />
-        </section>
+        </Tarjeta>
       );
     case "ejemplo_paso_a_paso":
       return (
-        <section
-          className={caja}
-          aria-label={tituloAccesible("ejemplo_paso_a_paso")}
-        >
+        <Tarjeta tipo="ejemplo_paso_a_paso">
           <PasoAPaso id={b.id} pasos={b.pasos} alResponder={alResponder} />
-        </section>
+        </Tarjeta>
       );
     case "visual":
       return (
-        <section className={caja} aria-label={tituloAccesible("visual")}>
+        <Tarjeta tipo="visual" etiqueta="Cuentas verificadas">
           <VisualView v={b} />
-        </section>
+        </Tarjeta>
       );
     case "en_tus_palabras":
       return (
-        <section
-          className={caja}
-          aria-label={tituloAccesible("en_tus_palabras")}
-        >
-          <p className="font-semibold">{b.consigna}</p>
+        <Tarjeta tipo="en_tus_palabras">
+          <p className="tb-pregunta">{b.consigna}</p>
           <TextoLibre
             id={b.id}
             etiqueta="Con tus palabras"
             alResponder={alResponder}
+            grande
           />
-        </section>
+        </Tarjeta>
       );
     case "invitacion_comprobar":
       return (
-        <section
-          className={caja}
-          aria-label={tituloAccesible("invitacion_comprobar")}
-        >
-          <p>{b.texto}</p>
+        <Tarjeta tipo="invitacion_comprobar">
+          <p className="tb-pregunta">{b.texto}</p>
           {comprobando ? (
-            <Link className={boton} to={`/aprender/${arbolId}`}>
-              Ir a mi comprobación
+            <Link className="tb-btn tb-btn--cta" to={`/aprender/${arbolId}`}>
+              Ir a mi comprobación <ArrowRight size={17} aria-hidden="true" />
             </Link>
           ) : (
-            <button className={boton} onClick={onComprobar}>
-              Empezar comprobación sin ayudas
+            <button className="tb-btn tb-btn--cta" onClick={onComprobar}>
+              Empezar comprobación sin ayudas{" "}
+              <ArrowRight size={17} aria-hidden="true" />
             </button>
           )}
-        </section>
+        </Tarjeta>
       );
     case "cita":
       return (
-        <section className={caja} aria-label={tituloAccesible("cita")}>
-          <p className="text-sm">Fragmento de tu material.</p>
+        <Tarjeta tipo="cita">
+          <p className="tb-cita">
+            <strong>{b.documento ?? "Fragmento de tu material"}</strong>
+            {b.pagina ? ` · pág. ${b.pagina}` : ""}
+          </p>
           <Link
-            className={secundario}
+            className="tb-btn tb-btn--suave"
             to={`/aprender?fragmento=${b.fragmento_id}`}
           >
             Ver el original
           </Link>
-        </section>
+        </Tarjeta>
       );
   }
 }

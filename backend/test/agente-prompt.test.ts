@@ -5,13 +5,19 @@ import {
   SISTEMA_AGENTE,
 } from "../src/modules/tutor/agente";
 // Regresiones del prompt tras probar el agente con Groq real.
-describe("prompt tutor-agente-v2", () => {
+describe("prompt tutor-agente-v3", () => {
   it("está versionado", () => {
-    expect(PROMPT_AGENTE).toBe("tutor-agente-v2");
+    expect(PROMPT_AGENTE).toBe("tutor-agente-v3");
   });
   it("se presenta como CALIBRA", () => {
     expect(SISTEMA_AGENTE).toMatch(/^Eres CALIBRA,/);
     expect(SISTEMA_AGENTE).not.toMatch(/Atlas/);
+  });
+  it("pide acompañar la respuesta con un bloque pertinente, sin forzarlo en cada turno", () => {
+    expect(SISTEMA_AGENTE).toMatch(/acompaña tu respuesta con al menos un bloque/);
+    expect(SISTEMA_AGENTE).toMatch(/pregunta_socratica con respuestas_rapidas/);
+    expect(SISTEMA_AGENTE).toMatch(/contraste y un visual/);
+    expect(SISTEMA_AGENTE).toMatch(/Sin forzar bloques en cada turno/);
   });
   it("exige idea_clave en los nodos de error e idea", () => {
     expect(SISTEMA_AGENTE).toMatch(

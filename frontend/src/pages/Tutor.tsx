@@ -6,33 +6,135 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessagesSquare, Send } from "lucide-react";
+import {
+  ChevronLeft,
+  History,
+  Moon,
+  Network,
+  Search,
+  SquarePen,
+  Sun,
+  UserRound,
+} from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { ThemeToggle } from "@/components/system/ThemeToggle";
-import { MathMarkdown } from "@/components/shared/MathMarkdown";
-import { BloqueView } from "@/components/tutor/Bloques";
+import { ConversacionTutor } from "@/components/tutor/ConversacionTutor";
 import { GrafoComprension } from "@/components/tutor/GrafoComprension";
+import { HistorialPanel } from "@/components/tutor/HistorialPanel";
+import { InicioTutor } from "@/components/tutor/InicioTutor";
+import { TutorProgress } from "@/components/tutor/TutorProgress";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { api, post } from "@/integrations/api/client";
 import type { Conversacion } from "@/lib/tutor/chat";
 import type { Grafo } from "@/lib/tutor/grafo";
-const card = "rounded-2xl border border-border bg-card p-5 sm:p-6";
-const button =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2 font-bold text-primary-foreground disabled:opacity-50";
-const TEMAS = [
-  { id: "porcentajes", nombre: "Porcentajes" },
-  { id: "proporciones", nombre: "Proporciones" },
-  { id: "fracciones", nombre: "Fracciones" },
-];
+import type { ItemHistorial } from "@/lib/tutor/historial";
+import {
+  TEMAS_SOPORTADOS,
+  cuerpoDeCreacion,
+  opcionesDeContexto,
+  ordenarTemas,
+  ultimaPracticaFallada,
+  type Contexto,
+  type Intencion,
+  type OpcionDeContexto,
+} from "@/lib/tutor/inicio";
+import "@/components/tutor/tutor.css";
+import "@/components/tutor/tutor-chat.css";
+type IntentoLite = { id: string; estado: string };
+type RespuestaLite = { pregunta_id: string; correcta: boolean | null };
+async function cargarUltimaPractica() {
+  const intentos = await api<IntentoLite[]>("/intentos");
+  const recientes = intentos
+    .filter((i) => i.estado === "entregado")
+    .slice(0, 3);
+  const respuestas = Object.fromEntries(
+    await Promise.all(
+      recientes.map(
+        async (i) =>
+          [
+            i.id,
+            await api<RespuestaLite[]>(`/intentos/${i.id}/respuestas`),
+          ] as const,
+      ),
+    ),
+  );
+  return ultimaPracticaFallada(recientes, (id) => respuestas[id] ?? []);
+}
+async function cargarMaterial() {
+  const cursos = await api<{ id: string }[]>("/cursos");
+  for (const c of cursos) {
+    const curso = await api<{
+      documentos: { id: string; nombre: string; estado: string }[];
+    }>(`/cursos/${c.id}`);
+    const doc = curso.documentos.find((d) => d.estado === "listo");
+    if (!doc) continue;
+    const detalle = await api<{ fragmentos: { id: string }[] }>(
+      `/documentos/${doc.id}`,
+    );
+    if (detalle.fragmentos[0])
+      return { fragmento_id: detalle.fragmentos[0].id, nombre: doc.nombre };
+  }
+  return null;
+}
+const anchoGrande = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(min-width: 1100px)").matches;
+const CLAVE_MODO = "calibra-tutor-modo";
+const modoGuardado = () => {
+  try {
+    return localStorage.getItem(CLAVE_MODO) === "claro";
+  } catch {
+    return false;
+  }
+};
 export default function Tutor() {
   const { id } = useParams(),
-    [search] = useSearchParams(),
+    [search, setSearch] = useSearchParams(),
     nav = useNavigate(),
     client = useQueryClient();
-  const [tema, setTema] = useState("porcentajes"),
-    [texto, setTexto] = useState(""),
-    [elegido, setElegido] = useState<string | null>(null);
-  const clave = useRef<{ texto: string; key: string } | null>(null);
-  const fin = useRef<HTMLDivElement>(null);
+  const vistaGrafo = search.get("vista") === "grafo" && !id;
+  const [borrador, setBorrador] = useState(""),
+    [inicio, setInicio] = useState(""),
+    [intencion, setIntencion] = useState<Intencion["id"] | null>(null),
+    [elegido, setElegido] = useState<string | null>(null),
+    [busqueda, setBusqueda] = useState(""),
+    [mapaAbierto, setMapaAbierto] = useState(anchoGrande),
+    [historialAbierto, setHistorialAbierto] = useState(false);
+  const deUrl: OpcionDeContexto | null = search.get("fragmento")
+    ? {
+        clave: "url",
+        etiqueta: "Material que elegiste",
+        contexto: { fragmento_id: search.get("fragmento")! },
+      }
+    : search.get("intento") && search.get("pregunta")
+      ? {
+          clave: "url",
+          etiqueta: "Pregunta que elegiste",
+          contexto: {
+            intento_id: search.get("intento")!,
+            pregunta_id: search.get("pregunta")!,
+          },
+        }
+      : null;
+  const [contextoClave, setContextoClave] = useState(deUrl ? "url" : "");
+  // Apariencia propia del tutor: noche CALIBRA por defecto, con variante clara.
+  const [claro, setClaro] = useState(modoGuardado);
+  const alternarModo = () =>
+    setClaro((c) => {
+      try {
+        localStorage.setItem(CLAVE_MODO, c ? "noche" : "claro");
+      } catch {
+        // Sin almacenamiento, el modo vale solo para esta visita.
+      }
+      return !c;
+    });
+  const claveCrear = useRef<{ huella: string; key: string } | null>(null);
+  const claveEnvio = useRef<{ texto: string; key: string } | null>(null);
   useEffect(() => {
     document.title = "Conversar con el tutor | CALIBRA";
   }, []);
@@ -50,42 +152,75 @@ export default function Tutor() {
     queryFn: () =>
       api<{ id: string; arbol_id: string } | null>("/comprobaciones/activa"),
   });
-  // El foco lo decide el agente (operación enfocar); el estudiante también puede elegir un nodo.
+  const salud = useQuery({
+    queryKey: ["salud"],
+    queryFn: () => api<{ ia: string; ok: boolean; pruebas: boolean }>("/salud"),
+    staleTime: 30000,
+  });
+  const historial = useQuery({
+    queryKey: ["conversaciones"],
+    queryFn: () => api<ItemHistorial[]>("/conversaciones"),
+  });
+  const practica = useQuery({
+    queryKey: ["ultima-practica"],
+    queryFn: () => cargarUltimaPractica().catch(() => null),
+    enabled: !id,
+    staleTime: 60000,
+  });
+  const material = useQuery({
+    queryKey: ["material-tutor"],
+    queryFn: () => cargarMaterial().catch(() => null),
+    enabled: !id,
+    staleTime: 60000,
+  });
   const foco = grafo.data?.foco ?? null;
   useEffect(() => {
     if (foco) setElegido(foco);
   }, [foco]);
+  const base = opcionesDeContexto({
+    practica: practica.data,
+    material: material.data,
+  });
+  const contextos = deUrl ? [deUrl, ...base] : base;
+  const contextoElegido =
+    contextos.find((c) => c.clave === contextoClave)?.contexto ?? null;
+  const temas = ordenarTemas(grafo.data);
   const crear = useMutation({
-    mutationFn: () =>
-      post<{ id: string }>(
+    mutationFn: (v: { texto: string; contexto: Contexto | null }) => {
+      // La misma clave en cada reintento del mismo pedido: no se duplica la conversación.
+      const huella = JSON.stringify(v);
+      if (claveCrear.current?.huella !== huella)
+        claveCrear.current = { huella, key: crypto.randomUUID() };
+      return post<{ id: string }>(
         "/conversaciones",
-        search.get("fragmento")
-          ? { fragmento_id: search.get("fragmento") }
-          : search.get("intento") && search.get("pregunta")
-            ? {
-                intento_id: search.get("intento"),
-                pregunta_id: search.get("pregunta"),
-              }
-            : { tema },
-      ),
-    onSuccess: (r) => nav(`/tutor/${r.id}`),
+        cuerpoDeCreacion(v.contexto, v.texto),
+        claveCrear.current.key,
+      );
+    },
+    onSuccess: (r) => {
+      claveCrear.current = null;
+      setInicio("");
+      setIntencion(null);
+      void client.invalidateQueries({ queryKey: ["conversaciones"] });
+      nav(`/tutor/${r.id}`);
+    },
   });
   const enviar = useMutation({
     mutationFn: (t: string) => {
-      // La misma clave en cada reintento del mismo texto: el turno no se duplica.
-      if (clave.current?.texto !== t)
-        clave.current = { texto: t, key: crypto.randomUUID() };
+      if (claveEnvio.current?.texto !== t)
+        claveEnvio.current = { texto: t, key: crypto.randomUUID() };
       return post(
         `/conversaciones/${id}/mensajes`,
         { texto: t },
-        clave.current.key,
+        claveEnvio.current.key,
       );
     },
-    onSuccess: () => {
-      clave.current = null;
-      setTexto("");
+    onSuccess: (_r, t) => {
+      claveEnvio.current = null;
+      setBorrador((b) => (b.trim() === t ? "" : b));
       void conv.refetch();
       void grafo.refetch();
+      void historial.refetch();
     },
   });
   const comprobar = useMutation({
@@ -96,206 +231,259 @@ export default function Tutor() {
       nav(`/aprender/${conv.data!.arbol_id}`);
     },
   });
-  const mensajes = conv.data?.mensajes ?? [];
-  useEffect(() => {
-    fin.current?.scrollIntoView?.({ block: "end" });
-  }, [mensajes.length, enviar.isPending]);
-  const error = crear.error ?? enviar.error ?? comprobar.error ?? conv.error;
+  const empezar = (texto: string, contexto = contextoElegido) =>
+    crear.mutate({ texto: texto.trim(), contexto });
+  const alElegirIntencion = (i: Intencion) => {
+    setIntencion(i.id);
+    if (i.accion === "texto") setInicio(i.precarga);
+    else if (i.accion === "grafo") setSearch({ vista: "grafo" });
+    else {
+      const tema =
+        contextoElegido && "tema" in contextoElegido
+          ? TEMAS_SOPORTADOS.find((t) => t.id === contextoElegido.tema)
+          : temas[0];
+      if (tema)
+        empezar(
+          `Quiero practicar ${tema.nombre}. Dame un ejercicio para empezar.`,
+          {
+            tema: tema.id,
+          },
+        );
+    }
+  };
+  const estado = salud.isError
+    ? "Sin conexión"
+    : !salud.data
+      ? "Conectando…"
+      : salud.data.pruebas
+        ? "Modo de pruebas"
+        : salud.data.ia === "disabled"
+          ? "IA sin configurar"
+          : "IA configurada";
+  const listo =
+    !!salud.data && !salud.data.pruebas && salud.data.ia !== "disabled";
+  const titulo =
+    historial.data?.find((c) => c.id === id)?.titulo ?? "Conversación";
+  const nodoActual = grafo.data?.nodos.find((n) => n.id === elegido);
+  const temaActual =
+    nodoActual?.titulo ??
+    TEMAS_SOPORTADOS.find((t) => t.id === nodoActual?.concepto)?.nombre ??
+    "esta idea";
+  const errorHistorial = historial.isError ? historial.error.message : null;
+  const panelHistorial = (acople: boolean, alElegir?: () => void) => (
+    <HistorialPanel
+      items={historial.data}
+      activoId={id}
+      cargando={historial.isPending}
+      error={errorHistorial}
+      onReintentar={() => void historial.refetch()}
+      onElegir={alElegir}
+      acople={acople}
+    />
+  );
+  const botonHistorial = (
+    <button
+      type="button"
+      className="tc-btn tc-btn--line"
+      onClick={() => setHistorialAbierto(true)}
+    >
+      <History size={18} aria-hidden="true" /> Historial
+    </button>
+  );
   return (
-    <ResponsiveLayout>
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-7 sm:px-6 sm:py-10">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <Link
-              to="/aprender"
-              className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
-            >
-              CALIBRA · conversar para comprender
-            </Link>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Entiende el porqué de tus errores
-            </h1>
-            <p className="mt-3 max-w-2xl text-muted-foreground">
-              Conversa con el tutor. Tu mapa se arma con lo que exploras; el
-              estado de cada idea lo calcula CALIBRA desde tus comprobaciones, no
-              desde lo que diga la IA.
-            </p>
-          </div>
-          <ThemeToggle />
-        </header>
-        {error && (
-          <p
-            role="alert"
-            className="rounded-xl border border-destructive/40 bg-destructive/5 p-4"
+    <ResponsiveLayout
+      appearance="tutor"
+      headerTools={
+        <>
+          <button
+            type="button"
+            className="tc-modo"
+            aria-pressed={claro}
+            aria-label={claro ? "Cambiar a modo noche" : "Cambiar a modo claro"}
+            onClick={alternarModo}
           >
-            {error.message}
-          </p>
-        )}
-        {!id ? (
-          <section className={card} aria-labelledby="empezar">
-            <h2 id="empezar" className="text-xl font-bold">
-              ¿Sobre qué quieres conversar?
-            </h2>
-            {search.get("fragmento") || search.get("intento") ? (
-              <p className="mt-3 text-sm text-muted-foreground">
-                Empezaremos desde el material o la pregunta que elegiste.
+            {claro ? <Moon size={16} /> : <Sun size={16} />}
+            {claro ? "Noche" : "Claro"}
+          </button>
+          <span className="tutor-guest">
+            <UserRound size={17} />
+            <span>Invitado</span>
+          </span>
+        </>
+      }
+    >
+      <main className="tc-page">
+        {claro && <span className="tc-claro" hidden />}
+        {vistaGrafo ? (
+          <div className="tc-vista-grafo">
+            <div className="tc-conv-bar">
+              <Link to="/tutor" className="tc-btn tc-btn--line">
+                <ChevronLeft size={18} aria-hidden="true" /> Volver al tutor
+              </Link>
+              <h1>Tu grafo de comprensión</h1>
+            </div>
+            <section className="tc-map" aria-label="Grafo de comprensión">
+              <p>
+                Los estados salen de tus comprobaciones, no de lo que diga la
+                IA.
               </p>
-            ) : (
-              <fieldset className="mt-4 flex flex-wrap gap-3">
-                <legend className="sr-only">Tema</legend>
-                {TEMAS.map((t) => (
-                  <label
-                    key={t.id}
-                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border px-4"
-                  >
-                    <input
-                      type="radio"
-                      name="tema"
-                      checked={tema === t.id}
-                      onChange={() => setTema(t.id)}
-                    />
-                    {t.nombre}
-                  </label>
-                ))}
-              </fieldset>
-            )}
-            <button
-              className={`${button} mt-5`}
-              disabled={crear.isPending}
-              onClick={() => crear.mutate()}
-            >
-              <MessagesSquare className="h-4 w-4" /> Empezar a conversar
-            </button>
-          </section>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <section
-              className={`${card} flex flex-col`}
-              aria-labelledby="chat-title"
-            >
-              <h2 id="chat-title" className="text-xl font-bold">
-                Charla con el tutor
-              </h2>
-              {activa.data && (
-                <p
-                  className="mt-3 rounded-xl bg-primary/5 p-3 text-sm"
-                  role="status"
-                >
-                  Hay una comprobación sin ayudas en curso. Mientras dure, el
-                  tutor no resolverá ni confirmará su resultado y no habrá
-                  prácticas.{" "}
-                  <Link
-                    className="font-semibold underline"
-                    to={`/aprender/${activa.data.arbol_id}`}
-                  >
-                    Ir a la comprobación
-                  </Link>
-                </p>
+              {grafo.isError ? (
+                <p role="alert">{grafo.error.message}</p>
+              ) : grafo.data ? (
+                <GrafoComprension
+                  grafo={grafo.data}
+                  seleccionado={elegido}
+                  onSeleccionar={setElegido}
+                />
+              ) : (
+                <p role="status">Preparando tu mapa…</p>
               )}
-              <div
-                role="log"
-                aria-live="polite"
-                aria-label="Mensajes de la charla"
-                className="mt-4 max-h-[60vh] min-h-48 space-y-4 overflow-y-auto pr-1"
-              >
-                {mensajes.length === 0 && !enviar.isPending && (
-                  <p className="text-sm text-muted-foreground">
-                    Cuéntame qué quieres entender o en qué te trabaste. Puedes
-                    decir «no sé por dónde empezar».
-                  </p>
-                )}
-                {mensajes.map((m) => (
-                  <div
-                    key={m.id}
-                    className={
-                      m.rol === "estudiante"
-                        ? "ml-auto max-w-[90%] rounded-2xl bg-primary/10 p-3"
-                        : "space-y-3"
-                    }
-                  >
-                    <p className="sr-only">
-                      {m.rol === "estudiante" ? "Tú" : "Tutor"}:
-                    </p>
-                    {m.rol === "tutor" ? (
-                      <>
-                        <MathMarkdown content={m.texto} />
-                        {m.degradado && (
-                          <p className="text-xs text-muted-foreground">
-                            Respuesta simplificada: esta vez solo pude armar el
-                            texto, sin ejercicios ni cambios en tu mapa.
-                          </p>
-                        )}
-                        {m.bloques.map((b) => (
-                          <BloqueView
-                            key={b.id}
-                            bloque={b}
-                            arbolId={conv.data!.arbol_id}
-                            comprobando={!!activa.data}
-                            alResponder={(t) => {
-                              void grafo.refetch();
-                              if (t) enviar.mutate(t);
-                            }}
-                            onComprobar={() => comprobar.mutate()}
-                          />
-                        ))}
-                      </>
-                    ) : (
-                      <p>{m.texto}</p>
-                    )}
-                  </div>
-                ))}
-                {enviar.isPending && (
-                  <p role="status" className="text-sm text-muted-foreground">
-                    El tutor está pensando… tu mensaje queda guardado.
-                  </p>
-                )}
-                <div ref={fin} />
-              </div>
-              <form
-                className="mt-4 flex flex-col gap-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (texto.trim()) enviar.mutate(texto.trim());
-                }}
-              >
-                <label className="text-sm font-semibold">
-                  Tu mensaje
-                  <textarea
-                    value={texto}
-                    maxLength={2000}
-                    onChange={(e) => setTexto(e.target.value)}
-                    className="mt-2 min-h-20 w-full rounded-lg border bg-background p-3 font-normal"
-                  />
-                </label>
-                <button
-                  className={button}
-                  disabled={enviar.isPending || !texto.trim()}
-                >
-                  <Send className="h-4 w-4" /> Enviar
-                </button>
-              </form>
             </section>
-            <section className={card} aria-labelledby="mapa-title">
-              <h2 id="mapa-title" className="text-xl font-bold">
-                Tu mapa de comprensión
-              </h2>
-              <div className="mt-4">
-                {grafo.data ? (
-                  <GrafoComprension
-                    grafo={grafo.data}
-                    seleccionado={elegido}
-                    onSeleccionar={setElegido}
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Cargando tu mapa…
-                  </p>
-                )}
-              </div>
-            </section>
+            <TutorProgress grafo={grafo.data} />
           </div>
+        ) : !id ? (
+          <>
+            <div className="tc-only-narrow" style={{ marginBottom: 12 }}>
+              {botonHistorial}
+            </div>
+            <div className="tc-home-grid">
+              <InicioTutor
+                temas={temas}
+                contextos={contextos}
+                contextoClave={contextoClave}
+                onContexto={setContextoClave}
+                valor={inicio}
+                onCambio={(v) => {
+                  setInicio(v);
+                  if (!v) setIntencion(null);
+                }}
+                onEnviar={() => empezar(inicio)}
+                onIntencion={alElegirIntencion}
+                intencionActiva={intencion}
+                ocupado={crear.isPending}
+                error={crear.error?.message ?? null}
+                onReintentar={() =>
+                  crear.variables && crear.mutate(crear.variables)
+                }
+              />
+              <div className="tc-only-wide">{panelHistorial(true)}</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="tc-conv-bar">
+              <Link to="/tutor" className="tc-btn tc-btn--line">
+                <SquarePen size={18} aria-hidden="true" /> Nueva
+              </Link>
+              <h1 title={titulo}>{titulo}</h1>
+              <span className={`tc-status${listo ? " tc-status--ready" : ""}`}>
+                <i /> {estado}
+              </span>
+              {botonHistorial}
+              <button
+                type="button"
+                className="tc-btn tc-btn--soft"
+                aria-pressed={mapaAbierto}
+                onClick={() => setMapaAbierto((a) => !a)}
+              >
+                <Network size={18} aria-hidden="true" />
+                {mapaAbierto ? "Ocultar mapa" : "Ver mapa"}
+              </button>
+            </div>
+            <div
+              className={`tc-conv${mapaAbierto ? " tc-conv--con-mapa" : ""}`}
+            >
+              {conv.isError ? (
+                <div className="tc-banner tc-banner--error" role="alert">
+                  <span>{conv.error.message}</span>
+                  <button type="button" onClick={() => void conv.refetch()}>
+                    Reintentar conversación
+                  </button>
+                </div>
+              ) : (
+                <ConversacionTutor
+                  conv={conv.data ?? { id: id, arbol_id: "", mensajes: [] }}
+                  cargando={conv.isPending}
+                  pensando={enviar.isPending}
+                  pendiente={
+                    enviar.isPending ? (enviar.variables ?? null) : null
+                  }
+                  error={enviar.error ?? comprobar.error}
+                  onReintentar={() =>
+                    enviar.isError && enviar.variables
+                      ? enviar.mutate(enviar.variables)
+                      : comprobar.mutate()
+                  }
+                  borrador={borrador}
+                  onBorrador={setBorrador}
+                  onEnviar={(t) => t && enviar.mutate(t)}
+                  activa={activa.data ?? null}
+                  ocupado={
+                    enviar.isPending || comprobar.isPending || !conv.data
+                  }
+                  temaActual={temaActual}
+                  onComprobar={() => comprobar.mutate()}
+                />
+              )}
+              {mapaAbierto && (
+                <aside className="tc-map" aria-labelledby="tc-mapa-titulo">
+                  <h2 id="tc-mapa-titulo">Tu mapa de comprensión</h2>
+                  <p>
+                    Así se conectan tus ideas. El estado de cada nodo sale de
+                    tus comprobaciones.
+                  </p>
+                  <label className="tc-search">
+                    <Search size={17} aria-hidden="true" />
+                    <span className="sr-only">Buscar ideas en tu mapa</span>
+                    <input
+                      type="search"
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                      placeholder="Buscar ideas en tu mapa…"
+                    />
+                  </label>
+                  {grafo.isPending ? (
+                    <p role="status">Preparando tu mapa…</p>
+                  ) : grafo.isError ? (
+                    <div role="alert">
+                      <p>{grafo.error.message}</p>
+                      <button
+                        type="button"
+                        className="tc-btn tc-btn--line"
+                        onClick={() => void grafo.refetch()}
+                      >
+                        Reintentar mapa
+                      </button>
+                    </div>
+                  ) : (
+                    <GrafoComprension
+                      grafo={grafo.data}
+                      seleccionado={elegido}
+                      onSeleccionar={setElegido}
+                      busqueda={busqueda}
+                    />
+                  )}
+                </aside>
+              )}
+            </div>
+          </>
         )}
       </main>
+      <Sheet open={historialAbierto} onOpenChange={setHistorialAbierto}>
+        <SheetContent
+          side="right"
+          className={`tc-sheet tutor-layout${claro ? " tc-modo-claro" : ""}`}
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Historial de conversaciones</SheetTitle>
+            <SheetDescription>
+              Tus conversaciones con el tutor, de la más reciente a la más
+              antigua.
+            </SheetDescription>
+          </SheetHeader>
+          {panelHistorial(false, () => setHistorialAbierto(false))}
+        </SheetContent>
+      </Sheet>
     </ResponsiveLayout>
   );
 }

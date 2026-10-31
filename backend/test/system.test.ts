@@ -1870,7 +1870,12 @@ describe("Matriz de artefactos: integración con PostgreSQL real y proveedor fak
   });
   it("cita acepta solo fragmentos del propio estudiante", async () => {
     const ok = await emitir(`cita:${propio}`);
-    expect(ok.bloques[0]).toMatchObject({ tipo: "cita", fragmento_id: propio });
+    expect(ok.bloques[0]).toMatchObject({
+      tipo: "cita",
+      fragmento_id: propio,
+      documento: "doc.txt",
+      pagina: 1,
+    });
     const no = await emitir(`cita:${ajeno}`);
     expect(no.bloques).toEqual([]);
     expect(no.descartes).toBe(1);
@@ -1981,5 +1986,191 @@ describe("Revisiones de nodo: quién las hizo", () => {
       [[raiz, hijo]],
     );
     expect(por.rows.map((x) => x.por)).toEqual(["agente", "estudiante"]);
+  });
+});
+
+describe("Conversación con mensaje inicial y sin contexto (S6)", () => {
+  let a: string, b: string;
+  const crear = (body: unknown, key?: string, sid = a) =>
+    http("/conversaciones", "POST", body, sid, key);
+  const filas = async (sql: string, params: unknown[] = []) =>
+    (await db.query(sql.replaceAll("$S", schema), params)).rows;
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    b = (await http("/sesion", "POST", {}, "")).cookie!;
+  });
+  it("crea la conversación y manda el primer turno en una sola llamada", async () => {
+    const r = await crear(
+      { mensaje_inicial: "No sé por dónde empezar" },
+      randomUUID(),
+    );
+    expect(r.status).toBe(201);
+    expect(r.data.id).toBeTruthy();
+    expect(r.data.arbol_id).toBeTruthy();
+    expect(r.data.estudiante).toMatchObject({
+      rol: "estudiante",
+      texto: "No sé por dónde empezar",
+    });
+    expect(r.data.tutor).toMatchObject({ rol: "tutor", degradado: false });
+    const c = (await http(`/conversaciones/${r.data.id}`, "GET", undefined, a))
+      .data;
+    expect(c.mensajes.map((m: { rol: string }) => m.rol)).toEqual([
+      "estudiante",
+      "tutor",
+    ]);
+  });
+  it("sin contexto la conversación no tiene concepto ni ideas clave", async () => {
+    const r = await crear(
+      { mensaje_inicial: "Quiero repasar algo" },
+      randomUUID(),
+    );
+    const arbol = (
+      await filas(`SELECT titulo,concepto FROM $S.arboles WHERE id=$1`, [
+        r.data.arbol_id,
+      ])
+    )[0];
+    expect(arbol.concepto).toBeNull();
+    expect(arbol.titulo).toBe("Quiero repasar algo");
+    const nodo = (await http("/grafo", "GET", undefined, a)).data.nodos.find(
+      (n: { arbol_id: string }) => n.arbol_id === r.data.arbol_id,
+    );
+    expect(nodo).toMatchObject({ concepto: null, tipo: "concepto" });
+    const seguido = await http(
+      `/conversaciones/${r.data.id}/mensajes`,
+      "POST",
+      { texto: "[[ops]] sigo" },
+      a,
+      randomUUID(),
+    );
+    expect(seguido.status).toBe(201);
+    const creado = (await http("/grafo", "GET", undefined, a)).data.nodos.find(
+      (n: { titulo: string }) => n.titulo === "Cada porcentaje tiene su base",
+    );
+    // Sin concepto no hay catálogo: la idea clave se ignora en vez de inventarse.
+    expect(creado.idea_clave).toBeNull();
+  });
+  it("con tema y mensaje inicial usa el concepto elegido", async () => {
+    const r = await crear(
+      { tema: "fracciones", mensaje_inicial: "Fracciones, por favor" },
+      randomUUID(),
+    );
+    expect(r.status).toBe(201);
+    const arbol = (
+      await filas(`SELECT concepto,titulo FROM $S.arboles WHERE id=$1`, [
+        r.data.arbol_id,
+      ])
+    )[0];
+    expect(arbol.concepto).toBe("fracciones");
+    // El historial muestra el mensaje, no solo el nombre del concepto.
+    expect(arbol.titulo).toBe("Fracciones, por favor");
+  });
+  it("repetir la misma clave recupera la misma conversación y el mismo turno", async () => {
+    const key = randomUUID();
+    const x = await crear({ mensaje_inicial: "Hola, soy nuevo" }, key);
+    const y = await crear({ mensaje_inicial: "Hola, soy nuevo" }, key);
+    expect(y.status).toBe(201);
+    expect(y.data.id).toBe(x.data.id);
+    expect(y.data.arbol_id).toBe(x.data.arbol_id);
+    expect(y.data.tutor.id).toBe(x.data.tutor.id);
+    expect(
+      (
+        await filas(
+          `SELECT count(*)::int AS n FROM $S.mensajes WHERE conversacion_id=$1`,
+          [x.data.id],
+        )
+      )[0].n,
+    ).toBe(2);
+    expect(
+      (
+        await filas(`SELECT count(*)::int AS n FROM $S.arboles WHERE id=$1`, [
+          x.data.arbol_id,
+        ])
+      )[0].n,
+    ).toBe(1);
+  });
+  it("la misma clave con otro mensaje es un conflicto; otra sesión no la comparte", async () => {
+    const key = randomUUID();
+    await crear({ mensaje_inicial: "Primero" }, key);
+    expect((await crear({ mensaje_inicial: "Segundo" }, key)).status).toBe(409);
+    const ajena = await crear({ mensaje_inicial: "Primero" }, key, b);
+    expect(ajena.status).toBe(201);
+  });
+  it("el mensaje inicial exige Idempotency-Key", async () => {
+    expect((await crear({ mensaje_inicial: "Hola" })).status).toBe(400);
+    expect((await crear({ mensaje_inicial: "Hola" }, "corta")).status).toBe(
+      400,
+    );
+  });
+  it("no cambian las llamadas existentes: sin contexto ni mensaje sigue siendo 400", async () => {
+    expect((await crear({})).status).toBe(400);
+    expect((await crear({ mensaje_inicial: "" }, randomUUID())).status).toBe(
+      400,
+    );
+    const sola = await crear({ tema: "porcentajes" });
+    expect(sola.status).toBe(201);
+    expect(sola.data.tutor).toBeUndefined();
+    expect(Object.keys(sola.data).sort()).toEqual([
+      "arbol_id",
+      "id",
+      "raiz_id",
+    ]);
+  });
+  it("el historial trae título, concepto y fecha de cada conversación", async () => {
+    const lista = (await http("/conversaciones", "GET", undefined, a)).data;
+    expect(lista.length).toBeGreaterThan(2);
+    for (const c of lista) {
+      expect(c.titulo).toBeTruthy();
+      expect(c.created_at).toBeTruthy();
+      expect("concepto" in c).toBe(true);
+    }
+    expect(
+      lista.some((c: { concepto: string | null }) => c.concepto === null),
+    ).toBe(true);
+    expect(
+      lista.some(
+        (c: { concepto: string | null }) => c.concepto === "fracciones",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("Fallos del proveedor durante un turno", () => {
+  let a: string, conv: string;
+  const decir = (texto: string, key = randomUUID()) =>
+    http(`/conversaciones/${conv}/mensajes`, "POST", { texto }, a, key);
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    conv = (await http("/conversaciones", "POST", { tema: "porcentajes" }, a))
+      .data.id;
+  });
+  it("el límite de uso del proveedor es un 503 comprensible, no un error interno", async () => {
+    const r = await decir("[[error-limite]] hola");
+    expect(r.status).toBe(503);
+    expect(r.data.error.mensaje).toMatch(/límite de uso/);
+    expect(r.data.error.mensaje).toMatch(/puedes reintentar/);
+  });
+  it("una caída del proveedor también es un 503 con mensaje claro", async () => {
+    const r = await decir("[[error-red]] hola");
+    expect(r.status).toBe(503);
+    expect(r.data.error.mensaje).toMatch(/proveedor de IA/);
+  });
+  it("el mensaje del estudiante queda guardado y reintentar con la misma clave retoma el turno", async () => {
+    const key = randomUUID();
+    const texto = "[[error-una-vez]] repasemos";
+    const falla = await decir(texto, key);
+    expect(falla.status).toBe(503);
+    const guardado = await db.query(
+      `SELECT count(*)::int AS n FROM ${schema}.mensajes WHERE conversacion_id=$1 AND texto=$2 AND rol='estudiante'`,
+      [conv, texto],
+    );
+    expect(guardado.rows[0].n).toBe(1);
+    const ok = await decir(texto, key);
+    expect(ok.status).toBe(201);
+    expect(ok.data.tutor.degradado).toBe(false);
+    const total = await db.query(
+      `SELECT count(*)::int AS n FROM ${schema}.mensajes WHERE conversacion_id=$1 AND texto=$2 AND rol='estudiante'`,
+      [conv, texto],
+    );
+    expect(total.rows[0].n).toBe(1);
   });
 });

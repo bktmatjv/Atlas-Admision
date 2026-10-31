@@ -15,7 +15,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { Database } from "../../database/database.js";
 import { validate } from "../../http.js";
@@ -55,7 +55,7 @@ import { TutorModule, TutorService } from "./tutor.js";
 import { BloquesController, BloquesService } from "./bloques.js";
 import { clavesExpuestas } from "../seguimiento/expuestas.js";
 import { SeguimientoModule } from "../seguimiento/seguimiento.js";
-export const PROMPT_AGENTE = "tutor-agente-v2";
+export const PROMPT_AGENTE = "tutor-agente-v3";
 export const MAX_HERRAMIENTAS = 4;
 export const TIMEOUT_TURNO_MS = 60000;
 export const MAX_TURNOS_CONVERSACION = 40;
@@ -73,6 +73,7 @@ Reglas de comportamiento:
 Herramientas: leer_grafo, leer_rastro, leer_evidencias, leer_intento, generar_practica (te da una plantilla y una semilla; tú solo redactas una historia breve sin cambiar los números) y proponer_comprobacion. Máximo ${MAX_HERRAMIENTAS} llamadas por turno.
 Cierra SIEMPRE llamando a la herramienta responder con {mensaje, bloques, grafo_ops}. El sistema valida todo y descarta lo que no cumpla.
 Bloques (opcionales, máximo 6): pregunta_socratica {texto, respuestas_rapidas?}; contraste {tuyo[], correcto[]} (tuyo debe contener la respuesta o frases literales del estudiante; las cuentas de correcto con «=» se verifican); razonamiento_anotado {pasos:[{texto, estado:"ok"|"revisar", cita}]} (cita literal del estudiante); prediccion {pregunta, plantilla, semilla}; ejemplo_paso_a_paso {pasos:[{texto, cuenta?}]}; visual {forma:"cadena_porcentual"|"barra_de_partes"|"tabla_proporcion"|"recta_numerica", ...}; practica {plantilla, semilla, historia?}; en_tus_palabras {consigna}; invitacion_comprobar {texto}; cita {fragmento_id}.
+Cuando aporte, acompaña tu respuesta con al menos un bloque pertinente: una pregunta_socratica con respuestas_rapidas (2 o 3 opciones cortas) cuando preguntes por el razonamiento del estudiante, o un contraste y un visual cuando el estudiante ya mostró su cálculo. Si ya mostró cómo lo pensó, prefiere un contraste con sus palabras literales antes que otra pregunta suelta. Sin forzar bloques en cada turno: un saludo o una aclaración breve pueden ir solo con texto.
 Al crear nodos de tipo error o idea, incluye SIEMPRE idea_clave (de ideas_clave) cuando alguna corresponda; así el sistema puede unir los errores con las ideas.
 Operaciones de grafo (opcionales, máximo 8): crear_nodo {ref_temporal, tipo:"concepto"|"idea"|"error"|"ejemplo"|"pregunta", titulo, resumen, idea_clave?, padre?}; relacionar {origen, destino, tipo:"subtema"|"requiere"|"relacionado"|"contrasta_con"|"ejemplo_de"|"confusion_con"}; editar_nodo {nodo, titulo?, resumen?}; fusionar {nodos[], en}; enfocar {nodo}. El estado de los nodos lo calcula el sistema; tú no lo escribes. idea_clave solo puede ser una de las ideas_clave del contexto.`;
 const vacio = { type: "object", properties: {}, additionalProperties: false };
@@ -138,15 +139,28 @@ const origenSchema = z
     pregunta_id: z.string().max(100).optional(),
     fragmento_id: z.string().uuid().optional(),
     tema: z.enum(["porcentajes", "proporciones", "fracciones"]).optional(),
+    // Crea la conversación y manda el primer turno en una sola llamada (requiere Idempotency-Key).
+    mensaje_inicial: z.string().min(1).max(2000).optional(),
   })
   .strict()
   .refine(
     (b) =>
       Boolean(b.intento_id && b.pregunta_id) ||
       Boolean(b.fragmento_id) ||
-      Boolean(b.tema),
-    "Elige una pregunta, tema o fragmento.",
+      Boolean(b.tema) ||
+      Boolean(b.mensaje_inicial),
+    "Elige una pregunta, tema o fragmento, o escribe un mensaje inicial.",
   );
+// Id estable por (actor, clave): reintentar la misma creación no duplica la conversación.
+const idDeCreacion = (actor: string, key: string) => {
+  const h = createHash("sha256").update(`${actor}:${key}`).digest("hex");
+  const variante = ((parseInt(h[16], 16) & 0x3) | 0x8).toString(16);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-${variante}${h.slice(17, 20)}-${h.slice(20, 32)}`;
+};
+const tituloDe = (texto: string) => {
+  const t = texto.replace(/\s+/g, " ").trim();
+  return t.length > 60 ? `${t.slice(0, 57)}…` : t;
+};
 const mensajeSchema = z.object({ texto: z.string().min(1).max(2000) }).strict();
 type Conversacion = { id: string; actor_id: string; arbol_id: string };
 type FilaMensaje = {
@@ -203,48 +217,96 @@ export class AgenteService {
     if (!c) throw new NotFoundException("Conversación no encontrada.");
     return c;
   }
-  async crear(actor: string, b: z.infer<typeof origenSchema>) {
-    const source = await this.tutor.material(actor, {
-      intento_id: b.intento_id,
-      pregunta_id: b.pregunta_id,
-      fragmento_id: b.fragmento_id,
-      concepto: b.tema,
-    });
+  async crear(actor: string, b: z.infer<typeof origenSchema>, key?: string) {
+    const { mensaje_inicial: inicial, ...origen } = b;
+    if (inicial) validate(z.string().min(8).max(120), key);
+    const id = inicial ? idDeCreacion(actor, key!) : randomUUID();
+    const creada = await this.crearConversacion(actor, origen, id, inicial);
+    if (!inicial) return creada;
+    const turno = await this.turno(actor, id, inicial, key!);
+    return { ...creada, ...turno };
+  }
+  private async crearConversacion(
+    actor: string,
+    b: Omit<z.infer<typeof origenSchema>, "mensaje_inicial">,
+    id: string,
+    inicial?: string,
+  ) {
+    const [previa] = await this.db.query<{ arbol_id: string }>(
+      "SELECT arbol_id FROM conversaciones WHERE id=$1 AND actor_id=$2",
+      [id, actor],
+    );
+    if (previa) return this.resumenDeCreacion(id, previa.arbol_id);
+    const hayContexto = Boolean(
+      (b.intento_id && b.pregunta_id) || b.fragmento_id || b.tema,
+    );
+    // Sin contexto no hay concepto (ni catálogo de ideas clave): el título sale del mensaje.
+    const source = hayContexto
+      ? await this.tutor.material(actor, {
+          intento_id: b.intento_id,
+          pregunta_id: b.pregunta_id,
+          fragmento_id: b.fragmento_id,
+          concepto: b.tema,
+        })
+      : {
+          titulo: tituloDe(inicial ?? "Conversación nueva"),
+          citas: [] as unknown[],
+          concepto: null as string | null,
+        };
+    // Con un tema pelado y un mensaje, el título del historial es el mensaje, no el nombre del concepto.
+    if (inicial && !b.intento_id && !b.fragmento_id)
+      source.titulo = tituloDe(inicial);
     const arbol = randomUUID(),
-      raiz = randomUUID(),
-      id = randomUUID();
-    await this.db.transaction(async (m) => {
-      await m.query(
-        "INSERT INTO arboles(id,actor_id,titulo,pregunta_id,intento_id,documento_id,fragmento_id,concepto) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
-        [
-          arbol,
-          actor,
-          source.titulo,
-          b.pregunta_id ?? null,
-          b.intento_id ?? null,
-          "documento_id" in source ? source.documento_id : null,
-          b.fragmento_id ?? null,
-          source.concepto,
-        ],
+      raiz = randomUUID();
+    try {
+      await this.db.transaction(async (m) => {
+        await m.query(
+          "INSERT INTO arboles(id,actor_id,titulo,pregunta_id,intento_id,documento_id,fragmento_id,concepto) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+          [
+            arbol,
+            actor,
+            source.titulo,
+            b.pregunta_id ?? null,
+            b.intento_id ?? null,
+            "documento_id" in source ? source.documento_id : null,
+            b.fragmento_id ?? null,
+            source.concepto,
+          ],
+        );
+        await m.query(
+          "INSERT INTO nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,citas) VALUES($1,$2,NULL,0,0,'raiz',$3,$4,$5,$6,$7)",
+          [
+            raiz,
+            arbol,
+            source.titulo,
+            `Conversación con el tutor sobre: ${source.titulo}.`,
+            "Creado por el sistema al iniciar la conversación",
+            PROMPT_AGENTE,
+            JSON.stringify(source.citas),
+          ],
+        );
+        await m.query(
+          "INSERT INTO conversaciones(id,actor_id,arbol_id) VALUES($1,$2,$3)",
+          [id, actor, arbol],
+        );
+      });
+    } catch (e) {
+      // Dos pedidos simultáneos con la misma clave: gana uno y el otro reutiliza su conversación.
+      const [ganadora] = await this.db.query<{ arbol_id: string }>(
+        "SELECT arbol_id FROM conversaciones WHERE id=$1 AND actor_id=$2",
+        [id, actor],
       );
-      await m.query(
-        "INSERT INTO nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,citas) VALUES($1,$2,NULL,0,0,'raiz',$3,$4,$5,$6,$7)",
-        [
-          raiz,
-          arbol,
-          source.titulo,
-          `Conversación con el tutor sobre: ${source.titulo}.`,
-          "Creado por el sistema al iniciar la conversación",
-          PROMPT_AGENTE,
-          JSON.stringify(source.citas),
-        ],
-      );
-      await m.query(
-        "INSERT INTO conversaciones(id,actor_id,arbol_id) VALUES($1,$2,$3)",
-        [id, actor, arbol],
-      );
-    });
+      if (!ganadora) throw e;
+      return this.resumenDeCreacion(id, ganadora.arbol_id);
+    }
     return { id, arbol_id: arbol, raiz_id: raiz };
+  }
+  private async resumenDeCreacion(id: string, arbolId: string) {
+    const [raiz] = await this.db.query<{ id: string }>(
+      "SELECT id FROM nodos WHERE arbol_id=$1 AND padre_id IS NULL",
+      [arbolId],
+    );
+    return { id, arbol_id: arbolId, raiz_id: raiz?.id };
   }
   async obtener(actor: string, id: string) {
     const c = await this.propia(actor, id);
@@ -260,7 +322,7 @@ export class AgenteService {
   }
   async listar(actor: string) {
     return this.db.query(
-      "SELECT c.id,c.arbol_id,a.titulo,c.created_at FROM conversaciones c JOIN arboles a ON a.id=c.arbol_id WHERE c.actor_id=$1 ORDER BY c.created_at DESC LIMIT 20",
+      "SELECT c.id,c.arbol_id,a.titulo,a.concepto,c.created_at FROM conversaciones c JOIN arboles a ON a.id=c.arbol_id WHERE c.actor_id=$1 ORDER BY c.created_at DESC LIMIT 20",
       [actor],
     );
   }
@@ -331,7 +393,21 @@ export class AgenteService {
         "El tutor IA no está configurado. Configura AI_PROVIDER, AI_MODEL y AI_API_KEY en el servidor.",
       );
     const contexto = await this.armarContexto(actor, conv, id);
-    const bruto = await this.ciclo(proveedor, contexto, texto, actor, conv);
+    // Si el proveedor falla (límite de uso, timeout, caída), el mensaje del estudiante ya está
+    // guardado: se informa con claridad y reintentar con la misma clave retoma el turno.
+    const bruto = await this.ciclo(
+      proveedor,
+      contexto,
+      texto,
+      actor,
+      conv,
+    ).catch((e: unknown) => {
+      if (e instanceof ErrorProveedor)
+        throw new ServiceUnavailableException(
+          `${e.message} Tu mensaje quedó guardado; puedes reintentar.`,
+        );
+      throw e;
+    });
     const validado = bruto.degradado
       ? {
           mensaje: bruto.mensaje,
@@ -394,7 +470,7 @@ export class AgenteService {
         orden: next,
         rol: "tutor",
         texto: validado.mensaje,
-        bloques: this.enriquecer(bloques),
+        bloques: this.enriquecer(await this.conCitas(bloques)),
         descartes,
         degradado: bruto.degradado,
         clave: "r:" + key,
@@ -419,6 +495,28 @@ export class AgenteService {
     return { estudiante: proyectar(reservado.est), tutor: proyectar(tutor) };
   }
   // Cada bloque recibe un id; práctica y predicción muestran enunciado y opciones sin marcar la correcta.
+  // La cita muestra el documento y la página del fragmento (ya validado como propio).
+  private async conCitas(bloques: Bloque[]) {
+    const ids = bloques.flatMap((b) =>
+      b.tipo === "cita" ? [b.fragmento_id] : [],
+    );
+    if (!ids.length) return bloques;
+    const filas = await this.db.query<{
+      id: string;
+      pagina: number;
+      nombre: string;
+    }>(
+      "SELECT f.id,f.pagina,d.nombre FROM fragmentos f JOIN documentos d ON d.id=f.documento_id WHERE f.id::text = ANY($1::text[])",
+      [ids],
+    );
+    return bloques.map((b) => {
+      const f =
+        b.tipo === "cita"
+          ? filas.find((x) => x.id === b.fragmento_id)
+          : undefined;
+      return f ? { ...b, documento: f.nombre, pagina: f.pagina } : b;
+    });
+  }
   private enriquecer(bloques: Bloque[]) {
     return bloques.map((b) => {
       const base = { ...b, id: randomUUID() };
@@ -811,8 +909,12 @@ export class ConversacionesController {
   @Get() listar(@Req() r: ActorRequest) {
     return this.s.listar(r.actorId);
   }
-  @Post() crear(@Req() r: ActorRequest, @Body() b: unknown) {
-    return this.s.crear(r.actorId, validate(origenSchema, b));
+  @Post() crear(
+    @Req() r: ActorRequest,
+    @Body() b: unknown,
+    @Headers("idempotency-key") key?: string,
+  ) {
+    return this.s.crear(r.actorId, validate(origenSchema, b), key);
   }
   @Get(":id") obtener(@Req() r: ActorRequest, @Param("id") id: string) {
     return this.s.obtener(r.actorId, validate(z.string().uuid(), id));
