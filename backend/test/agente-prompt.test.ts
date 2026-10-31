@@ -5,9 +5,9 @@ import {
   SISTEMA_AGENTE,
 } from "../src/modules/tutor/agente";
 // Regresiones del prompt tras probar el agente con Groq real.
-describe("prompt tutor-agente-v3", () => {
+describe("prompt tutor-agente-v4", () => {
   it("está versionado", () => {
-    expect(PROMPT_AGENTE).toBe("tutor-agente-v3");
+    expect(PROMPT_AGENTE).toBe("tutor-agente-v4");
   });
   it("se presenta como CALIBRA", () => {
     expect(SISTEMA_AGENTE).toMatch(/^Eres CALIBRA,/);
@@ -45,6 +45,12 @@ describe("prompt tutor-agente-v3", () => {
       "enfocar",
     ])
       expect(SISTEMA_AGENTE).toContain(o);
+  });
+  it("usa el perfil declarado sin asumir San Marcos ni inventar diagnósticos", () => {
+    expect(SISTEMA_AGENTE).toContain("universitarios y escolares");
+    expect(SISTEMA_AGENTE).toContain("perfil declarado");
+    expect(SISTEMA_AGENTE).toContain("no presupongas que todos preparan San Marcos");
+    expect(SISTEMA_AGENTE).toContain("ni inventes diagnósticos");
   });
   it("describe los diez bloques", () => {
     for (const b of [

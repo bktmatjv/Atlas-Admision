@@ -23,6 +23,7 @@ import {
 } from "../src/modules/seguimiento/plantillas";
 import { clavesExpuestas } from "../src/modules/seguimiento/expuestas";
 import { olvidarRouters } from "../src/modules/tutor/proveedor";
+import { casosCuentaPerfil } from "./cuenta-perfil.cases";
 let app: INestApplication,
   db: Client,
   url: string,
@@ -113,6 +114,7 @@ afterAll(async () => {
   }
   if (folder) await rm(folder, { recursive: true, force: true });
 }, 60000);
+casosCuentaPerfil({ http, db: () => db, app: () => app, schema, url: () => url });
 describe("CALIBRA integrado con PostgreSQL real", () => {
   it("importa sin duplicar y no sirve el banco con claves", async () => {
     const c = await db.query(
