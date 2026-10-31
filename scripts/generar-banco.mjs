@@ -1,11 +1,11 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { examenSubible, filasDeExamen, parsearPrefijo } from "../src/lib/admision/subida.ts";
-import { carreraDeJson, distribucionDeJson, itemDeJson, procesoDeJson, resultadoDeJson } from "../src/lib/admision/datos-unmsm.ts";
+import { examenSubible, filasDeExamen, parsearPrefijo } from "../frontend/src/lib/admision/subida.ts";
+import { carreraDeJson, distribucionDeJson, itemDeJson, procesoDeJson, resultadoDeJson } from "../frontend/src/lib/admision/datos-unmsm.ts";
 
 /**
- * Genera los datos estáticos de la web en public/datos y public/graficos:
+ * Genera el banco privado en backend/data y los recursos en frontend/public/graficos:
  *   - el banco de San Marcos, a partir de la extracción (banco.json y textos.json de cada examen);
  *   - las escuelas, procesos, resultados, distribuciones y el día del examen de scripts/admision/unmsm.
  *
@@ -17,9 +17,9 @@ import { carreraDeJson, distribucionDeJson, itemDeJson, procesoDeJson, resultado
  */
 const RAIZ = fileURLToPath(new URL("..", import.meta.url));
 const SALIDA = resolve(process.argv[2] ?? join(RAIZ, "..", "komu-admision", "scripts", "admision", "salida"));
-const DATOS = join(RAIZ, "public", "datos");
-const GRAFICOS = join(RAIZ, "public", "graficos");
-const UNMSM = join(RAIZ, "scripts", "admision", "unmsm");
+const DATOS = join(RAIZ, 'backend', 'data');
+const GRAFICOS = join(RAIZ, 'frontend', 'public', 'graficos');
+const UNMSM = join(RAIZ, 'backend', 'data', 'fuentes', 'unmsm');
 
 if (!existsSync(SALIDA)) {
   console.error(`No encuentro la extracción en ${SALIDA}. Pásala como argumento.`);
