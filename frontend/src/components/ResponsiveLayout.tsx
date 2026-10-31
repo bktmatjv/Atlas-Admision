@@ -91,7 +91,7 @@ export function ResponsiveLayout({
             className={
               tutorMode
                 ? "tutor-header-row mx-auto flex max-w-[1600px] items-center"
-                : "mx-auto flex h-14 max-w-5xl items-center justify-between gap-3"
+                : "mx-auto flex min-h-14 max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2"
             }
           >
             <NavLink
@@ -110,7 +110,10 @@ export function ResponsiveLayout({
                 }
               />
             </NavLink>
-            <nav aria-label="Secciones" className="flex items-center gap-1">
+            <nav
+              aria-label="Secciones"
+              className="order-last flex w-full items-center gap-1 overflow-x-auto md:order-none md:w-auto"
+            >
               <NavLink to="/tutor" className={enlace}>
                 Tutor
               </NavLink>
@@ -127,10 +130,12 @@ export function ResponsiveLayout({
                 Temas
               </NavLink>
             </nav>
-            <MenuCuenta />
             {headerTools && (
               <div className="tutor-header-tools">{headerTools}</div>
             )}
+            <div className={tutorMode ? "shrink-0" : "ml-auto shrink-0"}>
+              <MenuCuenta />
+            </div>
           </div>
         </div>
       </header>

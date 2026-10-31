@@ -5,9 +5,14 @@ import {
   SISTEMA_AGENTE,
 } from "../src/modules/tutor/agente";
 // Regresiones del prompt tras probar el agente con Groq real.
-describe("prompt tutor-agente-v4", () => {
+describe("prompt tutor-agente-v5", () => {
   it("está versionado", () => {
-    expect(PROMPT_AGENTE).toBe("tutor-agente-v4");
+    expect(PROMPT_AGENTE).toBe("tutor-agente-v5");
+  });
+  it("no promete bloques por nombre ni con abajo o arriba en el texto", () => {
+    expect(SISTEMA_AGENTE).toMatch(/no menciones los bloques por su nombre/);
+    expect(SISTEMA_AGENTE).toContain("«abajo», «arriba»");
+    expect(SISTEMA_AGENTE).toMatch(/descartar un bloque que no pase la verificación/);
   });
   it("se presenta como CALIBRA", () => {
     expect(SISTEMA_AGENTE).toMatch(/^Eres CALIBRA,/);

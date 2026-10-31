@@ -74,8 +74,13 @@ export class SeguimientoController {
     @Req() r: ActorRequest,
     @Body() input: unknown,
   ) {
-    const { arbol_id } = validate(
-      z.object({ arbol_id: z.string().uuid() }).strict(),
+    const { arbol_id, tema } = validate(
+      z
+        .object({
+          arbol_id: z.string().uuid(),
+          tema: z.enum(["porcentajes", "proporciones", "fracciones"]).optional(),
+        })
+        .strict(),
       input,
     );
     return this.db.transaction(async (m) => {
@@ -87,6 +92,20 @@ export class SeguimientoController {
         [arbol_id, r.actorId],
       );
       if (!tree) throw new NotFoundException("Árbol no encontrado.");
+      if (!tree.concepto) {
+        // Una conversación libre no tiene tema: el estudiante lo elige, y nunca se pisa uno existente.
+        if (!tema)
+          throw new ConflictException({
+            codigo: "elige_tema",
+            message:
+              "Elige el tema de la comprobación: porcentajes, proporciones o fracciones.",
+          });
+        await m.query(
+          "UPDATE arboles SET concepto=$2 WHERE id=$1 AND concepto IS NULL",
+          [arbol_id, tema],
+        );
+        tree.concepto = tema;
+      }
       await m.query(
         "UPDATE solicitudes_ia SET estado='fallida' WHERE actor_id=$1 AND estado='pendiente' AND created_at<now()-interval '2 minutes'",
         [r.actorId],
@@ -210,11 +229,22 @@ export class SeguimientoController {
               [row.arbol_id, idea],
             )
           : [];
+        // Si el mapa no tiene la idea clave, el sistema la crea desde el catálogo curado.
+        const nodoRetorno = idea
+          ? ((nodo?.id as string | undefined) ??
+            (await this.grafo.asegurarRetorno(
+              m,
+              r.actorId,
+              row.arbol_id,
+              idea,
+              b.respuesta,
+            )))
+          : null;
         const fila = {
           actividad_id: task.id,
           respuesta: b.respuesta,
           idea_clave: idea,
-          nodo_retorno_id: (nodo?.id as string | undefined) ?? null,
+          nodo_retorno_id: nodoRetorno,
           nivel_ayuda: nivelPorFallos(n),
         };
         rastro = construirRastro(fila);

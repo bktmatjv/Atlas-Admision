@@ -4,6 +4,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly codigo?: string,
   ) {
     super(message);
   }
@@ -33,6 +34,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new ApiError(
       data?.error?.mensaje || "No se pudo completar la solicitud.",
       r.status,
+      typeof data?.error?.codigo === "string" ? data.error.codigo : undefined,
     );
   return data as T;
 }

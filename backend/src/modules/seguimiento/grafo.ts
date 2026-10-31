@@ -4,10 +4,14 @@ import type { EntityManager } from "typeorm";
 import { Database } from "../../database/database.js";
 import type { ActorRequest } from "../identidad/identidad.js";
 import { caminoHasta } from "./rastros.js";
+import { ideaPorClave } from "./actividades.js";
 import type { OpGrafo } from "../tutor/artefactos.js";
 export const MAX_NODOS_AGENTE = 40;
 export const MAX_ARISTAS = 120;
 export const PROCEDENCIA_AGENTE = "Generado por el tutor agente; no revisado";
+// Nodos que el sistema crea desde el mapa de errores curado; no cuentan como exploración del estudiante.
+export const PROCEDENCIA_SISTEMA =
+  "Creado por CALIBRA desde el mapa de errores curado";
 export type Estado = "sin_explorar" | "explorado" | "fallo" | "aplicado";
 type NodoFila = {
   id: string;
@@ -84,7 +88,7 @@ export class GrafoService {
     }>("SELECT foco_nodo_id,grafo_version FROM actores WHERE id=$1", [actor]);
     const nodos = await this.db.query<NodoFila>(
       `SELECT n.id,n.arbol_id,n.padre_id,n.tipo,n.titulo,n.contenido,n.idea_clave,n.senal,n.procedencia,a.concepto,
-        EXISTS(SELECT 1 FROM nodos h WHERE h.padre_id=n.id AND h.procedencia<>'Generado por el tutor agente; no revisado') AS con_hijos,
+        EXISTS(SELECT 1 FROM nodos h WHERE h.padre_id=n.id AND h.procedencia NOT IN ('Generado por el tutor agente; no revisado','Creado por CALIBRA desde el mapa de errores curado')) AS con_hijos,
         EXISTS(SELECT 1 FROM revisiones_nodo r WHERE r.nodo_id=n.id AND r.por='estudiante') AS con_revision
        FROM nodos n JOIN arboles a ON a.id=n.arbol_id WHERE a.actor_id=$1
        ORDER BY a.created_at,n.profundidad,n.orden`,
@@ -342,6 +346,86 @@ export class GrafoService {
     return { aplicadas, rechazadas };
   }
   // Al registrar un rastro con idea clave, el sistema une un nodo `error` ya existente con el nodo de retorno.
+  /**
+   * Garantiza que la idea clave de un fallo exista en el mapa. Si el agente no la creó, el sistema la crea
+   * desde el catálogo curado (bajo la raíz) junto con un nodo `error` y su arista `confusion_con`.
+   * Es idempotente: reutiliza la idea y el error si ya existen. Devuelve el nodo de retorno.
+   */
+  async asegurarRetorno(
+    m: EntityManager,
+    actor: string,
+    arbolId: string,
+    ideaClave: string,
+    respuesta: string,
+  ): Promise<string | null> {
+    const catalogo = ideaPorClave(ideaClave);
+    if (!catalogo) return null;
+    const [existente] = (await m.query(
+      "SELECT id FROM nodos WHERE arbol_id=$1 AND idea_clave=$2 AND tipo<>'error' ORDER BY created_at DESC,profundidad DESC LIMIT 1",
+      [arbolId, ideaClave],
+    )) as { id: string }[];
+    if (existente) return existente.id;
+    const [raiz] = (await m.query(
+      "SELECT id,profundidad FROM nodos WHERE arbol_id=$1 AND padre_id IS NULL",
+      [arbolId],
+    )) as { id: string; profundidad: number }[];
+    if (!raiz) return null;
+    const siguiente = async () =>
+      (
+        (await m.query(
+          "SELECT coalesce(max(orden),-1)+1 AS next FROM nodos WHERE arbol_id=$1 AND padre_id=$2",
+          [arbolId, raiz.id],
+        )) as { next: number }[]
+      )[0].next;
+    const crear = async (
+      tipo: "idea" | "error",
+      titulo: string,
+      contenido: string,
+      ideaClaveNodo: string | null,
+    ) => {
+      const id = randomUUID();
+      await m.query(
+        "INSERT INTO nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,citas,idea_clave) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'[]',$11)",
+        [
+          id,
+          arbolId,
+          raiz.id,
+          raiz.profundidad + 1,
+          await siguiente(),
+          tipo,
+          titulo,
+          contenido,
+          PROCEDENCIA_SISTEMA,
+          "sistema-v1",
+          ideaClaveNodo,
+        ],
+      );
+      return id;
+    };
+    const palabras = catalogo.clave.replace(/-/g, " ");
+    const idea = await crear(
+      "idea",
+      palabras.charAt(0).toUpperCase() + palabras.slice(1),
+      catalogo.descripcion,
+      ideaClave,
+    );
+    const texto = respuesta.trim().slice(0, 60);
+    const error = await crear(
+      "error",
+      `Respondiste ${texto}`,
+      `Tu respuesta fue ${texto}. Revisa la idea «${catalogo.descripcion}»`,
+      null,
+    );
+    await m.query(
+      "INSERT INTO aristas(id,actor_id,origen,destino,tipo,creada_por) VALUES($1,$2,$3,$4,'confusion_con','sistema') ON CONFLICT DO NOTHING",
+      [randomUUID(), actor, error, idea],
+    );
+    await m.query(
+      "UPDATE actores SET grafo_version=grafo_version+1 WHERE id=$1",
+      [actor],
+    );
+    return idea;
+  }
   async vincularConfusion(
     m: EntityManager,
     actor: string,

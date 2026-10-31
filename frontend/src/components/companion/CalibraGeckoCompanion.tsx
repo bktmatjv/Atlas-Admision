@@ -4,6 +4,20 @@ import { X, ChevronRight, Compass, Sparkles, EyeOff, Eye } from "lucide-react";
 import { CalibraGeckoSvg, GeckoMood, GeckoOrientation } from "./CalibraGeckoSvg";
 import { getGeckoMessages, GeckoMessage } from "./geckoMessages";
 import { cn } from "@/lib/utils";
+import {
+  estadoInicialGecko,
+  guardarEstadoGecko,
+  leerEstadoGecko,
+  type EstadoGecko,
+} from "./preferenciaGecko";
+
+const almacen = () => {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
 
 export type GeckoPerch = "bottom-left" | "right-edge" | "top-right";
 
@@ -30,17 +44,27 @@ export function CalibraGeckoCompanion() {
   const [perchIndex, setPerchIndex] = useState<number>(0);
   const perch = PERCH_ORDER[perchIndex];
 
-  // Estado de visibilidad de la burbuja de diálogo
-  const [bubbleOpen, setBubbleOpen] = useState<boolean>(true);
-
-  // Estado de minimización (modo concentración)
-  const [isMinimized, setIsMinimized] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem("calibra_gecko_minimized") === "true";
-    } catch {
-      return false;
-    }
+  // Preferencia de vista recordada: abierto, minimizado u oculto. Sin elección previa arranca
+  // minimizado en anchos chicos y sobre formularios para no tapar controles.
+  const [estado, setEstado] = useState<EstadoGecko>(() => {
+    // `?gecko=1` lo vuelve a mostrar si se ocultó.
+    const guardado = leerEstadoGecko(almacen());
+    const restaurar =
+      new URLSearchParams(location.search).get("gecko") === "1" &&
+      guardado === "oculto";
+    if (restaurar) guardarEstadoGecko(almacen(), "minimizado");
+    return estadoInicialGecko(
+      restaurar ? "minimizado" : guardado,
+      window.innerWidth,
+      location.pathname,
+    );
   });
+  const isMinimized = estado === "minimizado";
+
+  // Estado de visibilidad de la burbuja de diálogo (cerrada al arrancar en pantallas chicas)
+  const [bubbleOpen, setBubbleOpen] = useState<boolean>(
+    () => window.innerWidth >= 768,
+  );
 
   // Índice de mensaje actual
   const [messageIndex, setMessageIndex] = useState<number>(0);
@@ -81,17 +105,13 @@ export function CalibraGeckoCompanion() {
   }, []);
 
   // Minimizar / Restaurar (Modo Concentración)
-  const handleToggleMinimize = useCallback(() => {
-    setIsMinimized((prev) => {
-      const next = !prev;
-      try {
-        sessionStorage.setItem("calibra_gecko_minimized", next ? "true" : "false");
-      } catch {
-        // Silencioso en navegadores restringidos
-      }
-      return next;
-    });
+  const cambiarEstado = useCallback((siguiente: EstadoGecko) => {
+    setEstado(siguiente);
+    guardarEstadoGecko(almacen(), siguiente);
   }, []);
+  const handleToggleMinimize = useCallback(() => {
+    cambiarEstado(estado === "minimizado" ? "abierto" : "minimizado");
+  }, [estado, cambiarEstado]);
 
   // Click directo en el Gecko
   const handleGeckoClick = useCallback(() => {
@@ -105,18 +125,27 @@ export function CalibraGeckoCompanion() {
   }, [bubbleOpen, handleNextMessage]);
 
   // Si estamos en un examen activo, no renderizamos para garantizar concentración total
-  if (isEnExamenActivo) {
+  if (isEnExamenActivo || estado === "oculto") {
     return null;
   }
 
   // Si está minimizado, mostrar botón sutil en el borde izquierdo
   if (isMinimized) {
     return (
-      <div className="fixed bottom-6 left-6 z-40">
+      <div className="fixed bottom-3 left-3 z-40 flex items-center gap-1 sm:bottom-6 sm:left-6">
+        <button
+          type="button"
+          onClick={() => cambiarEstado("oculto")}
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-card/90 text-muted-foreground shadow-md backdrop-blur-md hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label="Ocultar compañero Calibra Gecko"
+          title="Ocultar compañero (vuelve con ?gecko=1)"
+        >
+          <X className="w-4 h-4" aria-hidden="true" />
+        </button>
         <button
           type="button"
           onClick={handleToggleMinimize}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/90 border border-primary/20 text-foreground text-xs font-semibold shadow-md backdrop-blur-md hover:border-primary transition-all cursor-pointer group"
+          className="flex min-h-11 items-center gap-2 px-3 py-1.5 rounded-full bg-card/90 border border-primary/20 text-foreground text-xs font-semibold shadow-md backdrop-blur-md hover:border-primary transition-all cursor-pointer group"
           aria-label="Restaurar compañero Calibra Gecko"
           title="Ver compañero Calibra Gecko"
         >
@@ -194,6 +223,16 @@ export function CalibraGeckoCompanion() {
                   aria-label="Minimizar compañero"
                 >
                   <EyeOff className="w-3.5 h-3.5" />
+                </button>
+                {/* Ocultar el compañero por completo (se recuerda) */}
+                <button
+                  type="button"
+                  onClick={() => cambiarEstado("oculto")}
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                  title="Ocultar compañero"
+                  aria-label="Ocultar compañero"
+                >
+                  <Eye className="w-3.5 h-3.5" />
                 </button>
                 {/* Botón cerrar burbuja */}
                 <button

@@ -2459,3 +2459,148 @@ describe("Router de modelos con el agente (Groq simulado, sin llamadas reales)",
     expect(fake.pruebas).toBe(true);
   });
 });
+
+describe("Demo: comprobación sin tema y retorno creado por el sistema", () => {
+  let a: string;
+  const nueva = async (sid: string) =>
+    (await http("/conversaciones", "POST", { tema: "porcentajes" }, sid))
+      .data as {
+      id: string;
+      arbol_id: string;
+    };
+  const sinConcepto = async (arbol: string) =>
+    db.query(`UPDATE ${schema}.arboles SET concepto=NULL WHERE id=$1`, [arbol]);
+  const concepto = async (arbol: string) =>
+    (
+      await db.query(`SELECT concepto FROM ${schema}.arboles WHERE id=$1`, [
+        arbol,
+      ])
+    ).rows[0].concepto;
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+  });
+  it("sin concepto ni tema responde elige_tema, no el mensaje de actividad agotada", async () => {
+    const c = await nueva(a);
+    await sinConcepto(c.arbol_id);
+    const r = await http(
+      "/comprobaciones",
+      "POST",
+      { arbol_id: c.arbol_id },
+      a,
+    );
+    expect(r.status).toBe(409);
+    expect(r.data.error.codigo).toBe("elige_tema");
+    expect(r.data.error.mensaje).not.toContain("No hay otra actividad");
+    expect(await concepto(c.arbol_id)).toBeNull();
+  });
+  it("con tema fija el concepto del árbol y crea la comprobación", async () => {
+    const c = await nueva(a);
+    await sinConcepto(c.arbol_id);
+    const r = await http(
+      "/comprobaciones",
+      "POST",
+      { arbol_id: c.arbol_id, tema: "proporciones" },
+      a,
+    );
+    expect(r.status).toBe(201);
+    expect(r.data.enunciado).toBeTruthy();
+    expect(await concepto(c.arbol_id)).toBe("proporciones");
+    await http(`/comprobaciones/${r.data.id}/cancelar`, "POST", {}, a);
+  });
+  it("un tema fuera del catálogo se rechaza y un concepto existente no se pisa", async () => {
+    const c = await nueva(a);
+    const malo = await http(
+      "/comprobaciones",
+      "POST",
+      { arbol_id: c.arbol_id, tema: "geometria" },
+      a,
+    );
+    expect(malo.status).toBe(400);
+    const r = await http(
+      "/comprobaciones",
+      "POST",
+      { arbol_id: c.arbol_id, tema: "fracciones" },
+      a,
+    );
+    expect(r.status).toBe(201);
+    expect(await concepto(c.arbol_id)).toBe("porcentajes");
+    await http(`/comprobaciones/${r.data.id}/cancelar`, "POST", {}, a);
+  });
+  it("fallar sin nodo de la idea clave lo crea con su error y su arista, una sola vez", async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    const c = await nueva(a);
+    const ini = await http(
+      "/comprobaciones",
+      "POST",
+      { arbol_id: c.arbol_id },
+      a,
+    );
+    expect(ini.status).toBe(201);
+    const r = await http(
+      `/comprobaciones/${ini.data.id}/respuesta`,
+      "PUT",
+      { respuesta: "100", justificacion: "" },
+      a,
+    );
+    expect(r.status).toBe(200);
+    expect(r.data.rastro.idea_clave).toBe("cambio-de-base");
+    const retorno = r.data.rastro.nodo_retorno_id as string;
+    expect(retorno).toBeTruthy();
+    const nodos = (
+      await db.query(
+        `SELECT id,tipo,titulo,idea_clave,procedencia,padre_id FROM ${schema}.nodos WHERE arbol_id=$1 ORDER BY orden`,
+        [c.arbol_id],
+      )
+    ).rows;
+    const idea = nodos.filter((n) => n.tipo === "idea");
+    const error = nodos.filter((n) => n.tipo === "error");
+    expect(idea).toHaveLength(1);
+    expect(idea[0]).toMatchObject({
+      id: retorno,
+      idea_clave: "cambio-de-base",
+      titulo: "Cambio de base",
+    });
+    expect(error).toHaveLength(1);
+    expect(error[0].titulo).toBe("Respondiste 100");
+    const aristas = (
+      await db.query(
+        `SELECT origen,destino,tipo,creada_por FROM ${schema}.aristas WHERE origen=$1 OR destino=$1`,
+        [error[0].id],
+      )
+    ).rows;
+    expect(aristas).toEqual([
+      {
+        origen: error[0].id,
+        destino: retorno,
+        tipo: "confusion_con",
+        creada_por: "sistema",
+      },
+    ]);
+    const g = (await http("/grafo", "GET", undefined, a)).data;
+    expect(g.camino_error).toHaveLength(2);
+    expect(g.camino_error.at(-1)).toBe(retorno);
+    const nodo = g.nodos.find((n: { id: string }) => n.id === retorno);
+    expect(nodo).toMatchObject({ estado: "fallo", origen: "sistema" });
+    // La raíz no pasa a «explorado» por los nodos que creó el sistema.
+    const raiz = g.nodos.find(
+      (n: { tipo: string; arbol_id: string }) =>
+        n.arbol_id === c.arbol_id && n.tipo === "concepto",
+    );
+    expect(raiz.estado).toBe("sin_explorar");
+    // Reenviar la misma respuesta devuelve el resultado guardado y no duplica nada.
+    const otra = await http(
+      `/comprobaciones/${ini.data.id}/respuesta`,
+      "PUT",
+      { respuesta: "100", justificacion: "" },
+      a,
+    );
+    expect(otra.data.rastro.nodo_retorno_id).toBe(retorno);
+    const [{ n }] = (
+      await db.query(
+        `SELECT count(*)::int AS n FROM ${schema}.nodos WHERE arbol_id=$1`,
+        [c.arbol_id],
+      )
+    ).rows;
+    expect(n).toBe(nodos.length);
+  });
+});
