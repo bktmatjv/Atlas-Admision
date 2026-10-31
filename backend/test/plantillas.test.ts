@@ -4,7 +4,10 @@ import {
   claveInstancia,
   generar,
   generarNoExpuesta,
+  instanciaDesdeClave,
   instancias,
+  opciones,
+  respuestaDeActividad,
 } from "../src/modules/seguimiento/plantillas";
 import { esClaveDe } from "../src/modules/seguimiento/actividades";
 const nombres = [
@@ -108,5 +111,25 @@ describe("plantillas paramétricas (§4.2)", () => {
     const i = generarNoExpuesta("fracciones", 11, () => false)!;
     expect(i.concepto).toBe("fracciones");
     expect(generarNoExpuesta("geometria", 1, () => false)).toBeNull();
+  });
+});
+
+describe("ayudas para actividades de plantilla", () => {
+  it("instanciaDesdeClave recupera la instancia y respuestaDeActividad cubre curadas y plantillas", () => {
+    const i = generar("fraccion_de_cantidad", 4);
+    expect(instanciaDesdeClave(claveInstancia(i))).toEqual(i);
+    expect(respuestaDeActividad(claveInstancia(i))).toBe(i.respuesta);
+    expect(respuestaDeActividad("porcentajes-1")).toBe(96);
+    expect(instanciaDesdeClave("porcentajes-1")).toBeNull();
+    expect(instanciaDesdeClave("inventada:{}")).toBeNull();
+    expect(respuestaDeActividad("nada")).toBeNull();
+  });
+  it("opciones incluye la respuesta y los distractores en un orden estable por semilla", () => {
+    const i = generar("proporcion_inversa", 9);
+    const o = opciones(i, 9);
+    expect(o).toEqual(opciones(i, 9));
+    expect([...o].sort()).toEqual(
+      [i.respuesta, ...i.distractores.map((d) => d.valor)].sort(),
+    );
   });
 });

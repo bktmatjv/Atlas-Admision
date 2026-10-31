@@ -1,4 +1,4 @@
-import { esClaveDe } from "./actividades.js";
+import { ACTIVIDADES, esClaveDe } from "./actividades.js";
 // Plantillas paramétricas: el sistema genera números, respuesta y distractores
 // (con su idea clave); el enunciado base es texto fijo del sistema, sin IA.
 export type Parametros = Record<string, number>;
@@ -211,4 +211,28 @@ export function generarNoExpuesta(
     if (!expuesta(claveInstancia(i))) return i;
   }
   return null;
+}
+// Una actividad expuesta es curada (id) o de plantilla (clave `plantilla:{parametros}`).
+export function instanciaDesdeClave(clave: string): Instancia | null {
+  const corte = clave.indexOf(":");
+  if (corte < 0 || !brutas.some((p) => p.nombre === clave.slice(0, corte)))
+    return null;
+  const nombre = clave.slice(0, corte);
+  return instancias(nombre).find((i) => claveInstancia(i) === clave) ?? null;
+}
+export function respuestaDeActividad(id: string): number | null {
+  return (
+    ACTIVIDADES.find((a) => a.id === id)?.respuesta ??
+    instanciaDesdeClave(id)?.respuesta ??
+    null
+  );
+}
+// Orden estable de las opciones (respuesta y distractores) para una semilla, sin marcar cuál es la correcta.
+export function opciones(i: Instancia, semilla: number): number[] {
+  const v = [i.respuesta, ...i.distractores.map((d) => d.valor)];
+  for (let k = v.length - 1; k > 0; k--) {
+    const j = Math.floor(aleatorio(semilla + k * 7919) * (k + 1));
+    [v[k], v[j]] = [v[j], v[k]];
+  }
+  return v;
 }

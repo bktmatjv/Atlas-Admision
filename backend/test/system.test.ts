@@ -1048,3 +1048,220 @@ describe("Grafo de comprensión: estados derivados de la evidencia", () => {
     expect(r.rechazadas).toHaveLength(1);
   });
 });
+
+describe("Tutor agente: ciclo con herramientas del sistema", () => {
+  let a: string, b: string, conv: string, arbol: string;
+  type Bloque = { tipo: string; id?: string; opciones?: number[] };
+  const nuevaConv = async (sid: string, tema = "porcentajes") =>
+    (await http("/conversaciones", "POST", { tema }, sid)).data as {
+      id: string;
+      arbol_id: string;
+    };
+  const decir = (texto: string, key = randomUUID(), c = conv, sid = a) =>
+    http(`/conversaciones/${c}/mensajes`, "POST", { texto }, sid, key);
+  const mensajes = async (c = conv) =>
+    (
+      await db.query(
+        `SELECT rol,texto,bloques,grafo_ops,descartes,degradado FROM ${schema}.mensajes WHERE conversacion_id=$1 ORDER BY orden`,
+        [c],
+      )
+    ).rows;
+  const grafo = async (sid = a) =>
+    (await http("/grafo", "GET", undefined, sid)).data;
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    b = (await http("/sesion", "POST", {}, "")).cookie!;
+    const c = await nuevaConv(a);
+    conv = c.id;
+    arbol = c.arbol_id;
+  });
+  it("crea la conversación con su árbol y raíz, sin llamar a la IA", async () => {
+    const r = await http("/conversaciones", "POST", {}, a);
+    expect(r.status).toBe(400);
+    const g = await grafo();
+    expect(
+      g.nodos.some(
+        (n: { arbol_id: string; tipo: string }) =>
+          n.arbol_id === arbol && n.tipo === "concepto",
+      ),
+    ).toBe(true);
+    expect(
+      (await http(`/conversaciones/${conv}`, "GET", undefined, a)).data
+        .mensajes,
+    ).toEqual([]);
+  });
+  it("un turno usa al menos una herramienta y persiste el mensaje del tutor", async () => {
+    const r = await decir("Hola, quiero entender los porcentajes");
+    expect(r.status).toBe(201);
+    expect(r.data.tutor.texto).toContain("PROVEEDOR DE PRUEBAS");
+    expect(r.data.tutor.degradado).toBe(false);
+    const ms = await mensajes();
+    expect(ms.map((m) => m.rol)).toEqual(["estudiante", "tutor"]);
+  });
+  it("el turno es idempotente por Idempotency-Key", async () => {
+    const key = randomUUID();
+    const antes = (await mensajes()).length;
+    const x = await decir("Mensaje con clave", key);
+    const y = await decir("Mensaje con clave", key);
+    expect(y.data.tutor.id).toBe(x.data.tutor.id);
+    expect((await mensajes()).length).toBe(antes + 2);
+    expect((await decir("Otro texto", key)).status).toBe(409);
+    expect((await decir("sin clave", "corta")).status).toBe(400);
+  });
+  it("ofrece las seis herramientas cuando no hay comprobación activa", async () => {
+    const r = await decir("[[herramientas]]");
+    expect(r.data.tutor.texto.split(": ")[1].split(",")).toEqual([
+      "leer_grafo",
+      "leer_rastro",
+      "leer_evidencias",
+      "leer_intento",
+      "generar_practica",
+      "proponer_comprobacion",
+    ]);
+  });
+  it("ejecuta como máximo 4 llamadas a herramientas por turno", async () => {
+    const r = await decir("[[cuatro]]");
+    expect(r.data.tutor.texto).toBe("Ejecutadas: 4");
+  });
+  it("repara una sola vez un turno que no pasa la forma", async () => {
+    const r = await decir("[[reparable]]");
+    expect(r.data.tutor).toMatchObject({
+      texto: "Respuesta reparada.",
+      degradado: false,
+    });
+  });
+  it("si la reparación falla, el turno queda degradado con solo texto", async () => {
+    const r = await decir("[[sin-forma]]");
+    expect(r.data.tutor).toMatchObject({
+      texto: "esto no es json",
+      degradado: true,
+      bloques: [],
+    });
+    const ult = (await mensajes()).at(-1)!;
+    expect(ult.degradado).toBe(true);
+  });
+  it("descarta bloques inválidos y conserva los válidos", async () => {
+    const r = await decir("[[bloques]]");
+    const bloques = r.data.tutor.bloques as Bloque[];
+    expect(bloques.map((x) => x.tipo)).toEqual(["en_tus_palabras"]);
+    expect(bloques[0].id).toBeTruthy();
+    expect(r.data.tutor.descartes).toBe(2);
+  });
+  it("aplica las operaciones de grafo válidas y descarta las ajenas", async () => {
+    const r = await decir("[[ops]]");
+    expect(r.status).toBe(201);
+    const g = await grafo();
+    const e = g.nodos.find(
+      (n: { titulo: string }) =>
+        n.titulo === "Pensar que +20% y -20% se anulan",
+    );
+    const i = g.nodos.find(
+      (n: { titulo: string }) => n.titulo === "Cada porcentaje tiene su base",
+    );
+    expect(e).toMatchObject({ tipo: "error", estado: "sin_explorar" });
+    expect(i).toMatchObject({
+      idea_clave: "cambio-de-base",
+      estado: "sin_explorar",
+    });
+    expect(g.foco).toBe(i.id);
+    expect(
+      g.aristas.some(
+        (x: { origen: string; destino: string; tipo: string }) =>
+          x.origen === e.id && x.destino === i.id && x.tipo === "confusion_con",
+      ),
+    ).toBe(true);
+    expect(r.data.tutor.descartes).toBe(1);
+  });
+  it("el agente genera práctica desde una plantilla, sin revelar cuál opción es la correcta", async () => {
+    const r = await decir("[[practica]]");
+    const p = (r.data.tutor.bloques as Bloque[])[0] as Bloque &
+      Record<string, unknown>;
+    expect(p.tipo).toBe("practica");
+    expect(p.id).toBeTruthy();
+    expect(typeof p.enunciado).toBe("string");
+    expect(p.opciones!.length).toBeGreaterThanOrEqual(3);
+    expect(JSON.stringify(p)).not.toMatch(/respuesta|distractor|correct/);
+  });
+  it("propone la comprobación sin iniciarla", async () => {
+    const r = await decir("[[comprobar]]");
+    expect((r.data.tutor.bloques as Bloque[]).map((x) => x.tipo)).toContain(
+      "invitacion_comprobar",
+    );
+    expect(
+      (await http("/comprobaciones/activa", "GET", undefined, a)).data,
+    ).toBeNull();
+  });
+  it("sin comprobación activa el mensaje puede contener cualquier número", async () => {
+    const r = await decir("[[filtrar]]");
+    expect(r.data.tutor.texto).toContain("96");
+  });
+  describe("con una comprobación activa", () => {
+    let comprobacion: string;
+    beforeAll(async () => {
+      comprobacion = (
+        await http("/comprobaciones", "POST", { arbol_id: arbol }, a)
+      ).data.id;
+    });
+    afterAll(async () => {
+      await http(`/comprobaciones/${comprobacion}/cancelar`, "POST", {}, a);
+    });
+    it("no ofrece leer_intento ni generar_practica", async () => {
+      const r = await decir("[[herramientas]]");
+      const lista = r.data.tutor.texto.split(": ")[1].split(",");
+      expect(lista).not.toContain("leer_intento");
+      expect(lista).not.toContain("generar_practica");
+      expect(lista).toContain("leer_grafo");
+    });
+    it("rechaza una respuesta que contiene el valor correcto de la actividad", async () => {
+      const r = await decir("[[filtrar]]");
+      expect(r.data.tutor.texto).toMatch(/comprobación está activa/);
+      expect(r.data.tutor.texto).not.toContain("96");
+      expect(r.data.tutor.descartes).toBe(1);
+    });
+    it("no entrega bloques de práctica mientras dura la comprobación", async () => {
+      const r = await decir("[[practica]]");
+      expect(r.data.tutor.bloques).toEqual([]);
+    });
+    it("conversar no cierra ni modifica la comprobación", async () => {
+      const activa = await http("/comprobaciones/activa", "GET", undefined, a);
+      expect(activa.data.id).toBe(comprobacion);
+    });
+  });
+  it("otra sesión no ve ni escribe en la conversación", async () => {
+    expect(
+      (await http(`/conversaciones/${conv}`, "GET", undefined, b)).status,
+    ).toBe(404);
+    expect((await decir("hola", randomUUID(), conv, b)).status).toBe(404);
+    expect((await http("/conversaciones", "GET", undefined, b)).data).toEqual(
+      [],
+    );
+    expect(
+      (await http("/conversaciones", "GET", undefined, a)).data.length,
+    ).toBeGreaterThan(0);
+  });
+  it("sin proveedor configurado falla con claridad y el reintento con la misma clave funciona", async () => {
+    const key = randomUUID();
+    process.env.AI_PROVIDER = "disabled";
+    try {
+      const r = await decir("Hola otra vez", key);
+      expect(r.status).toBe(503);
+      expect(r.data.error.mensaje).toMatch(/no está configurado/);
+    } finally {
+      process.env.AI_PROVIDER = "fake";
+    }
+    const ok = await decir("Hola otra vez", key);
+    expect(ok.status).toBe(201);
+    const ms = (await mensajes()).filter((m) => m.texto === "Hola otra vez");
+    expect(ms).toHaveLength(1);
+  });
+  it("hay un presupuesto de turnos por conversación", async () => {
+    const c = await nuevaConv(b);
+    for (let n = 1; n <= 40; n++)
+      await db.query(
+        `INSERT INTO ${schema}.mensajes(id,conversacion_id,orden,rol,texto) VALUES($1,$2,$3,'estudiante','x')`,
+        [randomUUID(), c.id, n],
+      );
+    const r = await decir("uno más", randomUUID(), c.id, b);
+    expect(r.status).toBe(429);
+  });
+});

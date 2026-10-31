@@ -49,7 +49,6 @@ export function calcularEstado(
   n: NodoFila,
   rastros: RastroFila[],
   evidencias: EvidenciaFila[],
-  foco: string | null,
 ): { estado: Estado; evidencias: number } {
   const delNodo = rastros.filter((r) => r.nodo_retorno_id === n.id);
   const esConcepto = n.tipo === "raiz" || n.tipo === "concepto";
@@ -71,7 +70,7 @@ export function calcularEstado(
     return { estado: "fallo", evidencias: total };
   if (correcciones.length || sinAyuda.length)
     return { estado: "aplicado", evidencias: total };
-  if (n.con_hijos || n.con_revision || foco === n.id)
+  if (n.con_hijos || n.con_revision)
     return { estado: "explorado", evidencias: total };
   return { estado: "sin_explorar", evidencias: total };
 }
@@ -129,7 +128,7 @@ export class GrafoService {
       foco: foco && nodos.some((n) => n.id === foco) ? foco : null,
       camino_error: ultimo ? caminoHasta(delArbol, ultimo.nodo_retorno_id) : [],
       nodos: nodos.map((n) => {
-        const e = calcularEstado(n, rastros, evidencias, foco);
+        const e = calcularEstado(n, rastros, evidencias);
         return {
           id: n.id,
           arbol_id: n.arbol_id,

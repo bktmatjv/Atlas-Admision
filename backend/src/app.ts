@@ -9,6 +9,7 @@ import {
 import { ContenidoModule } from "./modules/contenido/contenido.js";
 import { PracticaModule } from "./modules/practica/practica.js";
 import { TutorModule } from "./modules/tutor/tutor.js";
+import { AgenteModule } from "./modules/tutor/agente.js";
 import { SeguimientoModule } from "./modules/seguimiento/seguimiento.js";
 import { DocumentosModule } from "./modules/contenido/documentos.js";
 import { settings } from "./config.js";
@@ -32,6 +33,7 @@ class Health {
     ContenidoModule,
     PracticaModule,
     TutorModule,
+    AgenteModule,
     SeguimientoModule,
     DocumentosModule,
   ],

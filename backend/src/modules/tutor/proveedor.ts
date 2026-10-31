@@ -281,25 +281,129 @@ export class ProveedorAnthropic implements ProveedorIA {
 }
 // Guion determinista solo para pruebas. Con herramientas disponibles llama a la
 // primera que no sea la forzada; con sus resultados (o sin herramientas) responde.
+// Marcadores en el mensaje del estudiante eligen el comportamiento a probar.
 export class ProveedorFake implements ProveedorIA {
   async completar(e: EntradaIA): Promise<RespuestaIA> {
+    const usuarios = e.mensajes.flatMap((m) =>
+      m.rol === "user" ? [m.texto] : [],
+    );
+    const reparando =
+      usuarios[usuarios.length - 1]?.startsWith("ERROR_DE_FORMA");
+    const original =
+      [...usuarios].reverse().find((t) => !t.startsWith("ERROR_DE_FORMA")) ??
+      "";
     const ultimo = e.mensajes[e.mensajes.length - 1];
-    const herramienta = e.herramientas?.find((h) => h.nombre !== e.forzar);
-    if (herramienta && ultimo?.rol !== "tool")
-      return {
-        texto: null,
-        llamadas: [
-          { id: "fake-1", nombre: herramienta.nombre, argumentos: {} },
-        ],
-      };
-    return {
-      texto: JSON.stringify({
-        mensaje: "PROVEEDOR DE PRUEBAS — no es una respuesta de IA real.",
-        bloques: [],
-        grafo_ops: [],
-      }),
+    const nombres = (e.herramientas ?? [])
+      .map((h) => h.nombre)
+      .filter((n) => n !== "responder");
+    const resultados = e.mensajes.flatMap((m) => (m.rol === "tool" ? [m] : []));
+    const final = (turno: Record<string, unknown>): RespuestaIA => ({
+      texto: JSON.stringify({ bloques: [], grafo_ops: [], ...turno }),
       llamadas: [],
-    };
+    });
+    const llamar = (nombre: string, n = 1): RespuestaIA => ({
+      texto: null,
+      llamadas: Array.from({ length: n }, (_, i) => ({
+        id: `fake-${i + 1}`,
+        nombre,
+        argumentos: {},
+      })),
+    });
+    const tiene = (marca: string) => original.includes(`[[${marca}]]`);
+    if (tiene("sin-forma")) return { texto: "esto no es json", llamadas: [] };
+    if (tiene("reparable"))
+      return reparando
+        ? final({ mensaje: "Respuesta reparada." })
+        : { texto: JSON.stringify({ bloques: [] }), llamadas: [] };
+    if (tiene("herramientas"))
+      return final({ mensaje: `Herramientas: ${nombres.join(",")}` });
+    if (tiene("cuatro"))
+      return resultados.length
+        ? final({
+            mensaje: `Ejecutadas: ${resultados.filter((r) => !r.texto.includes("límite")).length}`,
+          })
+        : llamar("leer_grafo", 6);
+    if (tiene("bloques"))
+      return final({
+        mensaje: "Probemos con una cuenta.",
+        bloques: [
+          { tipo: "holograma" },
+          {
+            tipo: "visual",
+            forma: "cadena_porcentual",
+            pasos: [
+              { valor: 100 },
+              { op: "+20%", valor: 120 },
+              { op: "-20%", valor: 100 },
+            ],
+          },
+          { tipo: "en_tus_palabras", consigna: "Explícalo con tus palabras" },
+        ],
+      });
+    if (tiene("ops"))
+      return final({
+        mensaje: "Agrego lo que vimos a tu mapa.",
+        grafo_ops: [
+          {
+            op: "crear_nodo",
+            ref_temporal: "e",
+            tipo: "error",
+            titulo: "Pensar que +20% y -20% se anulan",
+            resumen: "Tratar los dos porcentajes como si usaran la misma base",
+            idea_clave: "cambio-de-base",
+          },
+          {
+            op: "crear_nodo",
+            ref_temporal: "i",
+            tipo: "idea",
+            titulo: "Cada porcentaje tiene su base",
+            resumen: "Tras un cambio la base ya no es la inicial",
+            idea_clave: "cambio-de-base",
+            padre: "e",
+          },
+          {
+            op: "relacionar",
+            origen: "e",
+            destino: "i",
+            tipo: "confusion_con",
+          },
+          { op: "enfocar", nodo: "i" },
+          { op: "enfocar", nodo: "nodo-ajeno" },
+        ],
+      });
+    if (tiene("practica")) {
+      const r = resultados.find((x) => x.nombre === "generar_practica");
+      if (!r && nombres.includes("generar_practica"))
+        return llamar("generar_practica");
+      const datos = r
+        ? (JSON.parse(r.texto) as { plantilla?: string; semilla?: number })
+        : {};
+      return final({
+        mensaje: "Probemos con un ejercicio.",
+        bloques: [
+          {
+            tipo: "practica",
+            plantilla: datos.plantilla ?? "porcentaje_encadenado",
+            semilla: datos.semilla ?? 1,
+            historia: "Una tienda ajusta sus precios.",
+          },
+        ],
+      });
+    }
+    if (tiene("comprobar"))
+      return resultados.length
+        ? final({ mensaje: "Cuando quieras, lo verificamos." })
+        : llamar("proponer_comprobacion");
+    if (tiene("filtrar"))
+      return final({ mensaje: "El resultado correcto es 96 soles." });
+    const herramienta = (e.herramientas ?? []).find(
+      (h) => h.nombre !== e.forzar && h.nombre !== "responder",
+    );
+    if (herramienta && ultimo?.rol !== "tool" && !resultados.length)
+      return llamar(herramienta.nombre);
+    return final({
+      mensaje: "PROVEEDOR DE PRUEBAS — no es una respuesta de IA real.",
+    });
   }
 }
 @Injectable()
