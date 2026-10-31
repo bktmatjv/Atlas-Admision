@@ -4,7 +4,7 @@
 
 Plataforma para postulantes a la Universidad Nacional Mayor de San Marcos (UNMSM). Combina práctica con preguntas de admisiones anteriores, un tutor conversacional y un **grafo de comprensión** que muestra qué ideas exploraste, dónde fallaste y qué ya aplicaste por tu cuenta.
 
-> **Estado:** MVP funcional en entorno local. Demo desplegada y validación con postulantes: **pendientes** (ver [Limitaciones](#limitaciones-actuales)).
+> **Estado actual:** MVP funcional en entorno local, con frontend React, API NestJS y PostgreSQL integrados. La demo pública y la validación con postulantes siguen **pendientes** (ver [Limitaciones](#limitaciones-actuales)).
 
 ---
 
