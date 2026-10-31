@@ -33,6 +33,8 @@ const schema = z
     AI_CADENA: z.string().optional(),
     AI_SIN_HERRAMIENTAS: z.string().optional(),
     GROQ_API_KEY: z.string().optional(),
+    CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+    CLOUDFLARE_API_TOKEN: z.string().optional(),
     AI_TIMEOUT_MS: entero(1000, 120000, 20000),
     AI_TIMEOUT_TOTAL_MS: entero(1000, 300000, 45000),
     AI_MAX_CONCURRENCIA: entero(1, 50, 4),
@@ -65,6 +67,26 @@ const schema = z
             code: "custom",
             message:
               "Falta GROQ_API_KEY para los destinos de Groq de AI_CADENA",
+          });
+        if (usa("cloudflare") && !v.CLOUDFLARE_ACCOUNT_ID)
+          c.addIssue({
+            code: "custom",
+            message:
+              "Falta CLOUDFLARE_ACCOUNT_ID para los destinos de Cloudflare de AI_CADENA",
+          });
+        if (usa("cloudflare") && !v.CLOUDFLARE_API_TOKEN)
+          c.addIssue({
+            code: "custom",
+            message:
+              "Falta CLOUDFLARE_API_TOKEN para los destinos de Cloudflare de AI_CADENA",
+          });
+        if (
+          v.CLOUDFLARE_ACCOUNT_ID &&
+          !/^[A-Za-z0-9_-]{8,64}$/.test(v.CLOUDFLARE_ACCOUNT_ID)
+        )
+          c.addIssue({
+            code: "custom",
+            message: "CLOUDFLARE_ACCOUNT_ID tiene un formato inválido",
           });
         for (const id of listaDeIds(v.AI_SIN_HERRAMIENTAS))
           if (!cadena.destinos.some((d) => d.id === id))

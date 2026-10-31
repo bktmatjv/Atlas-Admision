@@ -1,5 +1,5 @@
 // Lectura pura de AI_CADENA. No importa config.ts: config.ts la usa para validar al arrancar.
-export const PROVEEDORES_ROUTER = ["groq"] as const;
+export const PROVEEDORES_ROUTER = ["groq", "cloudflare"] as const;
 export type ProveedorRouter = (typeof PROVEEDORES_ROUTER)[number];
 export type DestinoConfig = {
   proveedor: ProveedorRouter;
@@ -10,7 +10,7 @@ export const MAX_DESTINOS = 8;
 export type ResultadoCadena =
   { ok: true; destinos: DestinoConfig[] } | { ok: false; error: string };
 // Formato: proveedor:modelo separados por comas. El modelo puede contener «:», «/» y «@»
-// (p. ej. rutas con «/» o «@»), por eso solo se parte en el primer «:».
+// (los modelos de Cloudflare empiezan por «@cf/» o «@hf/»), por eso solo se parte en el primer «:».
 export function parsearCadena(texto: string | undefined): ResultadoCadena {
   const crudo = (texto ?? "").trim();
   if (!crudo)

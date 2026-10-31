@@ -190,6 +190,52 @@ async function completarOpenAI(
   }
   return leerRespuestaOpenAI(datos);
 }
+export const CLOUDFLARE_API = "https://api.cloudflare.com/client/v4";
+// Workers AI: cuota diaria gratuita de 10 000 neuronas (HTTP 429, código 3036) que se reinicia a
+// las 00:00 UTC. Otros 429 (p. ej. 3040, capacidad temporal) no tienen hora de recuperación.
+export function esperaCloudflare(
+  h: Headers,
+  cuerpo: string,
+  ahora = Date.now(),
+): number | undefined {
+  const indicada = leerRetryAfter(h.get("retry-after"));
+  if (indicada !== undefined) return indicada;
+  if (!/\b3036\b/.test(cuerpo)) return undefined;
+  const d = new Date(ahora);
+  return aMs(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1) - ahora,
+  );
+}
+type OpcionesCloudflare = {
+  accountId: string;
+  apiToken: string;
+  model: string;
+  fetch?: FetchFn;
+  timeoutMs?: number;
+  url?: string;
+};
+// Workers AI mediante su endpoint compatible con OpenAI: mismos mensajes, herramientas y respuesta.
+export class ProveedorCloudflare implements ProveedorIA {
+  constructor(private o: OpcionesCloudflare) {}
+  completar(e: EntradaIA, op?: OpcionesLlamada): Promise<RespuestaIA> {
+    return completarOpenAI(
+      {
+        url:
+          this.o.url ??
+          `${CLOUDFLARE_API}/accounts/${encodeURIComponent(this.o.accountId)}/ai/v1/chat/completions`,
+        apiKey: this.o.apiToken,
+        model: this.o.model,
+        fetch: this.o.fetch,
+        timeoutMs: this.o.timeoutMs ?? TIMEOUT_LLAMADA_MS,
+        esperaLimite: (h, cuerpo) => esperaCloudflare(h, cuerpo),
+        // response_format no está verificado para los modelos de Workers AI.
+        formatoJson: false,
+      },
+      e,
+      op,
+    );
+  }
+}
 export class ProveedorGroq implements ProveedorIA {
   constructor(private o: OpcionesGroq) {}
   completar(e: EntradaIA, op?: OpcionesLlamada): Promise<RespuestaIA> {
@@ -654,6 +700,8 @@ function routerDeConfiguracion(c: Settings): RouterIA {
     cadena.destinos.map((d) => d.id),
     [...sinHerramientas],
     c.GROQ_API_KEY,
+    c.CLOUDFLARE_ACCOUNT_ID,
+    c.CLOUDFLARE_API_TOKEN,
     c.AI_TIMEOUT_MS,
     c.AI_TIMEOUT_TOTAL_MS,
     c.AI_MAX_CONCURRENCIA,
@@ -666,11 +714,19 @@ function routerDeConfiguracion(c: Settings): RouterIA {
     proveedor: d.proveedor,
     modelo: d.modelo,
     herramientas: !sinHerramientas.has(d.id),
-    adaptador: new ProveedorGroq({
-      apiKey: c.GROQ_API_KEY!,
-      model: d.modelo,
-      timeoutMs: c.AI_TIMEOUT_MS,
-    }),
+    adaptador:
+      d.proveedor === "cloudflare"
+        ? new ProveedorCloudflare({
+            accountId: c.CLOUDFLARE_ACCOUNT_ID!,
+            apiToken: c.CLOUDFLARE_API_TOKEN!,
+            model: d.modelo,
+            timeoutMs: c.AI_TIMEOUT_MS,
+          })
+        : new ProveedorGroq({
+            apiKey: c.GROQ_API_KEY!,
+            model: d.modelo,
+            timeoutMs: c.AI_TIMEOUT_MS,
+          }),
   }));
   const router = new RouterIA({
     destinos,
