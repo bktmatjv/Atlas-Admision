@@ -6,3 +6,8 @@ dist
 !.env.example
 .DS_Store
 *.log
+# Local AI runtime state
+.atl/
+backend/uploads/
+coverage/
+*.tsbuildinfo
