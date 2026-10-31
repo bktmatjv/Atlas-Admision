@@ -51,7 +51,7 @@ export function MainActionHero({
   if (!carreraId) {
     return (
       <div className={cn("transition-all", className)}>
-        <TuCarrera userId={userId} titulo="Busca tu carrera" />
+        <TuCarrera userId={userId} titulo="Elige tu carrera para empezar" />
       </div>
     );
   }

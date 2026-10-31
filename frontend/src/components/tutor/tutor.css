@@ -1,58 +1,84 @@
 /* Tutor CALIBRA: superficies editoriales, conversación y evidencia, sin métricas simuladas. */
 /* Noche CALIBRA: grafito con vino y crema, como la pantalla de carga. Es la apariencia por defecto del tutor. */
 .tutor-layout {
-  /* Modo oscuro del tutor: grafito del marcador con verde cancha encendido. */
   color-scheme: dark;
-  --background: 220 13% 8%;
-  --card: 220 12% 12%;
-  --foreground: 96 27% 94%;
-  --muted: 220 10% 16%;
-  --muted-foreground: 220 8% 68%;
-  --primary: 151 62% 52%;
-  --primary-hover: 151 66% 60%;
-  --primary-foreground: 220 13% 8%;
-  --border: 220 9% 21%;
-  --tc-wine-a: 151 62% 52%;
-  --tc-wine-b: 151 66% 44%;
-  --tc-cream: 96 27% 94%;
-  --tc-ok: 151 62% 58%;
-  --tc-no: 358 80% 70%;
-  --tc-violet: 205 80% 70%;
-  --tc-amber: 40 100% 62%;
-  --tc-btn-bg: hsl(158 58% 24%);
-  --tc-btn-fg: hsl(0 0% 100%);
-  --tc-btn-border: transparent;
-  --tc-btn-shadow: 0 1px 2px hsl(0 0% 0% / 0.4);
-  --tc-glass: hsl(var(--card));
-  --tc-glass-border: hsl(var(--border));
-  --tc-glass-shadow: 0 1px 0 hsl(160 30% 10% / 0.06);
-  background: hsl(var(--background));
+  --background: 321 15% 9%;
+  --card: 322 14% 13%;
+  --foreground: 30 38% 92%;
+  --muted: 325 12% 18%;
+  --muted-foreground: 330 14% 73%;
+  --primary: 346 66% 66%;
+  --primary-hover: 346 72% 72%;
+  --primary-foreground: 322 24% 9%;
+  --border: 340 16% 25%;
+  --tc-wine-a: 346 60% 34%;
+  --tc-wine-b: 343 58% 24%;
+  --tc-cream: 30 38% 92%;
+  --tc-ok: 145 45% 64%;
+  --tc-no: 0 78% 74%;
+  --tc-violet: 262 75% 82%;
+  --tc-amber: 38 88% 68%;
+  --tc-btn-bg: linear-gradient(
+    135deg,
+    hsl(var(--tc-wine-a)),
+    hsl(var(--tc-wine-b))
+  );
+  --tc-btn-fg: hsl(var(--tc-cream));
+  --tc-btn-border: hsl(346 55% 52% / 0.55);
+  --tc-btn-shadow:
+    0 8px 22px hsl(346 60% 22% / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.14);
+  --tc-glass: linear-gradient(
+    180deg,
+    hsl(var(--card) / 0.86),
+    hsl(var(--card) / 0.68)
+  );
+  --tc-glass-border: hsl(346 24% 34% / 0.5);
+  --tc-glass-shadow:
+    0 20px 54px hsl(0 0% 0% / 0.38), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  background:
+    radial-gradient(
+      ellipse 70% 52% at 50% 18%,
+      hsl(346 46% 24% / 0.62),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 90% 60% at 50% 110%,
+      hsl(346 40% 16% / 0.5),
+      transparent 70%
+    ),
+    hsl(var(--background));
 }
-/* Modo claro (el de la app por defecto): blanco tiza y verde cancha. */
+/* Variante clara, solo para el tutor (la elige el estudiante con el botón de modo). */
 .tutor-layout:has(.tc-claro),
 .tutor-layout.tc-modo-claro {
   color-scheme: light;
-  --background: 96 27% 96%;
-  --card: 0 0% 100%;
-  --foreground: 150 21% 10%;
-  --muted-foreground: 152 7% 34%;
-  --primary: 162 62% 14%;
-  --primary-hover: 158 58% 22%;
-  --primary-foreground: 0 0% 100%;
-  --border: 125 12% 86%;
-  --muted: 120 14% 92%;
-  --tc-ok: 152 62% 28%;
-  --tc-no: 358 68% 44%;
-  --tc-violet: 205 70% 38%;
-  --tc-amber: 34 90% 32%;
+  --background: 30 50% 97%;
+  --card: 30 70% 99%;
+  --foreground: 231 37% 13%;
+  --muted-foreground: 224 14% 41%;
+  --primary: 340 84% 28%;
+  --primary-hover: 340 84% 22%;
+  --primary-foreground: 38 100% 98%;
+  --border: 24 31% 90%;
+  --muted: 24 30% 95%;
+  --tc-ok: 145 60% 28%;
+  --tc-no: 0 65% 40%;
+  --tc-violet: 262 45% 42%;
+  --tc-amber: 36 80% 32%;
   --tc-btn-bg: hsl(var(--primary));
   --tc-btn-fg: hsl(var(--primary-foreground));
   --tc-btn-border: transparent;
-  --tc-btn-shadow: 0 1px 2px hsl(160 30% 10% / 0.12);
+  --tc-btn-shadow: none;
   --tc-glass: hsl(var(--card));
-  --tc-glass-border: hsl(var(--border));
-  --tc-glass-shadow: 0 1px 0 hsl(160 30% 10% / 0.06);
-  background: hsl(var(--background));
+  --tc-glass-border: hsl(var(--border) / 0.65);
+  --tc-glass-shadow: 0 6px 24px hsl(var(--primary) / 0.04);
+  background:
+    radial-gradient(
+      ellipse at 70% 6%,
+      hsl(var(--primary) / 0.035),
+      transparent 43%
+    ),
+    hsl(var(--background));
 }
 .tutor-message-bubble p,
 .tutor-block p,
@@ -65,6 +91,20 @@
 .tutor-detail-content .prose {
   font-size: inherit;
   line-height: inherit;
+}
+.tutor-layout > header {
+  background: hsl(var(--card) / 0.94);
+}
+.tutor-layout > header nav {
+  flex-shrink: 0;
+}
+.tutor-layout > header nav a {
+  font-size: 12px;
+  padding-inline: 17px;
+}
+.tutor-layout > header nav a[aria-current="page"] {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.07);
 }
 .tutor-header-row {
   min-height: 58px;
@@ -110,8 +150,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: hsl(0 0% 100% / 0.8);
-  border-left: 1px solid hsl(0 0% 100% / 0.18);
+  color: hsl(var(--primary));
+  border-left: 1px solid hsl(var(--border));
   padding-left: 14px;
   font-size: 11px;
   font-weight: 600;
@@ -164,9 +204,9 @@
   text-transform: uppercase;
 }
 .tutor-hero h1 {
-  font-family: "Big Shoulders Display", Figtree, sans-serif;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(30px, 2.9vw, 48px);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.045em;
   margin: 0 0 10px;
@@ -185,12 +225,13 @@
   padding: 19px 23px;
   border: 1px solid hsl(var(--border) / 0.65);
   background: hsl(var(--card) / 0.82);
-  border-radius: 8px;
+  border-radius: 15px;
   box-shadow: 0 7px 25px hsl(var(--primary) / 0.025);
 }
 .tutor-hero-quote > span {
   font:
-    800 59px/0.9 "Big Shoulders Display", sans-serif;
+    700 56px/0.9 Georgia,
+    serif;
   color: hsl(var(--primary));
 }
 .tutor-hero-quote p {
@@ -224,7 +265,7 @@
 .tutor-panel {
   min-width: 0;
   border: 1px solid hsl(var(--border) / 0.65);
-  border-radius: 8px;
+  border-radius: 17px;
   background: hsl(var(--card));
   box-shadow: 0 6px 24px hsl(var(--primary) / 0.025);
 }
@@ -236,9 +277,9 @@
   min-height: 88px;
 }
 .tutor-panel-header h2 {
-  font-family: "Big Shoulders Display", Figtree, sans-serif;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 23px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.035em;
   margin: 0;
@@ -257,7 +298,7 @@
   width: 48px;
   height: 48px;
   border: 1px solid hsl(var(--primary) / 0.08);
-  border-radius: 8px;
+  border-radius: 12px;
   background: hsl(var(--primary) / 0.045);
   color: hsl(var(--primary));
 }
@@ -267,7 +308,7 @@
   height: 54px;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 16px;
   border: 1px solid hsl(var(--primary) / 0.08);
 }
 .tutor-avatar svg {
@@ -277,7 +318,7 @@
 .tutor-avatar--small {
   width: 37px;
   height: 37px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 .tutor-chat {
   display: flex;
@@ -410,7 +451,7 @@
 }
 .tutor-message--estudiante .tutor-message-bubble {
   background: hsl(var(--primary) / 0.065);
-  border-radius: 8px 5px 13px 13px;
+  border-radius: 13px 5px 13px 13px;
 }
 .tutor-student-avatar {
   width: 34px;
@@ -504,7 +545,7 @@
   display: flex;
   gap: 4px;
   padding: 15px 18px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: hsl(var(--muted) / 0.4);
 }
 .tutor-typing > span:not(.sr-only) {
@@ -813,7 +854,7 @@
   min-width: 0;
   overflow: hidden;
   border: 1px solid hsl(var(--border) / 0.65);
-  border-radius: 8px;
+  border-radius: 12px;
   background: radial-gradient(
     ellipse at center,
     hsl(var(--card)),
@@ -840,7 +881,7 @@
 .tutor-map-label {
   color: hsl(var(--foreground));
   text-align: center;
-  font-family: Figtree, system-ui, sans-serif;
+  font-family: Inter, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.3;
   word-break: break-word;
@@ -914,7 +955,7 @@
   flex-direction: column;
   min-width: 0;
   border: 1px solid hsl(var(--border) / 0.65);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 14px 11px;
   background: hsl(var(--card));
 }
@@ -1064,7 +1105,7 @@
   gap: 15px;
   padding: 36px;
   border: 1px dashed hsl(var(--border));
-  border-radius: 8px;
+  border-radius: 13px;
   background: radial-gradient(
     circle at center,
     hsl(var(--primary) / 0.04),
@@ -1096,7 +1137,7 @@
   margin-top: 12px;
   padding: 17px 23px;
   border: 1px solid hsl(var(--border) / 0.65);
-  border-radius: 8px;
+  border-radius: 13px;
   background: hsl(var(--card));
 }
 .tutor-progress-intro {
@@ -1270,7 +1311,10 @@
   .tutor-header-brand {
     padding-right: 15px;
   }
-    .tutor-progress {
+  .tutor-layout > header nav a {
+    padding-inline: 11px;
+  }
+  .tutor-progress {
     gap: 13px;
     grid-template-columns: minmax(230px, 1.5fr) repeat(4, minmax(120px, 1fr));
   }
@@ -1359,7 +1403,21 @@
   .tutor-header-search {
     width: min(100%, 240px);
   }
-    .tutor-hero-quote {
+  .tutor-layout > header nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    border-top: 1px solid hsl(var(--border) / 0.5);
+    padding-top: 5px;
+  }
+  .tutor-layout > header nav a {
+    min-height: 38px;
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+  .tutor-hero-quote {
     display: none;
   }
   .tutor-hero-art {
@@ -1429,7 +1487,7 @@
   .tutor-avatar {
     width: 46px;
     height: 46px;
-    border-radius: 8px;
+    border-radius: 13px;
   }
   .tutor-avatar--small {
     width: 30px;

@@ -15,14 +15,14 @@ export function CardTemasFrecuentes({ className }: CardTemasFrecuentesProps) {
     <section
       aria-labelledby="t-temas-frecuentes-sidebar"
       className={cn(
-        "p-5",
+        "rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/40",
         className
       )}
     >
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="grid h-10 w-10 shrink-0 place-items-center text-primary"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"
         >
           <TrendingUp className="h-5 w-5" />
         </span>

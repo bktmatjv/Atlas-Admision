@@ -25,7 +25,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Figtree', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Inter', '"Inter Fallback"', '"Inter Fallback Roboto"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
         // Solo para titulares de marketing. Los datos y la UI siguen en Inter: una cifra
         // en tipografía display se lee como decoración, no como dato.
         //
@@ -34,7 +34,7 @@ export default {
         // voz, dicha más fuerte. Inter Tight es la compañera de titulares de Inter —más
         // estrecha y con las contraformas ajustadas—, así que a cuerpos grandes tiene el
         // color que Inter pierde y a la vez no desentona con el texto de al lado.
-        display: ['"Big Shoulders Display"', 'Figtree', 'system-ui', 'sans-serif'],
+        display: ['"Inter Tight"', '"Inter Tight Fallback"', '"Inter Tight Fallback Roboto"', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         // Segunda familia, y la única con un rol que Inter no puede cumplir: la lectura
         // larga del capítulo (ParadaDeLeccion.tsx). Inter está dibujada para interfaz —
         // rótulos, botones, cifras cortas—, no para sostener veinte mil caracteres
@@ -57,17 +57,17 @@ export default {
         lectura: ['"Zilla Slab"', '"Zilla Slab Fallback"', 'Georgia', "'Times New Roman'", 'serif'],
         // Los titulares de la lección —definición, bloques, partes—: redondeada, como pide la
         // dirección de Calibra. Solo titulares: el cuerpo que explica va en Inter.
-        redonda: ['Figtree', 'system-ui', 'sans-serif'],
+        redonda: ['Nunito', '"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         // Escala semántica del sistema. Cinco tamaños, y son los únicos que debe usar
         // código nuevo. Los alias de abajo ('xs'…'5xl') se quedan porque las seis
         // pantallas que aún no se han migrado los usan en 1056 sitios.
         'figure': ['1.1875rem', { lineHeight: '1.15', letterSpacing: '-0.028em' }],
-        'title':  ['1rem', { lineHeight: '1.4',  letterSpacing: '-0.005em' }],
-        'body':   ['0.875rem', { lineHeight: '1.55', letterSpacing: '0' }],
-        'meta':   ['0.78125rem', { lineHeight: '1.45', letterSpacing: '0' }],
-        'label':  ['0.71875rem', { lineHeight: '1.4',  letterSpacing: '0.06em' }],
+        'title':  ['0.9375rem', { lineHeight: '1.4',  letterSpacing: '-0.012em' }],
+        'body':   ['0.8125rem', { lineHeight: '1.55', letterSpacing: '-0.003em' }],
+        'meta':   ['0.71875rem', { lineHeight: '1.45', letterSpacing: '0' }],
+        'label':  ['0.65625rem', { lineHeight: '1.4',  letterSpacing: '0.055em' }],
 
         // El sexto, y el único que no es para escanear: leer. Los cinco de arriba están
         // calibrados para paneles, tablas y cifras —13px es density, no lectura—, y un
@@ -116,9 +116,9 @@ export default {
         // dos peldaños que casi coinciden es una jerarquía que no existe.
         'hero':       ['2.25rem', { lineHeight: '1.06', letterSpacing: '-0.02em' }],
 
-        'xs': ['0.78125rem', { lineHeight: '1.5', letterSpacing: '0' }],
-        'sm': ['0.875rem', { lineHeight: '1.55', letterSpacing: '0' }],
-        'base': ['1rem', { lineHeight: '1.6', letterSpacing: '0' }],
+        'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0' }],
+        'sm': ['0.8125rem', { lineHeight: '1.55', letterSpacing: '-0.003em' }],
+        'base': ['0.9375rem', { lineHeight: '1.6', letterSpacing: '-0.006em' }],
         'lg': ['1.0625rem', { lineHeight: '1.5', letterSpacing: '-0.01em' }],
         'xl': ['1.25rem', { lineHeight: '1.4', letterSpacing: '-0.012em' }],
         '2xl': ['1.5rem', { lineHeight: '1.3', letterSpacing: '-0.016em' }],
@@ -128,11 +128,6 @@ export default {
       },
       colors: {
         // Colores semánticos de identidad CALIBRA
-        cancha: { DEFAULT: "hsl(var(--cancha))", vivo: "hsl(var(--cancha-vivo))", claro: "hsl(var(--cancha-claro))" },
-        grafito: { DEFAULT: "hsl(var(--grafito))", 2: "hsl(var(--grafito-2))" },
-        ambar: "hsl(var(--ambar))",
-        coral: "hsl(var(--coral))",
-        tiza: "hsl(var(--tiza))",
         "carmesi-principal": "hsl(var(--carmesi-principal))",
         "carmesi-secundario": "hsl(var(--carmesi-secundario))",
         fondo: "hsl(var(--fondo))",
@@ -241,9 +236,9 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 2px)",
-        "2xl": "calc(var(--radius) + 4px)",
-        "3xl": "calc(var(--radius) + 6px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "calc(var(--radius) + 12px)",
       },
       spacing: {
         "4.5": "1.125rem",

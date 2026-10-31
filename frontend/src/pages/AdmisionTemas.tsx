@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
 import { PageHeader } from "@/components/system/PageHeader";
+import { ThemeToggle } from "@/components/system/ThemeToggle";
 import { CURSOS } from "@/lib/admision/temario";
 import { admision } from "@/integrations/api/admision";
 import { useAuthUserId } from "@/hooks/useAuthUserId";
@@ -156,28 +157,41 @@ export default function AdmisionTemas() {
 
   return (
     <ResponsiveLayout>
-      <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 md:px-6 md:py-8">
+      <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8 lg:pb-8">
         <div className="mx-auto max-w-6xl space-y-6">
           {/* 1. Cabecera superior y navegación */}
           <div className="space-y-2">
             <PageHeader
-              title="Temario de San Marcos"
-              />
+              breadcrumb={["CALIBRA", "Admisión", "Temario"]}
+              title="Temario oficial · San Marcos"
+              actions={<ThemeToggle />}
+            />
+            <Link
+              to="/admision"
+              className="inline-flex min-h-[44px] items-center gap-1.5 text-xs font-bold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-1 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Volver a Inicio</span>
+            </Link>
           </div>
 
           {/* 2. Banner de orientación académica */}
           <section
             aria-labelledby="temario-intro-titulo"
-            className="rounded-[10px] border border-border bg-card p-5 shadow-sm transition-colors md:p-6"
+            className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors md:p-6"
           >
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0 space-y-1.5">
-                <h2
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Syllabus Oficial · Universidad Nacional Mayor de San Marcos</span>
+                </div>
+                <h1
                   id="temario-intro-titulo"
-                  className="text-lg font-bold text-foreground"
+                  className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl"
                 >
-                  Los 19 cursos que evalúa el examen
-                </h2>
+                  Estructura Oficial de Contenidos
+                </h1>
                 <p className="max-w-3xl text-sm text-muted-foreground leading-relaxed">
                   Consulta los 19 cursos oficiales y sus temas clasificados para el examen de admisión de la UNMSM.
                   Usa esta vista como guía de estudio o selecciona un curso para practicar de inmediato.
@@ -185,16 +199,16 @@ export default function AdmisionTemas() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 shrink-0">
-                <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
                   <FolderTree className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                   <span>{CURSOS.length} cursos oficiales</span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
                   <BookOpen className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                   <span>{totalTemas} temas evaluados</span>
                 </div>
                 {erroresMap.total > 0 && (
-                  <div className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive">
                     <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>
                       {erroresMap.total}{" "}
@@ -220,7 +234,7 @@ export default function AdmisionTemas() {
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   placeholder="Buscar curso o tema específico..."
-                  className="min-h-11 w-full rounded-md border border-border bg-background pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="min-h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -259,7 +273,7 @@ export default function AdmisionTemas() {
                     aria-selected={activo}
                     onClick={() => setCategoria(cat.id)}
                     className={cn(
-                      "min-h-9 rounded-md px-3.5 py-1.5 text-xs font-bold transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                      "min-h-9 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                       activo
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -274,7 +288,7 @@ export default function AdmisionTemas() {
 
           {/* 4. Lista de Cursos en Formato Acordeón / Directorio */}
           {cursosFiltrados.length === 0 ? (
-            <div className="rounded-[10px] border border-dashed border-border bg-card/60 p-8 text-center">
+            <div className="rounded-2xl border border-dashed border-border bg-card/60 p-8 text-center">
               <p className="font-semibold text-foreground">No se encontraron cursos o temas que coincidan</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Prueba con otro término de búsqueda o selecciona otra categoría.
@@ -285,13 +299,13 @@ export default function AdmisionTemas() {
                   setBusqueda("");
                   setCategoria("todas");
                 }}
-                className="mt-3 inline-flex min-h-11 items-center justify-center rounded-md bg-primary/10 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-primary/10 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 Restablecer filtros
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-border overflow-hidden rounded-[10px] border border-border bg-card" role="region" aria-label="Directorio de cursos">
+            <div className="space-y-3" role="region" aria-label="Directorio de cursos">
               {cursosFiltrados.map((curso) => {
                 const abierto = estaAbierto(curso.id);
                 const erroresCurso = erroresMap.porCurso[curso.id] ?? 0;
@@ -300,7 +314,7 @@ export default function AdmisionTemas() {
                 return (
                   <article
                     key={curso.id}
-                    className="transition-colors hover:bg-muted/40"
+                    className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-primary/40"
                   >
                     {/* Encabezado del Acordeón */}
                     <div
@@ -315,9 +329,15 @@ export default function AdmisionTemas() {
                           alternarCurso(curso.id);
                         }
                       }}
-                      className="flex min-h-[44px] cursor-pointer flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between select-none md:p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-[10px]"
+                      className="flex min-h-[44px] cursor-pointer flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between select-none md:p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-2xl"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
+                        <span
+                          aria-hidden="true"
+                          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"
+                        >
+                          <BookOpen className="h-5 w-5" />
+                        </span>
 
                         <div className="min-w-0 space-y-0.5">
                           <div className="flex flex-wrap items-center gap-2">
@@ -328,7 +348,7 @@ export default function AdmisionTemas() {
                               {curso.temas.length} {curso.temas.length === 1 ? "tema" : "temas"}
                             </span>
                             {erroresCurso > 0 && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive">
                                 <AlertCircle className="h-3 w-3" />
                                 <span>
                                   {erroresCurso}{" "}
@@ -348,7 +368,7 @@ export default function AdmisionTemas() {
                         <button
                           type="button"
                           onClick={(e) => handlePracticarCurso(curso.id, e)}
-                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98]"
+                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98]"
                           aria-label={`Practicar curso de ${curso.nombre}`}
                         >
                           <Dumbbell className="h-3.5 w-3.5" aria-hidden="true" />
@@ -385,7 +405,7 @@ export default function AdmisionTemas() {
                             return (
                               <li
                                 key={t.id}
-                                className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-card p-3 text-sm transition-colors hover:border-primary/30"
+                                className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card p-3 text-sm transition-colors hover:border-primary/30"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                   <span className="text-xs font-bold text-muted-foreground w-5 text-right shrink-0">
@@ -400,7 +420,7 @@ export default function AdmisionTemas() {
                                 </div>
 
                                 {erroresTema > 0 && (
-                                  <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
+                                  <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
                                     <AlertCircle className="h-3 w-3" />
                                     <span>
                                       {erroresTema} {erroresTema === 1 ? "error" : "errores"}

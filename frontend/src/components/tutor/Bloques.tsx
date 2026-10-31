@@ -5,7 +5,16 @@ import {
   CircleCheck,
   CircleX,
   Eye,
+  FileText,
+  Lightbulb,
+  MessageCircleQuestion,
+  PenLine,
+  Scale,
+  Search,
+  Shapes,
   ShieldCheck,
+  Sparkles,
+  Target,
 } from "lucide-react";
 import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import { post, ApiError } from "@/integrations/api/client";
@@ -19,7 +28,6 @@ import {
 } from "@/lib/tutor/chat";
 import { primeraDivergencia } from "@/lib/tutor/visual";
 import { VisualView } from "./Visual";
-import { IlustracionAnimada, type IdIlustracion } from "@/components/arcade/Ilustracion";
 import "./tutor-bloques.css";
 type Props = {
   bloque: Bloque;
@@ -29,19 +37,17 @@ type Props = {
   comprobando: boolean;
   onComprobar: () => void;
 };
-// Cada tipo de bloque tiene su dibujo 3D; los que piden hacer algo (predecir, aplicar,
-// explicar) se mueven para invitar a participar.
-const ICONOS: Record<TipoBloque, IdIlustracion> = {
-  pregunta_socratica: "duda",
-  contraste: "comparar",
-  razonamiento_anotado: "lupa",
-  prediccion: "hipotesis",
-  ejemplo_paso_a_paso: "bombilla",
-  visual: "grafico",
-  practica: "lapiz",
-  en_tus_palabras: "mano-levantada",
-  invitacion_comprobar: "diana-flecha",
-  cita: "cita",
+const ICONOS: Record<TipoBloque, typeof Search> = {
+  pregunta_socratica: MessageCircleQuestion,
+  contraste: Scale,
+  razonamiento_anotado: Search,
+  prediccion: Eye,
+  ejemplo_paso_a_paso: Lightbulb,
+  visual: Shapes,
+  practica: Sparkles,
+  en_tus_palabras: PenLine,
+  invitacion_comprobar: Target,
+  cita: FileText,
 };
 const TITULOS_VISIBLES: Record<TipoBloque, string> = {
   pregunta_socratica: "Para pensar",
@@ -64,10 +70,13 @@ function Tarjeta({
   etiqueta?: ReactNode;
   children: ReactNode;
 }) {
+  const Icono = ICONOS[tipo];
   return (
     <section className={`tb tb--${tipo}`} aria-label={tituloAccesible(tipo)}>
       <header className="tb-head">
-        <IlustracionAnimada nombre={ICONOS[tipo]} className="tb-icono" sizes="48px" />
+        <span className="tb-icono" aria-hidden="true">
+          <Icono size={19} />
+        </span>
         <h4>{TITULOS_VISIBLES[tipo]}</h4>
         {etiqueta && <span className="tb-tag">{etiqueta}</span>}
       </header>

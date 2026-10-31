@@ -2,17 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { Marcador } from "@/components/admision/Marcador";
+import { PageHeader } from "@/components/system/PageHeader";
+import { ThemeToggle } from "@/components/system/ThemeToggle";
 import { admision, type AreaDeAdmision, type IntentoDeAdmision } from "@/integrations/api/admision";
 import { leerTabla, escribirTabla } from "@/integrations/local/almacen";
 import { useAuthUserId } from "@/hooks/useAuthUserId";
 import { functionErrorReason } from "@/lib/function-error";
 import { CURSOS } from "@/lib/admision/temario";
 import { TuCarrera } from "@/components/admision/TuCarrera";
-import { AccesosInicio } from "@/components/admision/AccesosInicio";
+import { CuadernoDeErrores } from "@/components/admision/CuadernoDeErrores";
 import { UltimaSemana } from "@/components/admision/UltimaSemana";
 import { Progreso } from "@/components/admision/Progreso";
 import { Ingresaba } from "@/components/admision/Ingresaba";
+import {
+  BienvenidaContextual,
+  type EstadoContextualEstudiante,
+} from "@/components/admision/BienvenidaContextual";
 import { MainActionHero } from "@/components/MainActionHero";
 import { CardTemasFrecuentes } from "@/components/admision/CardTemasFrecuentes";
 import { ExploracionEntrenamiento } from "@/components/admision/ExploracionEntrenamiento";
@@ -23,6 +28,7 @@ import { ingresabaDelArea } from "@/lib/admision/ingresaba-del-area";
 import { siguientePasoDeAdmision } from "@/lib/admision/siguiente-paso";
 import { AREAS_DEL_EXAMEN } from "@/lib/admision/areas";
 import { jornadaDe, diasHasta } from "@/lib/admision/ultima-semana";
+import { racha } from "@/lib/admision/progreso";
 import { diaDeLima } from "@/lib/admision/motor/admision-leitner";
 
 const AREAS = AREAS_DEL_EXAMEN;
@@ -103,6 +109,8 @@ export default function Admision() {
   const jornada = datos.data ? jornadaDe(datos.data.procesos, area, hoy) : null;
   const diasParaExamen = jornada ? diasHasta(hoy, jornada.fecha) : null;
 
+  const entregados = useMemo(() => intentos.filter((i) => i.estado === "entregado"), [intentos]);
+  const r = useMemo(() => racha(entregados.map((i) => i.created_at), hoy), [entregados, hoy]);
 
   // Determinación del estado contextual del estudiante
   const tieneIntentoBase = useMemo(
@@ -119,6 +127,12 @@ export default function Admision() {
     () => intentos.some((i) => i.estado === "en_curso"),
     [intentos]
   );
+
+  const estadoContextual: EstadoContextualEstudiante = useMemo(() => {
+    if (!perfil.data?.carrera_id && intentos.length === 0) return "nuevo";
+    if (!tieneIntentoBase && !intentoEnCurso) return "sin_diagnostico";
+    return "con_actividad";
+  }, [perfil.data?.carrera_id, intentos.length, tieneIntentoBase, intentoEnCurso]);
 
   const nombreDelArea = AREAS.find((a) => a.id === area)?.nombre ?? area;
   const hayIntentoEnCurso = paso.tipo === "continuar" || intentos.some((i) => i.estado === "en_curso");
@@ -167,52 +181,57 @@ export default function Admision() {
     await armar(clave, body);
   }
 
-  const irA = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const accionPrincipal =
-    paso.tipo === "continuar"
-      ? { texto: "Retomar mi intento", onClick: () => navigate(`/admision/intento/${paso.intentoId}`) }
-      : !perfil.data?.carrera_id
-        ? { texto: "Elegir mi carrera", onClick: () => irA("tu-carrera") }
-        : paso.tipo === "diagnostico"
-          ? {
-              texto: "Hacer mi diagnóstico",
-              cargando: armando === "diagnostico",
-              onClick: () => void iniciarIntentoConValidacion("diagnostico", { modo: "diagnostico", area }),
-            }
-          : { texto: "Practicar ahora", onClick: () => irA("entrenar") };
-
   return (
     <ResponsiveLayout>
-      <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-5 md:px-6 md:py-8">
+      <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8 lg:pb-8">
         <div className="mx-auto max-w-6xl space-y-6">
-          <Marcador
-            carreraId={perfil.data?.carrera_id}
-            carreraNombre={escuela?.nombre ?? null}
-            areaNombre={nombreDelArea}
-            datos={datos.data}
-            puntaje={ingresaba?.tipo === "veredicto" ? ingresaba.puntaje : null}
-            diasParaExamen={diasParaExamen}
-            cicloExamen={jornada?.ciclo}
-            accion={accionPrincipal}
+          {/* 1. Encabezado superior */}
+          <PageHeader
+            breadcrumb={["CALIBRA", "Admisión"]}
+            title="Examen de admisión · San Marcos"
+            actions={<ThemeToggle />}
           />
 
           {error && (
-            <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3.5 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/40 bg-destructive/5 p-3.5 text-sm text-destructive"
+            >
               {error}
             </p>
           )}
 
-          <AccesosInicio
-            userId={userId}
-            area={area}
-            armando={armando}
-            onSimulacro={() => void iniciarIntentoConValidacion("simulacro", { modo: "simulacro", area, tipo: "cronometrado" })}
-          />
+          {/* 2. Grid Asimétrico con orden lógico mobile-first:
+              Mobile (< 1024px): Hero -> Modalidades -> Accesos Rápidos laterales (abajo) -> Historial.
+              Desktop (>= 1024px): 8 columnas izquierda (Hero + Modalidades + Historial) y 4 columnas derecha (Aside). */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Bloque 1: Hero + Modalidades (Mobile: orden 1; Desktop: col 1-8 fila 1) */}
+            <div className="order-1 lg:col-span-8 lg:order-1 space-y-6">
+              {/* Lógica de Renderizado del Hero (Fusión):
+                  SI existe un intento en curso: renderiza SOLO la tarjeta "Retoma tu simulacro".
+                  Se elimina el bloque superior genérico ("Continúa con tu plan...").
+                  SI NO hay intento en curso: muestra la bienvenida/plan de preparación que invite a usar las modalidades de abajo. */}
+              {hayIntentoEnCurso ? (
+                <MainActionHero
+                  paso={paso}
+                  carreraId={perfil.data?.carrera_id}
+                  userId={userId}
+                  area={area}
+                  areaNombre={nombreDelArea}
+                  armando={armando}
+                  onEmpezar={iniciarIntentoConValidacion}
+                />
+              ) : (
+                <>
+                  <BienvenidaContextual
+                    estado={estadoContextual}
+                    carreraNombre={escuela?.nombre ?? null}
+                    areaNombre={nombreDelArea}
+                    diasParaExamen={diasParaExamen}
+                    cicloExamen={jornada?.ciclo}
+                    rachaDias={r.actual}
+                  />
 
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-            <div className="order-1 space-y-6 lg:order-1 lg:col-span-8">
-              {!perfil.data?.carrera_id && !hayIntentoEnCurso && (
-                <div id="tu-carrera" className="scroll-mt-20">
                   <MainActionHero
                     paso={paso}
                     carreraId={perfil.data?.carrera_id}
@@ -222,10 +241,9 @@ export default function Admision() {
                     armando={armando}
                     onEmpezar={iniciarIntentoConValidacion}
                   />
-                </div>
+                </>
               )}
 
-              <div id="entrenar" className="scroll-mt-20">
               {/* Modalidades de entrenamiento colapsables */}
               <ExploracionEntrenamiento
                 area={area}
@@ -247,7 +265,6 @@ export default function Admision() {
                 onEmpezar={iniciarIntentoConValidacion}
                 esSimulacroPasoRecomendado={paso.tipo === "simulacro"}
               />
-              </div>
 
               {/* Veredicto de corte ¿Ingresabas? si corresponde */}
               {ingresaba?.tipo === "veredicto" && perfil.data?.carrera_id && (
@@ -272,14 +289,13 @@ export default function Admision() {
               aria-label="Seguimiento y apoyo"
             >
               {/* Tu cuaderno de errores (Leitner 1, 3, 7 días) */}
+              <CuadernoDeErrores userId={userId} area={area} />
 
-              <div className="divide-y divide-border overflow-hidden rounded-[10px] border border-border bg-card">
               {/* Temas que más vienen en San Marcos */}
               <CardTemasFrecuentes />
 
               {/* Racha y progreso (últimos 7 días + percentil OCA) */}
               <Progreso userId={userId} intentos={intentos} />
-              </div>
 
               {/* Si la carrera ya está configurada y no hay intento en curso, mostrar carrera y calendario */}
               {perfil.data?.carrera_id && !hayIntentoEnCurso && (

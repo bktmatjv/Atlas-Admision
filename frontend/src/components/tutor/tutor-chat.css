@@ -14,7 +14,7 @@
   opacity: 0.55;
 }
 .tc-serif {
-  font-family: "Big Shoulders Display", Figtree, sans-serif;
+  font-family: Georgia, "Times New Roman", serif;
 }
 .tc-btn {
   display: inline-flex;
@@ -24,7 +24,7 @@
   min-height: 44px;
   padding: 0 18px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
@@ -59,7 +59,7 @@
   width: 44px;
   height: 44px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   color: hsl(var(--muted-foreground));
 }
 .tc-icon-btn:hover {
@@ -112,7 +112,7 @@
   width: 84px;
   height: 84px;
   border: 1px solid hsl(var(--primary) / 0.12);
-  border-radius: 8px;
+  border-radius: 24px;
   color: hsl(var(--primary));
   background: linear-gradient(
     145deg,
@@ -123,17 +123,15 @@
 }
 .tc-home h1 {
   margin: 22px 0 0;
-  font-family: "Big Shoulders Display", Figtree, sans-serif;
-  font-size: clamp(40px, 7vw, 64px);
-  font-weight: 800;
-  line-height: 0.98;
-  letter-spacing: 0.005em;
-  text-transform: uppercase;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 6vw, 48px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
 }
 .tc-home h1 em {
   font-style: normal;
-  color: inherit;
-  box-shadow: inset 0 -0.22em 0 hsl(var(--ambar) / 0.75);
+  color: hsl(var(--primary));
 }
 .tc-home-sub {
   max-width: 560px;
@@ -171,7 +169,7 @@
   min-height: 124px;
   padding: 18px 12px;
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
+  border-radius: 16px;
   text-align: center;
   background: hsl(var(--card));
   box-shadow: 0 4px 16px hsl(var(--primary) / 0.04);
@@ -232,7 +230,7 @@
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid hsl(var(--border));
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
@@ -253,7 +251,7 @@
   font-size: 11px;
   font-weight: 700;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 999px;
   color: hsl(var(--primary));
   background: hsl(var(--primary) / 0.1);
 }
@@ -266,7 +264,7 @@
 .tc-composer {
   margin-top: 22px;
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
+  border-radius: 20px;
   text-align: left;
   background: hsl(var(--card));
   box-shadow: 0 10px 34px hsl(var(--primary) / 0.07);
@@ -281,7 +279,7 @@
   max-height: 220px;
   padding: 18px 20px 6px;
   border: 0;
-  border-radius: 8px 20px 0 0;
+  border-radius: 20px 20px 0 0;
   font-size: 16px;
   line-height: 1.5;
   color: inherit;
@@ -307,7 +305,7 @@
   max-width: 100%;
   padding: 0 12px;
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
   background: hsl(var(--background));
@@ -355,7 +353,7 @@
   min-height: 48px;
   margin-left: auto;
   padding: 0 18px;
-  border-radius: 8px;
+  border-radius: 14px;
   font-weight: 700;
   color: hsl(var(--primary-foreground));
   background: hsl(var(--primary));
@@ -376,7 +374,7 @@
   flex-direction: column;
   min-width: 0;
   border: 1px solid hsl(var(--border) / 0.7);
-  border-radius: 8px;
+  border-radius: 18px;
   background: hsl(var(--card));
   box-shadow: 0 8px 28px hsl(var(--primary) / 0.04);
 }
@@ -424,7 +422,7 @@
   gap: 10px;
   min-height: 52px;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 .tc-hist-item:hover {
   background: hsl(var(--muted));
@@ -473,9 +471,9 @@
   flex: 1 1 200px;
   min-width: 0;
   margin: 0;
-  font-family: "Big Shoulders Display", Figtree, sans-serif;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(20px, 3vw, 26px);
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -487,7 +485,7 @@
   gap: 7px;
   min-height: 32px;
   padding: 0 12px;
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -519,7 +517,7 @@
   min-width: 0;
   height: clamp(520px, calc(100vh - 190px), 940px);
   border: 1px solid hsl(var(--border) / 0.7);
-  border-radius: 8px;
+  border-radius: 18px;
   background: hsl(var(--card));
   box-shadow: 0 8px 28px hsl(var(--primary) / 0.04);
 }
@@ -530,7 +528,7 @@
   gap: 8px 12px;
   margin: 12px 14px 0;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   line-height: 1.45;
   background: hsl(var(--primary) / 0.07);
@@ -594,7 +592,7 @@
   margin-top: 8px;
 }
 .tc-msg--estudiante .tc-bubble {
-  border-radius: 8px 6px 18px 18px;
+  border-radius: 18px 6px 18px 18px;
   color: hsl(var(--primary-foreground));
   background: hsl(var(--primary));
   white-space: pre-wrap;
@@ -702,7 +700,7 @@
   min-width: 0;
   padding: 18px;
   border: 1px solid hsl(var(--border) / 0.7);
-  border-radius: 8px;
+  border-radius: 18px;
   background: hsl(var(--card));
   box-shadow: 0 8px 28px hsl(var(--primary) / 0.04);
 }
@@ -716,9 +714,9 @@
 }
 .tc-map h2 {
   margin: 0 0 4px;
-  font-family: "Big Shoulders Display", Figtree, sans-serif;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 600;
 }
 .tc-map > p {
   margin: 0 0 14px;
@@ -730,7 +728,7 @@
   align-items: center;
   min-height: 24px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
   color: hsl(var(--primary));
@@ -752,7 +750,7 @@
   margin-bottom: 14px;
   padding: 0 12px;
   border: 1px solid hsl(var(--border));
-  border-radius: 8px;
+  border-radius: 12px;
   color: hsl(var(--muted-foreground));
   background: hsl(var(--background));
 }
@@ -788,7 +786,7 @@
 .tc-error-note {
   margin: 12px 0 0;
   padding: 12px 14px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   text-align: left;
   background: hsl(0 80% 45% / 0.08);
@@ -863,7 +861,7 @@
   box-shadow:
     var(--tc-glass-shadow),
     0 0 0 1px hsl(var(--primary) / 0.25),
-    0 12px 34px hsl(158 50% 30% / 0.35);
+    0 12px 34px hsl(346 60% 30% / 0.35);
 }
 .tutor-layout .tc-composer:focus-within {
   border-color: hsl(var(--primary) / 0.75);
@@ -898,8 +896,8 @@
   gap: 10px;
   margin: 0 0 26px;
   padding: 9px 18px;
-  border: 1px solid hsl(158 26% 36% / 0.6);
-  border-radius: 6px;
+  border: 1px solid hsl(346 26% 36% / 0.6);
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -948,7 +946,7 @@
   width: min(900px, 120%);
   aspect-ratio: 1;
   transform: translateX(-50%);
-  background: none;
+  background: radial-gradient(circle, hsl(346 50% 28% / 0.45), transparent 62%);
   pointer-events: none;
 }
 .tutor-layout:has(.tc-claro) .tc-home::before {
@@ -956,6 +954,10 @@
 }
 .tutor-layout .tc-home h1 {
   color: hsl(var(--foreground));
+  letter-spacing: -0.02em;
+}
+.tutor-layout .tc-home h1 em {
+  text-shadow: 0 0 30px hsl(var(--primary) / 0.45);
 }
 .tutor-layout .tc-home-icon {
   border-color: hsl(var(--primary) / 0.35);
@@ -966,7 +968,7 @@
   );
   box-shadow:
     0 0 0 8px hsl(var(--primary) / 0.05),
-    0 18px 44px hsl(158 50% 26% / 0.55),
+    0 18px 44px hsl(346 60% 26% / 0.55),
     inset 0 1px 0 hsl(0 0% 100% / 0.1);
 }
 .tutor-layout .tc-home-art {
@@ -986,7 +988,7 @@
   min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--tc-glass-border, hsl(var(--border)));
-  border-radius: 6px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1217,75 +1219,4 @@
   .tw-chip-ideas {
     animation: none;
   }
-}
-/* Identidad «Marcador»: los cuatro comienzos son filas de una hoja de alineación, no tarjetas. */
-.tc-cards {
-  gap: 1px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  background: hsl(var(--border));
-}
-@media (max-width: 560px) {
-  .tc-cards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-.tc-card,
-.tutor-layout .tc-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  column-gap: 14px;
-  row-gap: 2px;
-  align-items: center;
-  justify-content: stretch;
-  min-height: 76px;
-  padding: 14px 18px;
-  border: 0;
-  border-radius: 0;
-  text-align: left;
-  background: hsl(var(--card));
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-.tc-card svg {
-  grid-row: 1 / span 2;
-  width: 24px;
-  height: 24px;
-}
-.tc-card:hover:not(:disabled),
-.tc-card[aria-pressed="true"] {
-  border-color: transparent;
-  box-shadow: none;
-  transform: none;
-  background: hsl(var(--muted));
-}
-.tc-card[aria-pressed="true"] {
-  box-shadow: inset 3px 0 0 hsl(var(--ambar));
-}
-
-/* Dibujos 3D (banco arcade) en el tutor: bloques, camino, acciones e inicio. */
-.tc-card-dibujo {
-  grid-row: 1 / span 2;
-  width: 48px;
-  height: 48px;
-}
-.tc-chip-dibujo {
-  width: 26px;
-  height: 26px;
-  margin-left: -4px;
-  flex-shrink: 0;
-}
-.tc-chip:hover:not(:disabled) .tc-chip-dibujo {
-  transform: translateY(-2px) rotate(-4deg);
-}
-.tc-chip-dibujo,
-.tc-card-dibujo {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.tc-card:hover:not(:disabled) .tc-card-dibujo {
-  transform: scale(1.08) rotate(-3deg);
 }
