@@ -19,10 +19,14 @@ import { validate } from "../../http.js";
 import type { ActorRequest } from "../identidad/identidad.js";
 import { ACTIVIDADES, buscarError } from "./actividades.js";
 import { construirRastro, nivelPorFallos } from "./rastros.js";
+import { GrafoController, GrafoService } from "./grafo.js";
 import { igualesNumeros, normalizarNumero } from "./numeros.js";
 @Controller()
 export class SeguimientoController {
-  constructor(@Inject(Database) private db: Database) {}
+  constructor(
+    @Inject(Database) private db: Database,
+    @Inject(GrafoService) private grafo: GrafoService,
+  ) {}
   @Get("evidencias") list(@Req() r: ActorRequest) {
     return this.db.query(
       "SELECT * FROM evidencias WHERE actor_id=$1 ORDER BY created_at DESC LIMIT 100",
@@ -178,6 +182,13 @@ export class SeguimientoController {
             fila.nivel_ayuda,
           ],
         );
+        if (idea)
+          await this.grafo.vincularConfusion(
+            m,
+            r.actorId,
+            idea,
+            fila.nodo_retorno_id,
+          );
       } else if (!ayuda.length) {
         // Solo el último fallo aún no corregido cuenta: una corrección no se registra dos veces.
         const [ultimo] = await m.query(
@@ -252,5 +263,9 @@ export class SeguimientoController {
     return { cancelada: true };
   }
 }
-@Module({ controllers: [SeguimientoController] })
+@Module({
+  controllers: [SeguimientoController, GrafoController],
+  providers: [GrafoService],
+  exports: [GrafoService],
+})
 export class SeguimientoModule {}

@@ -801,3 +801,250 @@ describe("Harness de comprensión: nodos etiquetados y nodo faltante", () => {
     expect(r.status).toBe(400);
   });
 });
+
+describe("Grafo de comprensión: estados derivados de la evidencia", () => {
+  let a: string, b: string, arbol: string, otro: string, arbolB: string;
+  let raiz: string, hijo: string;
+  type N = { id: string; titulo: string; arbol_id: string; estado: string };
+  type E = {
+    origen: string;
+    destino: string;
+    tipo: string;
+    creada_por: string;
+  };
+  const crear = async (tema: string, sid: string) =>
+    (
+      await http(
+        "/arboles",
+        "POST",
+        { tema, solicitud: "Quiero entender " + tema },
+        sid,
+        randomUUID(),
+      )
+    ).data.id as string;
+  const grafo = async (sid = a) =>
+    (await http("/grafo", "GET", undefined, sid)).data;
+  const nodo = async (id: string, sid = a) =>
+    (await grafo(sid)).nodos.find((n: N) => n.id === id);
+  const porTitulo = async (t: string) =>
+    (await grafo()).nodos.find((n: N) => n.titulo === t);
+  const aplicarOps = async (ops: unknown[], arbolId = arbol) => {
+    const { GrafoService } =
+      await import("../src/modules/seguimiento/grafo.js");
+    const { Database } = await import("../src/database/database.js");
+    const actor = (
+      await db.query(`SELECT actor_id FROM ${schema}.arboles WHERE id=$1`, [
+        arbolId,
+      ])
+    ).rows[0].actor_id as string;
+    return app
+      .get(Database)
+      .transaction((m) =>
+        app.get(GrafoService).aplicar(m, actor, arbolId, ops as never),
+      );
+  };
+  const comprobar = async (respuesta: string) => {
+    const c = await http("/comprobaciones", "POST", { arbol_id: arbol }, a);
+    return http(
+      `/comprobaciones/${c.data.id}/respuesta`,
+      "PUT",
+      { respuesta },
+      a,
+    );
+  };
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    b = (await http("/sesion", "POST", {}, "")).cookie!;
+    arbol = await crear("porcentajes", a);
+    otro = await crear("fracciones", a);
+    arbolB = await crear("proporciones", b);
+    const ns = (await http(`/arboles/${arbol}`, "GET", undefined, a)).data
+      .nodos;
+    raiz = ns[0].id;
+    hijo = ns[1].id;
+    await db.query(
+      `UPDATE ${schema}.nodos SET idea_clave='cambio-de-base' WHERE id=$1`,
+      [hijo],
+    );
+  });
+  it("reúne los nodos de todos los árboles del actor, con aristas padre-hijo", async () => {
+    const g = await grafo();
+    const cuantos = (
+      await db.query(
+        `SELECT count(*)::int AS n FROM ${schema}.nodos WHERE arbol_id = ANY($1::uuid[])`,
+        [[arbol, otro]],
+      )
+    ).rows[0].n;
+    expect(g.nodos).toHaveLength(cuantos);
+    expect(new Set(g.nodos.map((n: N) => n.arbol_id))).toEqual(
+      new Set([arbol, otro]),
+    );
+    expect(g.nodos.find((n: N) => n.id === raiz)).toMatchObject({
+      tipo: "concepto",
+      concepto: "porcentajes",
+      senal: null,
+    });
+    expect(
+      g.aristas.some(
+        (e: E) =>
+          e.origen === raiz && e.destino === hijo && e.tipo === "subtema",
+      ),
+    ).toBe(true);
+    expect(g.foco).toBeNull();
+    expect(g.camino_error).toEqual([]);
+  });
+  it("otra sesión no ve nada ajeno", async () => {
+    const gb = await grafo(b);
+    expect(gb.nodos.every((n: N) => n.arbol_id === arbolB)).toBe(true);
+    expect(gb.nodos.some((n: N) => n.id === raiz)).toBe(false);
+    expect((await http("/grafo", "GET", undefined, "")).status).toBe(401);
+  });
+  it("la señal se dibuja aparte y no cambia el estado", async () => {
+    await db.query(
+      `UPDATE ${schema}.nodos SET senal='posible_confusion' WHERE id=$1`,
+      [hijo],
+    );
+    expect(await nodo(hijo)).toMatchObject({
+      senal: "posible_confusion",
+      estado: "sin_explorar",
+    });
+    await db.query(`UPDATE ${schema}.nodos SET senal=NULL WHERE id=$1`, [hijo]);
+  });
+  it("un fallo en la comprobación marca el nodo de retorno y el camino del error", async () => {
+    await comprobar("100");
+    expect(await nodo(hijo)).toMatchObject({ estado: "fallo", evidencias: 1 });
+    expect((await grafo()).camino_error).toEqual([raiz, hijo]);
+  });
+  it("corregir después del error lleva el nodo a aplicado", async () => {
+    await comprobar("180");
+    expect(await nodo(hijo)).toMatchObject({ estado: "aplicado" });
+    expect(await nodo(raiz)).toMatchObject({ estado: "aplicado" });
+  });
+  it("un nodo sin interacción ni evidencia sigue sin explorar", async () => {
+    const ns = (await grafo()).nodos.filter((n: N) => n.arbol_id === otro);
+    expect(ns.some((n: N) => n.estado === "sin_explorar")).toBe(true);
+  });
+  it("crear_nodo y relacionar aplican la operación y el nodo nace sin explorar", async () => {
+    const r = await aplicarOps([
+      {
+        op: "crear_nodo",
+        ref_temporal: "e1",
+        tipo: "error",
+        titulo: "Compensar porcentajes",
+        resumen: "Creer que +20% y -20% se anulan",
+        idea_clave: "base-del-porcentaje",
+        padre: hijo,
+      },
+      {
+        op: "crear_nodo",
+        ref_temporal: "i1",
+        tipo: "idea",
+        titulo: "La base cambia",
+        resumen: "Cada porcentaje se calcula sobre su base",
+        idea_clave: "base-del-porcentaje",
+        padre: "e1",
+      },
+      { op: "relacionar", origen: "i1", destino: raiz, tipo: "requiere" },
+    ]);
+    expect(r.aplicadas).toHaveLength(3);
+    const g = await grafo();
+    const e1 = g.nodos.find((n: N) => n.titulo === "Compensar porcentajes");
+    const i1 = g.nodos.find((n: N) => n.titulo === "La base cambia");
+    expect(e1).toMatchObject({
+      tipo: "error",
+      origen: "ia",
+      estado: "sin_explorar",
+    });
+    expect(
+      g.aristas.some(
+        (x: E) =>
+          x.origen === i1.id &&
+          x.destino === raiz &&
+          x.tipo === "requiere" &&
+          x.creada_por === "ia",
+      ),
+    ).toBe(true);
+    expect(
+      g.aristas.some((x: E) => x.origen === e1.id && x.destino === i1.id),
+    ).toBe(true);
+  });
+  it("el sistema une el nodo error con el de retorno al registrar un rastro con idea clave", async () => {
+    await comprobar("20");
+    const g = await grafo();
+    const e1 = g.nodos.find((n: N) => n.titulo === "Compensar porcentajes");
+    const i1 = g.nodos.find((n: N) => n.titulo === "La base cambia");
+    expect(i1.estado).toBe("fallo");
+    expect(
+      g.aristas.filter(
+        (x: E) =>
+          x.tipo === "confusion_con" &&
+          x.origen === e1.id &&
+          x.destino === i1.id &&
+          x.creada_por === "sistema",
+      ),
+    ).toHaveLength(1);
+  });
+  it("editar_nodo guarda la revisión anterior", async () => {
+    const i1 = await porTitulo("La base cambia");
+    await aplicarOps([
+      { op: "editar_nodo", nodo: i1.id, resumen: "Resumen nuevo" },
+    ]);
+    expect((await nodo(i1.id)).resumen).toBe("Resumen nuevo");
+    const rev = await db.query(
+      `SELECT contenido FROM ${schema}.revisiones_nodo WHERE nodo_id=$1`,
+      [i1.id],
+    );
+    expect(rev.rows.map((x) => x.contenido)).toContain(
+      "Cada porcentaje se calcula sobre su base",
+    );
+  });
+  it("fusionar conserva las aristas y rechaza nodos con evidencia propia", async () => {
+    const r = await aplicarOps([
+      {
+        op: "crear_nodo",
+        ref_temporal: "f1",
+        tipo: "ejemplo",
+        titulo: "Ejemplo A",
+        resumen: "A",
+        padre: raiz,
+      },
+      {
+        op: "crear_nodo",
+        ref_temporal: "f2",
+        tipo: "ejemplo",
+        titulo: "Ejemplo B",
+        resumen: "B",
+        padre: raiz,
+      },
+      { op: "relacionar", origen: "f2", destino: hijo, tipo: "ejemplo_de" },
+      { op: "fusionar", nodos: ["f1", "f2"], en: "f1" },
+    ]);
+    expect(r.aplicadas).toHaveLength(4);
+    expect(await porTitulo("Ejemplo B")).toBeUndefined();
+    const f1 = await porTitulo("Ejemplo A");
+    expect(
+      (await grafo()).aristas.some(
+        (x: E) =>
+          x.origen === f1.id && x.destino === hijo && x.tipo === "ejemplo_de",
+      ),
+    ).toBe(true);
+    const bloqueada = await aplicarOps([
+      { op: "fusionar", nodos: [hijo, f1.id], en: f1.id },
+    ]);
+    expect(bloqueada.aplicadas).toHaveLength(0);
+    expect(bloqueada.rechazadas).toHaveLength(1);
+    expect(await nodo(hijo)).toBeTruthy();
+  });
+  it("enfocar solo cambia el foco de la vista", async () => {
+    const antes = await nodo(hijo);
+    await aplicarOps([{ op: "enfocar", nodo: hijo }]);
+    expect((await grafo()).foco).toBe(hijo);
+    expect((await nodo(hijo)).estado).toBe(antes.estado);
+  });
+  it("las operaciones no alcanzan nodos de otra sesión", async () => {
+    const ajeno = (await grafo(b)).nodos[0].id;
+    const r = await aplicarOps([{ op: "enfocar", nodo: ajeno }]);
+    expect(r.aplicadas).toHaveLength(0);
+    expect(r.rechazadas).toHaveLength(1);
+  });
+});
