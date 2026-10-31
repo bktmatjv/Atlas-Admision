@@ -281,6 +281,120 @@ export class ProveedorAnthropic implements ProveedorIA {
 }
 // Guion determinista solo para pruebas. Con herramientas disponibles llama a la
 // primera que no sea la forzada; con sus resultados (o sin herramientas) responde.
+const ARTEFACTOS_FAKE: Record<string, unknown> = {
+  pregunta_socratica: {
+    tipo: "pregunta_socratica",
+    texto: "¿Sobre qué cantidad se calcula la baja?",
+    respuestas_rapidas: ["Sobre 100", "Sobre 120"],
+  },
+  contraste: {
+    tipo: "contraste",
+    tuyo: ["se cancelan"],
+    correcto: ["100 × 1,20 × 0,80 = 96"],
+  },
+  razonamiento_anotado: {
+    tipo: "razonamiento_anotado",
+    pasos: [
+      { texto: "Asumes que se anulan", estado: "revisar", cita: "se cancelan" },
+    ],
+  },
+  prediccion: {
+    tipo: "prediccion",
+    pregunta: "¿Qué pasará con el precio final?",
+    plantilla: "porcentaje_encadenado",
+    semilla: 3,
+  },
+  ejemplo_paso_a_paso: {
+    tipo: "ejemplo_paso_a_paso",
+    pasos: [
+      { texto: "Calcula el aumento", cuenta: "100 × 20% = 20" },
+      {
+        texto: "Calcula la baja sobre la nueva base",
+        cuenta: "120 × 20% = 24",
+      },
+    ],
+  },
+  visual_cadena: {
+    tipo: "visual",
+    forma: "cadena_porcentual",
+    pasos: [
+      { valor: 100 },
+      { op: "+20%", valor: 120 },
+      { op: "-20%", valor: 96 },
+    ],
+  },
+  visual_barra: {
+    tipo: "visual",
+    forma: "barra_de_partes",
+    total: 24,
+    partes: 8,
+    marcadas: 3,
+    fraccion: "3/8",
+  },
+  visual_tabla: {
+    tipo: "visual",
+    forma: "tabla_proporcion",
+    columnas: ["Máquinas", "Horas"],
+    filas: [
+      [3, 12],
+      [6, 6],
+    ],
+    relacion: "inversa",
+  },
+  visual_recta: {
+    tipo: "visual",
+    forma: "recta_numerica",
+    min: 0,
+    max: 10,
+    puntos: [{ valor: 5, etiqueta: "mitad" }],
+  },
+  practica: {
+    tipo: "practica",
+    plantilla: "porcentaje_encadenado",
+    semilla: 5,
+    historia: "Una tienda ajusta sus precios.",
+  },
+  en_tus_palabras: {
+    tipo: "en_tus_palabras",
+    consigna: "Explica con tus palabras por qué cambia la base",
+  },
+  invitacion_comprobar: {
+    tipo: "invitacion_comprobar",
+    texto: "Cuando quieras, puedes hacer una comprobación sin ayudas.",
+  },
+};
+// Turno de prueba para un artefacto: bloque, o las cinco operaciones de grafo con referencias temporales.
+function artefactoFake(tipo: string, fragmento?: string) {
+  if (tipo === "ops_completas")
+    return {
+      mensaje: "Ordeno tu mapa.",
+      grafo_ops: [
+        {
+          op: "crear_nodo",
+          ref_temporal: "f1",
+          tipo: "ejemplo",
+          titulo: "Ejemplo A",
+          resumen: "A",
+        },
+        {
+          op: "crear_nodo",
+          ref_temporal: "f2",
+          tipo: "ejemplo",
+          titulo: "Ejemplo B",
+          resumen: "B",
+        },
+        { op: "relacionar", origen: "f2", destino: "f1", tipo: "relacionado" },
+        { op: "editar_nodo", nodo: "f1", resumen: "A editado" },
+        { op: "fusionar", nodos: ["f1", "f2"], en: "f1" },
+        { op: "enfocar", nodo: "f1" },
+      ],
+    };
+  const bloque =
+    tipo === "cita" && fragmento
+      ? { tipo: "cita", fragmento_id: fragmento }
+      : ARTEFACTOS_FAKE[tipo];
+  return bloque ? { mensaje: `Bloque ${tipo}`, bloques: [bloque] } : null;
+}
 // Marcadores en el mensaje del estudiante eligen el comportamiento a probar.
 export class ProveedorFake implements ProveedorIA {
   async completar(e: EntradaIA): Promise<RespuestaIA> {
@@ -329,6 +443,12 @@ export class ProveedorFake implements ProveedorIA {
       };
     }
     const tiene = (marca: string) => original.includes(`[[${marca}]]`);
+    // Un artefacto por marcador [[b:tipo]] (cita: [[b:cita:uuid]]); el texto del estudiante aporta las citas literales.
+    const marca = /\[\[b:([a-z_]+)(?::([0-9a-f-]{36}))?\]\]/.exec(original);
+    if (marca) {
+      const turno = artefactoFake(marca[1], marca[2]);
+      if (turno) return final(turno);
+    }
     if (tiene("contexto"))
       return final({
         mensaje: `${e.sistema.includes('"comprobacion_activa":{"enunciado"') ? "con-enunciado" : "sin-enunciado"};clave:${/\b96\b/.test(e.sistema.split("CONTEXTO")[1] ?? "") ? "filtrada" : "oculta"}`,
