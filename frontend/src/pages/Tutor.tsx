@@ -231,7 +231,10 @@ export default function Tutor() {
                             bloque={b}
                             arbolId={conv.data!.arbol_id}
                             comprobando={!!activa.data}
-                            alResponder={() => void grafo.refetch()}
+                            alResponder={(t) => {
+                              void grafo.refetch();
+                              if (t) enviar.mutate(t);
+                            }}
                             onComprobar={() => comprobar.mutate()}
                           />
                         ))}

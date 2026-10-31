@@ -12,11 +12,15 @@ type Props = {
   bloque: Bloque;
   arbolId: string;
   // Lo que cambia tras responder: el grafo (señales) y las interacciones.
-  alResponder: () => void;
+  alResponder: (respuesta?: string) => void;
   comprobando: boolean;
   onComprobar: () => void;
 };
-function useRespuesta(id: string, alResponder: () => void) {
+function useRespuesta(
+  id: string,
+  alResponder: (respuesta?: string) => void,
+  reenviar = false,
+) {
   const [res, setRes] = useState<RespuestaBloque | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -27,7 +31,8 @@ function useRespuesta(id: string, alResponder: () => void) {
       setRes(
         await post<RespuestaBloque>(`/bloques/${id}/respuesta`, { respuesta }),
       );
-      alResponder();
+      // El texto libre sigue en la charla: el tutor recibe lo que respondió el estudiante.
+      alResponder(reenviar ? respuesta : undefined);
     } catch (e) {
       setError(
         e instanceof ApiError ? e.message : "No se pudo enviar tu respuesta.",
@@ -80,10 +85,10 @@ function TextoLibre({
   id: string;
   etiqueta: string;
   rapidas?: string[];
-  alResponder: () => void;
+  alResponder: (respuesta?: string) => void;
 }) {
   const [texto, setTexto] = useState("");
-  const { res, error, enviando, enviar } = useRespuesta(id, alResponder);
+  const { res, error, enviando, enviar } = useRespuesta(id, alResponder, true);
   return (
     <form
       className="space-y-3"
@@ -132,7 +137,7 @@ function Opciones({
   id: string;
   enunciado: string;
   opciones: number[];
-  alResponder: () => void;
+  alResponder: (respuesta?: string) => void;
 }) {
   const [elegida, setElegida] = useState<number | null>(null);
   const { res, error, enviando, enviar } = useRespuesta(id, alResponder);

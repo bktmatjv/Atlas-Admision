@@ -1592,3 +1592,44 @@ describe("Comprobaciones desde plantillas (S13)", () => {
     await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, t);
   });
 });
+
+describe("Ajustes del agente tras las pruebas con Groq", () => {
+  let a: string, conv: string, arbol: string;
+  const decir = (texto: string) =>
+    http(
+      `/conversaciones/${conv}/mensajes`,
+      "POST",
+      { texto },
+      a,
+      randomUUID(),
+    );
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    const c = (
+      await http("/conversaciones", "POST", { tema: "porcentajes" }, a)
+    ).data;
+    conv = c.id;
+    arbol = c.arbol_id;
+  });
+  it("una lectura sin idea detectada no muestra el «Me parece que…»", async () => {
+    const r = await decir("[[bloques]]");
+    const bloque = r.data.tutor.bloques[0];
+    const res = await http(
+      `/bloques/${bloque.id}/respuesta`,
+      "POST",
+      { respuesta: "Tengo que pensarlo un poco más" },
+      a,
+    );
+    expect(res.status).toBe(201);
+    expect(res.data.guardada).toBe(true);
+    expect(res.data.mensaje).toBeNull();
+  });
+  it("el agente recibe el enunciado de la comprobación activa, nunca su clave", async () => {
+    const sin = await decir("[[contexto]]");
+    expect(sin.data.tutor.texto).toBe("sin-enunciado;clave:oculta");
+    const c = await http("/comprobaciones", "POST", { arbol_id: arbol }, a);
+    const con = await decir("[[contexto]]");
+    expect(con.data.tutor.texto).toBe("con-enunciado;clave:oculta");
+    await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, a);
+  });
+});

@@ -145,13 +145,10 @@ export class BloquesService {
     return {
       guardada: true,
       lectura,
-      mensaje: lectura
-        ? `Me parece que ${
-            idea
-              ? `podría haber una confusión sobre «${ideaPorClave(idea)?.descripcion}»`
-              : "tu respuesta toca las ideas de este tema"
-          }, por lo que escribiste: «${lectura.cita_del_estudiante}». Es una lectura provisional y puede equivocarse.`
-        : null,
+      mensaje:
+        lectura && idea
+          ? `Me parece que podría haber una confusión sobre «${ideaPorClave(idea)?.descripcion}», por lo que escribiste: «${lectura.cita_del_estudiante}». Es una lectura provisional y puede equivocarse.`
+          : null,
       nota: "Tu respuesta queda como interacción, no como evidencia de dominio.",
     };
   }

@@ -329,6 +329,10 @@ export class ProveedorFake implements ProveedorIA {
       };
     }
     const tiene = (marca: string) => original.includes(`[[${marca}]]`);
+    if (tiene("contexto"))
+      return final({
+        mensaje: `${e.sistema.includes('"comprobacion_activa":{"enunciado"') ? "con-enunciado" : "sin-enunciado"};clave:${/\b96\b/.test(e.sistema.split("CONTEXTO")[1] ?? "") ? "filtrada" : "oculta"}`,
+      });
     if (tiene("sin-forma")) return { texto: "esto no es json", llamadas: [] };
     if (tiene("reparable"))
       return reparando
