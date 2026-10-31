@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { ArrowRight } from "lucide-react";
+import { CalibraSymbol } from "@/components/brand/CalibraBrand";
 import { cn } from "@/lib/utils";
 import "./welcome.css";
 
@@ -7,10 +9,8 @@ export interface WelcomeScreenProps {
 }
 
 /**
- * Pantalla de Bienvenida Oficial de CALIBRA ("CALIBRA Welcome Experience").
- *
- * Diseñada bajo la estética Liquid Glass y paleta semántica oscura (#211B20 / #941F3D / #E56B83).
- * Implementada con un patrón Non-Invasive Session Gatekeeper que preserva deep-links intactos.
+ * Bienvenida de CALIBRA, identidad «Marcador»: la cancha antes del partido. Verde cancha con sus
+ * líneas de cal, la marca y una sola acción. Respeta los deep-links: solo se muestra una vez por sesión.
  */
 export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
   const [isExiting, setIsExiting] = useState(false);
@@ -32,7 +32,7 @@ export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
         // En caso de modo incógnito estricto o permisos bloqueados
       }
       onComplete();
-    }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 650);
+    }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 450);
   }, [isExiting, onComplete]);
 
   return (
@@ -45,119 +45,41 @@ export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
         if (["Enter", " ", "Escape"].includes(e.key)) { e.preventDefault(); handleEnter(); }
       }}
       className={cn(
-        "fixed inset-0 z-[100] min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#211B20] text-[#F7F1E8] select-none",
-        isExiting && "calibra-welcome-fade-out"
+        "fixed inset-0 z-[100] flex min-h-screen w-full items-center justify-center overflow-hidden bg-cancha text-white select-none",
+        isExiting && "calibra-welcome-fade-out",
       )}
     >
-      {/* Fondo Inmersivo (Orbes y Caustics) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        {/* Orbe 1 (Carmesí principal #941F3D/30, top -15%, centrado horizontalmente) */}
-        <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[540px] h-[540px] rounded-full bg-[#941F3D]/30 calibra-animate-liquid-1" />
+      {/* Líneas de cal de media cancha: dibujo, no decoración de fondo genérica */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 800">
+        <g fill="none" stroke="hsl(0 0% 100% / 0.09)" strokeWidth="3">
+          <line x1="600" y1="0" x2="600" y2="800" />
+          <circle cx="600" cy="400" r="150" />
+          <rect x="-2" y="230" width="150" height="340" />
+          <rect x="1052" y="230" width="150" height="340" />
+          <rect x="24" y="24" width="1152" height="752" />
+        </g>
+        <circle cx="600" cy="400" r="6" fill="hsl(0 0% 100% / 0.12)" />
+      </svg>
 
-        {/* Orbe 2 (Carmesí secundario #B83A56/22, top-[32%] -left-[15%]) */}
-        <div className="absolute top-[32%] -left-[15%] w-[460px] h-[460px] rounded-full bg-[#B83A56]/22 calibra-animate-liquid-2" />
-
-        {/* Orbe 3 (Rosa #E56B83/16, -bottom-[10%] -right-[12%]) */}
-        <div className="absolute -bottom-[10%] -right-[12%] w-[520px] h-[520px] rounded-full bg-[#E56B83]/16 calibra-animate-liquid-1" />
-
-        {/* Orbe 4 (Superficie #30262D/60, top-[48%] left-[52%]) */}
-        <div className="absolute top-[48%] left-[52%] w-[340px] h-[340px] rounded-full bg-[#30262D]/60 calibra-animate-liquid-3" />
-
-        {/* Anillos Caustic */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] rounded-full border border-white/[0.04] calibra-animate-caustic" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[920px] h-[920px] rounded-full border border-white/[0.02]" />
-
-        {/* Textura micro-grain */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.03]"
-          style={{
-            backgroundImage: "radial-gradient(rgba(247, 241, 232, 0.8) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-      </div>
-
-      {/* Píldora Superior ("CALIBRA • ESPACIO PARA PENSAR") */}
-      <div className="absolute top-6 inset-x-0 mx-auto w-fit z-20 flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#E56B83] shadow-[0_0_8px_#E56B83]" aria-hidden="true" />
-        <span className="font-['Montserrat',_'Plus_Jakarta_Sans',_sans-serif] text-[10px] tracking-[0.2em] uppercase font-medium text-[#F7F1E8]/75">
-          CALIBRA • ESPACIO PARA PENSAR
-        </span>
-      </div>
-
-      {/* Clúster Central Flotante */}
-      <div className="relative z-10 w-full max-w-[460px] min-h-screen px-6 py-12 flex flex-col items-center justify-between">
-        {/* Espaciador superior */}
-        <div className="w-full pt-8" />
-
-        {/* Núcleo de Identidad: Isotipo Hero + Título + Separador + Eslogan */}
-        <div className="flex flex-col items-center text-center my-auto">
-          {/* Isotipo Hero */}
-          <div className="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center mb-8">
-            {/* Halo orgánico pulsante */}
-            <div className="absolute inset-0 rounded-full bg-[#E56B83]/20 blur-2xl calibra-animate-halo" aria-hidden="true" />
-            {/* Anillo óptico de cristal líquido */}
-            <div className="absolute inset-0 rounded-full border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm shadow-[inset_0_0_24px_rgba(255,255,255,0.03)]" aria-hidden="true" />
-            {/* Isotipo Oficial CALIBRA (C rompecabezas + Destello cognitivo central) */}
-            <img
-              src="/brand/calibra-symbol-dark.png"
-              alt="Isotipo CALIBRA"
-              className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 object-contain drop-shadow-[0_8px_24px_rgba(229,107,131,0.25)] select-none pointer-events-none"
-              loading="eager"
-            />
-          </div>
-
-          {/* Título Principal (<h1>) */}
-          <h1 className="text-[40px] sm:text-[46px] leading-tight font-bold tracking-[0.22em] uppercase text-[#F7F1E8] drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)] pl-[0.22em] font-['Montserrat',_'Plus_Jakarta_Sans',_sans-serif]">
-            CALIBRA
-          </h1>
-
-          {/* Separador de Calibración Minimalista */}
-          <div className="flex items-center justify-center gap-3 w-48 my-4" aria-hidden="true">
-            <span className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-[#B83A56]" />
-            <div className="relative flex items-center justify-center">
-              <span className="w-1.5 h-1.5 rotate-45 bg-[#E56B83] shadow-[0_0_8px_#E56B83]" />
-              <span className="absolute h-3 w-[1px] bg-[#E56B83]/50" />
-            </div>
-            <span className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-[#B83A56]" />
-          </div>
-
-          {/* Eslogan Oficial (<p>) */}
-          <p className="text-xs sm:text-sm font-medium tracking-[0.22em] text-[#F7F1E8]/90 uppercase font-['Montserrat',_'Plus_Jakarta_Sans',_sans-serif]">
-            Aprende a pensar.
-          </p>
-        </div>
-
-        {/* Botón de Acción Principal ("Entrar a CALIBRA") */}
-        <div className="w-full pb-4">
-          <button
-            ref={enterButton}
-            type="button"
-            onClick={handleEnter}
-            disabled={isExiting}
-            className="calibra-btn-liquid-glass w-full py-4 px-8 rounded-full flex items-center justify-center gap-3 group text-[#F7F1E8] cursor-pointer"
-            aria-label="Entrar a CALIBRA"
-          >
-            <span className="calibra-btn-light-sweep" aria-hidden="true" />
-            <span className="relative z-10 font-['Montserrat',_'Plus_Jakarta_Sans',_sans-serif] font-semibold tracking-wider text-sm sm:text-base">
-              Entrar a CALIBRA
-            </span>
-            <span
-              className="relative z-10 w-7 h-7 rounded-full bg-white/[0.08] border border-white/20 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            >
-              <svg
-                className="w-3.5 h-3.5 text-[#F7F1E8]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </span>
-          </button>
-        </div>
+      <div className="calibra-welcome-entrada relative z-10 flex w-full max-w-md flex-col items-center px-6 text-center">
+        <CalibraSymbol size="xl" className="h-20 w-20" />
+        <p className="mt-6 font-display text-[clamp(3.5rem,14vw,5.5rem)] font-extrabold uppercase leading-[0.9] tracking-[0.02em] text-white">
+          Calibra
+        </p>
+        <p className="mt-3 font-display text-2xl font-bold uppercase tracking-[0.04em] text-ambar">Aprende a pensar</p>
+        <p className="mt-6 max-w-sm text-base leading-relaxed text-white/80">
+          Practica con exámenes reales de San Marcos. Cuando fallas, el tutor te ayuda a encontrar dónde se rompió tu
+          razonamiento. Solo cuenta lo que resuelves tú.
+        </p>
+        <button
+          ref={enterButton}
+          type="button"
+          onClick={handleEnter}
+          className="group mt-10 inline-flex min-h-14 w-full max-w-xs items-center justify-center gap-2 rounded-md bg-ambar px-8 text-lg font-bold text-grafito transition-[transform,background-color] duration-150 hover:bg-[hsl(40_100%_64%)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+        >
+          Empezar
+          <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </button>
       </div>
     </div>
   );

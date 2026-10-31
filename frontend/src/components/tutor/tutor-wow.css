@@ -30,7 +30,7 @@
   height: clamp(600px, calc(100dvh - 164px), 1040px);
   overflow: hidden;
   border: 1px solid var(--tc-glass-border);
-  border-radius: 20px;
+  border-radius: 8px;
   background: hsl(var(--card));
   box-shadow: var(--tc-glass-shadow);
 }
@@ -47,8 +47,7 @@
 .tw-panel-header h2 {
   margin-top: 4px;
   font:
-    500 21px/1.2 Georgia,
-    serif;
+    800 24px/1.2 "Big Shoulders Display", sans-serif;
   letter-spacing: -0.025em;
 }
 .tw-panel-footer {
@@ -200,7 +199,7 @@
   margin: 0;
 }
 .tw-panel .tutor-node-detail {
-  border-radius: 14px;
+  border-radius: 8px;
 }
 .tw-grafo-vivo {
   min-width: 0;
@@ -230,7 +229,7 @@
   .tw-divisor span {
     width: 3px;
     height: 42px;
-    border-radius: 99px;
+    border-radius: 6px;
     background: hsl(var(--border));
     transition: background var(--tw-duracion);
   }
@@ -258,7 +257,7 @@
     right: 0;
     height: calc(54dvh - var(--sheet-drag, 0px));
     max-height: calc(100dvh - 70px);
-    border-radius: 22px 22px 0 0;
+    border-radius: 8px 22px 0 0;
     box-shadow: 0 -18px 80px hsl(0 0% 0% / 0.35);
   }
   .tw-panel--completa {
@@ -277,7 +276,7 @@
   .tw-sheet-handle > span {
     width: 38px;
     height: 4px;
-    border-radius: 99px;
+    border-radius: 6px;
     background: hsl(var(--muted-foreground));
   }
   .tw-sheet-handle small {
@@ -298,7 +297,7 @@
   padding: 16px 18px 12px;
   border-bottom: 1px solid hsl(var(--border));
   background: linear-gradient(110deg, hsl(var(--primary) / 0.07), transparent);
-  border-radius: 18px 18px 0 0;
+  border-radius: 8px 18px 0 0;
 }
 .tw-camino header {
   display: flex;
@@ -389,13 +388,12 @@
   margin: 0 0 18px;
   padding: 16px;
   border: 1px solid hsl(var(--tc-no) / 0.3);
-  border-radius: 14px;
+  border-radius: 8px;
   background: hsl(var(--tc-no) / 0.05);
 }
 .tw-retro strong {
   font:
-    500 21px/1.25 Georgia,
-    serif;
+    800 24px/1.25 "Big Shoulders Display", sans-serif;
 }
 .tw-retro > span:not(.tw-eyebrow) {
   font-size: 12px;
@@ -415,7 +413,7 @@
   min-width: 0;
   text-align: left;
   border: 1px solid hsl(var(--border));
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 16px;
   background: hsl(var(--card));
   transition:
@@ -452,7 +450,7 @@
   place-items: center;
   width: 42px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: 8px;
   color: hsl(var(--tc-violet));
   background: hsl(var(--tc-violet) / 0.1);
 }
@@ -524,7 +522,7 @@
   padding: 20px;
   margin: 12px 0 20px;
   border: 1px solid hsl(var(--tc-ok) / 0.4);
-  border-radius: 16px;
+  border-radius: 8px;
   background: linear-gradient(
     120deg,
     hsl(var(--tc-ok) / 0.09),
@@ -560,8 +558,7 @@
 }
 .tw-antes-ahora blockquote {
   font:
-    500 26px Georgia,
-    serif;
+    800 29px "Big Shoulders Display", sans-serif;
 }
 .tw-antes-ahora blockquote span {
   color: hsl(var(--tc-no));
@@ -596,7 +593,7 @@
   margin: 12px 14px;
   padding: 16px;
   border: 1px solid hsl(var(--tc-amber) / 0.35);
-  border-radius: 14px;
+  border-radius: 8px;
   background: hsl(var(--tc-amber) / 0.04);
   max-height: 55dvh;
   overflow-y: auto;
@@ -646,7 +643,7 @@
   position: relative;
   margin: 12px 14px 0;
   padding: 14px 52px 14px 14px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 13px;
   line-height: 1.5;
   background: hsl(var(--tc-no) / 0.07);
@@ -845,4 +842,64 @@ html:has(.tw-demo) {
   ::view-transition-group(*) {
     animation-duration: 0s;
   }
+}
+
+/* Estaciones del camino con dibujo: apagadas hasta que se registran; la actual se mueve. */
+.tw-camino .tw-estacion {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: hsl(var(--card));
+}
+.tw-estacion-dibujo {
+  width: 32px;
+  height: 32px;
+  filter: grayscale(1);
+  opacity: 0.45;
+  transition: filter var(--tw-duracion), opacity var(--tw-duracion), transform var(--tw-duracion);
+}
+.tw-camino [data-hecho="true"] .tw-estacion-dibujo,
+.tw-camino [data-actual="true"] .tw-estacion-dibujo {
+  filter: none;
+  opacity: 1;
+}
+.tw-camino [data-actual="true"] .tw-estacion-dibujo {
+  transform: scale(1.12);
+}
+.tw-estacion-dibujo--candado {
+  width: 24px;
+  height: 24px;
+}
+.tw-estacion-check {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 2px solid hsl(var(--card));
+  border-radius: 50%;
+  color: hsl(0 0% 100%);
+  background: hsl(var(--tc-ok));
+}
+.tw-camino [data-actual="true"] .tw-estacion {
+  box-shadow: 0 0 0 3px hsl(var(--ambar) / 0.55);
+  border-color: transparent;
+}
+.tw-aplauso {
+  width: 30px;
+  height: 30px;
+  margin: -6px 4px -6px -2px;
+  vertical-align: middle;
+}
+.tw-camino-paso {
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: hsl(var(--muted-foreground));
+}
+.tw-camino-paso.tw-retro-nota {
+  color: hsl(var(--tc-no));
 }

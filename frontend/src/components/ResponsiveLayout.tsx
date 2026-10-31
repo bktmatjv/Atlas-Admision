@@ -1,8 +1,9 @@
 import { ReactNode, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
+import { FolderOpen, Home, ListChecks, MessageCircle, Moon, Network, Sun } from "lucide-react";
 import { CalibraBrand } from "@/components/brand/CalibraBrand";
-import { CalibraGeckoCompanion } from "@/components/companion/CalibraGeckoCompanion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,24 +25,65 @@ interface ResponsiveLayoutProps {
   showSidebar?: boolean;
   appearance?: "default" | "tutor";
   headerTools?: ReactNode;
+  /** Oculta la barra inferior del móvil: el examen y el tutor tienen sus propios controles abajo. */
+  sinBarraInferior?: boolean;
 }
+
+const SECCIONES = [
+  { to: "/admision", end: true, label: "Inicio", Icon: Home },
+  { to: "/admision/temas", end: false, label: "Temario", Icon: ListChecks },
+  { to: "/tutor", end: false, label: "Tutor", Icon: MessageCircle },
+  { to: "/aprender", end: false, label: "Explorar", Icon: Network },
+  { to: "/cursos", end: false, label: "Mis apuntes", corto: "Apuntes", Icon: FolderOpen },
+] as const;
 
 const enlace = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold transition-colors",
-    isActive
-      ? "bg-muted text-foreground"
-      : "text-muted-foreground hover:text-foreground",
+    "relative flex items-center px-3 text-[0.9375rem] font-semibold transition-colors",
+    "after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-sm after:transition-colors",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-ambar",
+    isActive ? "text-white after:bg-ambar" : "text-white/70 after:bg-transparent hover:text-white",
   );
 
+const enlaceCompacto = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex min-h-9 items-center justify-center rounded-md px-1 text-center text-[0.8125rem] font-semibold leading-tight",
+    isActive ? "bg-white/15 text-white" : "text-white/75",
+  );
+
+const pestana = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex min-h-[3.75rem] flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-semibold transition-colors",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+    isActive ? "text-primary" : "text-muted-foreground",
+  );
+
+/** Cambia entre claro y oscuro desde la cabecera, en toda la app. */
+function BotonTema() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const oscuro = resolvedTheme === "dark";
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(oscuro ? "light" : "dark")}
+      aria-label={oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+      title={oscuro ? "Modo claro" : "Modo oscuro"}
+      className="grid h-10 w-10 place-items-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ambar"
+    >
+      {oscuro ? <Sun className="h-[18px] w-[18px]" aria-hidden="true" /> : <Moon className="h-[18px] w-[18px]" aria-hidden="true" />}
+    </button>
+  );
+}
+
 /**
- * En CALIBRA, la barra lateral de toda la app. Aquí la app es solo Admisión: una cabecera con la marca
- * y las dos secciones, y el pie que recuerda dónde se guarda el progreso.
+ * La cáscara de toda la app: barra superior verde cancha con la marca y las cinco secciones,
+ * pestañas abajo en el móvil y un pie corto que recuerda dónde vive el progreso.
  */
 export function ResponsiveLayout({
   children,
   appearance = "default",
   headerTools,
+  sinBarraInferior = false,
 }: ResponsiveLayoutProps) {
   const tutorMode = appearance === "tutor";
   const cliente = useQueryClient();
@@ -85,127 +127,96 @@ export function ResponsiveLayout({
         tutorMode && "tutor-layout",
       )}
     >
-      <header className="sticky top-0 z-40 border-b border-border/30 bg-card/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] backdrop-blur-xl dark:shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
-        <div className="px-4 md:px-6 lg:px-8">
-          <div
-            className={
-              tutorMode
-                ? "tutor-header-row mx-auto flex max-w-[1600px] items-center"
-                : "mx-auto flex min-h-14 max-w-5xl flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2"
-            }
+      <header className="atlas-cabecera sticky top-0 z-40 bg-cancha text-white dark:border-b dark:border-white/10">
+        <div className="mx-auto flex h-14 max-w-6xl items-stretch gap-3 px-4 md:gap-6 md:px-6">
+          <NavLink
+            to="/admision"
+            end
+            aria-label="CALIBRA, inicio"
+            className="flex shrink-0 items-center self-center rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ambar"
           >
-            <NavLink
-              to="/admision"
-              end
-              className={cn(
-                "flex items-center",
-                tutorMode && "tutor-header-brand",
-              )}
-            >
-              <CalibraBrand
-                size={tutorMode ? "md" : "sm"}
-                subtitle={tutorMode ? undefined : "Admisión"}
-                textClassName={
-                  tutorMode ? "text-xl font-semibold tracking-wide" : undefined
-                }
-              />
-            </NavLink>
-            <nav
-              aria-label="Secciones"
-              className="order-last flex w-full items-center gap-1 overflow-x-auto md:order-none md:w-auto"
-            >
-              <NavLink to="/tutor" className={enlace}>
-                Tutor
+            <CalibraBrand size="sm" />
+          </NavLink>
+          <nav aria-label="Secciones" className="hidden items-stretch md:flex">
+            {SECCIONES.map(({ to, end, label }) => (
+              <NavLink key={to} to={to} end={end} className={enlace}>
+                {label}
               </NavLink>
-              <NavLink to="/aprender" className={enlace}>
-                Aprender
-              </NavLink>
-              <NavLink to="/cursos" className={enlace}>
-                Mis cursos
-              </NavLink>
-              <NavLink to="/admision" end className={enlace}>
-                Admisión
-              </NavLink>
-              <NavLink to="/admision/temas" className={enlace}>
-                Temas
-              </NavLink>
-            </nav>
-            {headerTools && (
-              <div className="tutor-header-tools">{headerTools}</div>
-            )}
-            <div className={tutorMode ? "shrink-0" : "ml-auto shrink-0"}>
-              <MenuCuenta />
-            </div>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-2">
+            {headerTools && <div className="tutor-header-tools">{headerTools}</div>}
+            <BotonTema />
+            <MenuCuenta />
           </div>
         </div>
+        {sinBarraInferior && (
+          <nav aria-label="Secciones" className="grid grid-cols-5 gap-1 px-2 pb-2 md:hidden">
+            {SECCIONES.map((sec) => (
+              <NavLink key={sec.to} to={sec.to} end={sec.end} className={enlaceCompacto} aria-label={sec.label}>
+                {"corto" in sec ? sec.corto : sec.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
       </header>
 
       <div className="atlas-pagina flex flex-1 flex-col overflow-x-clip">
         {children}
       </div>
 
-      {/* El tutor ya tiene avatar: la mascota flotante no debe tapar el chat ni la hoja móvil. */}
-      {!tutorMode && <CalibraGeckoCompanion />}
+      {!sinBarraInferior && (
+        <nav
+          aria-label="Secciones"
+          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
+          {SECCIONES.map((sec) => (
+            <NavLink key={sec.to} to={sec.to} end={sec.end} className={pestana} aria-label={sec.label}>
+              <sec.Icon className="h-5 w-5" aria-hidden="true" />
+              <span>{"corto" in sec ? sec.corto : sec.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      )}
 
-      <footer className="border-t border-border/40 bg-card/20">
-        <div className="px-4 md:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-5xl flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
-            <AlertDialog>
-              <p className="max-w-md text-xs text-muted-foreground leading-relaxed">
-                Tu progreso se guarda en este navegador. Si cambias de
-                dispositivo o borras sus datos,{" "}
-                <AlertDialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="font-bold text-foreground underline underline-offset-4 decoration-primary/60 hover:text-primary hover:decoration-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-0.5 inline cursor-pointer"
-                  >
-                    {borrando
-                      ? "eliminando…"
-                      : borrado
-                        ? "progreso borrado"
-                        : "empiezas de cero"}
-                  </button>
-                </AlertDialogTrigger>
-                .
+      <footer className={cn("border-t border-border", !sinBarraInferior && "mb-16 md:mb-0")}>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between md:px-6">
+          <AlertDialog>
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+              Tu progreso se guarda en este navegador. Si cambias de dispositivo o borras sus datos,{" "}
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  className="inline rounded font-semibold text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  {borrando ? "eliminando…" : borrado ? "progreso borrado" : "empiezas de cero"}
+                </button>
+              </AlertDialogTrigger>
+              .
+            </p>
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
               </p>
-              {error && (
-                <p role="alert" className="text-xs text-destructive">
-                  {error}
-                </p>
-              )}
-
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Borrar todo tu progreso?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Se borran tus intentos, tu carrera y tu cuaderno de errores
-                    de este navegador. No se puede deshacer.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    disabled={borrando}
-                    onClick={() => void borrar()}
-                  >
-                    Borrar todo
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            {/* Identidad de marca CALIBRA destacando el logotipo oficial sobre la tipografía */}
-            <div className="flex items-center gap-3 sm:justify-end">
-              <CalibraBrand
-                size="xl"
-                tagline="APRENDE A PENSAR"
-                className="select-none"
-                isotypeClassName="h-14 w-14 sm:h-16 sm:w-16"
-                textClassName="text-sm sm:text-base font-bold tracking-[0.16em] text-foreground/90"
-                taglineClassName="text-[0.6rem] sm:text-[0.66rem] font-semibold tracking-[0.18em] text-primary"
-              />
-            </div>
-          </div>
+            )}
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Borrar todo tu progreso?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Se borran tus intentos, tu carrera y tu cuaderno de errores de este navegador. No se puede deshacer.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction disabled={borrando} onClick={() => void borrar()}>
+                  Borrar todo
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <p className="font-display text-lg font-bold uppercase tracking-[0.04em] text-muted-foreground">
+            Calibra · Aprende a pensar
+          </p>
         </div>
       </footer>
     </div>

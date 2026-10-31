@@ -94,14 +94,14 @@ export function PageHeader({
           <h1
             className={
               esPortada
-                ? "font-display text-[1.9rem] font-extrabold leading-[1.05] tracking-[-0.035em] text-balance [overflow-wrap:anywhere] sm:text-[2.5rem]"
-                : "font-display text-[1.65rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-balance [overflow-wrap:anywhere] sm:text-[2.1rem]"
+                ? "font-display text-[2.4rem] font-extrabold uppercase leading-[0.98] tracking-[0.005em] text-balance [overflow-wrap:anywhere] sm:text-[3.2rem]"
+                : "font-display text-[2.1rem] font-extrabold uppercase leading-none tracking-[0.005em] text-balance [overflow-wrap:anywhere] sm:text-[2.75rem]"
             }
           >
             {title}
           </h1>
           {typeof count === "number" && (
-            <span className="shrink-0 self-center rounded-full bg-secondary px-3 py-1 text-sm font-bold tabular-nums text-primary">
+            <span className="shrink-0 self-center rounded-sm bg-grafito px-2.5 py-1 font-display text-lg font-bold tabular-nums text-ambar">
               {count.toLocaleString("es")}
             </span>
           )}

@@ -16,10 +16,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { ThemeToggle } from "@/components/system/ThemeToggle";
 import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import { api, post, ApiError } from "@/integrations/api/client";
-const card = "rounded-2xl border border-border bg-card p-5 sm:p-6";
+const card = "rounded-[10px] border border-border bg-card p-5 sm:p-6";
 const button =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2 font-bold text-primary-foreground disabled:opacity-50";
 const secondary =
@@ -332,13 +331,7 @@ export default function Aprender() {
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-7 sm:px-6 sm:py-10">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <Link
-              to="/aprender"
-              className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
-            >
-              CALIBRA · espacio para pensar
-            </Link>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+            <h1 className="text-balance">
               {tree.data?.titulo ?? "No solo entiendas la respuesta."}
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -353,7 +346,6 @@ export default function Aprender() {
               Conversar con el tutor y ver tu mapa de comprensión
             </Link>
           </div>
-          <ThemeToggle />
         </header>
         {error && (
           <p
@@ -459,10 +451,8 @@ export default function Aprender() {
         )}
         {!id && (
           <>
-            <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-              <section className={`${card} relative overflow-hidden`}>
-                <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/5" />
-                <Compass className="mb-5 h-9 w-9 text-primary" />
+            <div className="grid divide-y divide-border overflow-hidden rounded-[10px] border border-border bg-card lg:grid-cols-[1.35fr_1fr] lg:divide-x lg:divide-y-0">
+              <section className="relative p-5 sm:p-6">
                 <h2 className="text-2xl font-bold">¿Qué quieres comprender?</h2>
                 <form
                   className="relative mt-5 space-y-4"
@@ -512,9 +502,8 @@ export default function Aprender() {
                   </button>
                 </form>
               </section>
-              <section className={`${card} flex flex-col justify-between`}>
+              <section className="flex flex-col justify-between p-5 sm:p-6">
                 <div>
-                  <BookOpen className="mb-5 h-8 w-8 text-primary" />
                   <h2 className="text-2xl font-bold">
                     Tu material, tu punto de partida.
                   </h2>
@@ -524,7 +513,7 @@ export default function Aprender() {
                   </p>
                 </div>
                 <Link className={`${secondary} mt-6`} to="/cursos">
-                  Abrir Mis cursos <ArrowRight className="h-4 w-4" />
+                  Abrir Mis apuntes <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/admision"

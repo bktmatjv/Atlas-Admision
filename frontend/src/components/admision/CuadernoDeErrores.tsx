@@ -28,7 +28,7 @@ export function CuadernoDeErrores({ userId, area }: { userId: string | null; are
   return (
     <section aria-labelledby="cuaderno-titulo" className="min-w-0 space-y-3 rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start gap-3">
-        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted">
+        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center">
           <NotebookPen className="h-5 w-5 text-muted-foreground" />
         </span>
         <div className="min-w-0 flex-1">
