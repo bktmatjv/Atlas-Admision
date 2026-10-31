@@ -261,7 +261,8 @@ export class ProveedorFoundry implements ProveedorIA {
   completar(e: EntradaIA, op?: OpcionesLlamada): Promise<RespuestaIA> {
     return completarOpenAI(
       {
-        url: `${this.o.endpoint.replace(/\/+$/, "")}/openai/v1/chat/completions`,
+        // Acepta el recurso con o sin «/openai/v1» (el portal muestra la forma completa).
+        url: `${this.o.endpoint.replace(/\/+$/, "").replace(/\/openai\/v1$/, "")}/openai/v1/chat/completions`,
         apiKey: this.o.apiKey,
         model: this.o.model,
         fetch: this.o.fetch,

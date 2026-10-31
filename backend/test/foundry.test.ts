@@ -85,6 +85,23 @@ describe("adaptador Microsoft Foundry (fetch simulado)", () => {
     expect(cuerpo).not.toHaveProperty("response_format");
   });
 
+  it.each([
+    ["https://calibra-ia-resource.services.ai.azure.com/openai/v1"],
+    ["https://calibra-ia-resource.services.ai.azure.com/openai/v1/"],
+    ["https://calibra-ia-resource.services.ai.azure.com/"],
+    ["https://calibra-ia-resource.services.ai.azure.com"],
+  ])("normaliza el endpoint %s con o sin /openai/v1", async (endpoint) => {
+    let url = "";
+    const f = (async (u: string) => {
+      url = u;
+      return http(200, { choices: [{ message: { content: "ok" } }] });
+    }) as unknown as typeof fetch;
+    await fo(f, { endpoint }).completar(entrada);
+    expect(url).toBe(
+      "https://calibra-ia-resource.services.ai.azure.com/openai/v1/chat/completions",
+    );
+  });
+
   it("tolera una barra final en el endpoint", async () => {
     let url = "";
     const f = (async (u: string) => {
