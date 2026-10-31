@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -27,11 +27,18 @@ import {
 import { buscarNodos, disponerMapa } from "@/lib/tutor/presentacion";
 import { pluralizar } from "@/lib/tutor/chat";
 
+import type { PlanRetro } from "@/lib/tutor/wow";
+import { useMovimientoReducido } from "@/lib/tutor/useMovimientoReducido";
+const GrafoVivo = lazy(() => import("./GrafoVivo"));
 type Props = {
   grafo: Grafo;
   seleccionado: string | null;
   onSeleccionar: (id: string) => void;
   busqueda?: string;
+  plan?: PlanRetro | null;
+  eventoRetro?: boolean;
+  onConsumirRetro?: () => void;
+  demo?: boolean;
 };
 function Fila({ n, props }: { n: NodoArbol; props: Props }) {
   return (
@@ -74,7 +81,10 @@ function Mapa({ grafo, seleccionado, onSeleccionar }: Props) {
     () => disponerMapa(grafo, seleccionado),
     [grafo, seleccionado],
   );
-  const camino = aristasCamino(grafo.camino_error);
+  const pendiente = grafo.camino_error.some((id) =>
+    grafo.nodos.some((n) => n.id === id && n.estado === "fallo"),
+  );
+  const camino = aristasCamino(pendiente ? grafo.camino_error : []);
   return (
     <div className="tutor-map-drawing">
       <svg
@@ -205,7 +215,7 @@ function Mapa({ grafo, seleccionado, onSeleccionar }: Props) {
                 y={n.y + 1}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill="white"
+                fill={n.estado === "sin_explorar" ? "#172033" : "white"}
                 fontSize={n.central ? 27 : 21}
                 fontWeight="600"
                 aria-hidden="true"
@@ -413,10 +423,37 @@ function Detalle({ grafo, seleccionado }: Props) {
 }
 export function GrafoComprension(props: Props) {
   const [lista, setLista] = useState(false);
+  const [reproduccion, setReproduccion] = useState(0);
+  const reducido = useMovimientoReducido();
+  const { eventoRetro, plan, onConsumirRetro } = props;
+  useEffect(() => {
+    if (eventoRetro && plan) {
+      setLista(false);
+      setReproduccion((v) => v + 1);
+      onConsumirRetro?.();
+    }
+  }, [eventoRetro, plan, onConsumirRetro]);
   const found = buscarNodos(props.grafo.nodos, props.busqueda ?? "");
   const buscando = Boolean(props.busqueda?.trim());
   return (
     <div className="tutor-map">
+      {props.plan && (
+        <div className="tw-retro" aria-live="polite">
+          <span className="tw-eyebrow">EL ERROR ES INFORMACIÓN</span>
+          <strong>Tu error apunta a: {props.plan.titulo}</strong>
+          <span>↩ Volver aquí · una idea concreta para revisar</span>
+          <button
+            type="button"
+            className="tc-btn tc-btn--line"
+            onClick={() => {
+              setLista(false);
+              setReproduccion((v) => v + 1);
+            }}
+          >
+            Ver cómo viajó el error
+          </button>
+        </div>
+      )}
       <div className="tutor-map-tools">
         <ul className="tutor-map-legend" aria-label="Leyenda de estados">
           {(Object.keys(ESTADO_TEXTO) as Estado[]).map((e) => (
@@ -491,7 +528,17 @@ export function GrafoComprension(props: Props) {
                 )}
               </div>
             ) : (
-              <Mapa {...props} />
+              <Suspense fallback={<Mapa {...props} />}>
+                <GrafoVivo
+                  grafo={props.grafo}
+                  seleccionado={props.seleccionado}
+                  onSeleccionar={props.onSeleccionar}
+                  plan={props.plan ?? null}
+                  reproduccion={reproduccion}
+                  reducido={reducido}
+                  demo={props.demo}
+                />
+              </Suspense>
             )}
           </div>
           <Detalle {...props} />

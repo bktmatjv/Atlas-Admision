@@ -97,7 +97,7 @@ export function ultimoFallo(evidencias: Evidencia[], arbolId: string) {
   return (
     evidencias
       .filter(
-        (e) => e.arbol_id === arbolId && e.tipo === "aplicacion_por_reforzar",
+        (e) => (!arbolId || e.arbol_id === arbolId) && e.tipo === "aplicacion_por_reforzar",
       )
       .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null
   );
