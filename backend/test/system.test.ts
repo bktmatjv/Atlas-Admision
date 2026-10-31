@@ -23,7 +23,7 @@ import {
 } from "../src/modules/seguimiento/plantillas";
 import { clavesExpuestas } from "../src/modules/seguimiento/expuestas";
 import { olvidarRouters } from "../src/modules/tutor/proveedor";
-import { casosCuentaPerfil } from "./cuenta-perfil.cases";
+import { casosCuentaPerfil } from "./cuenta-perfil.cases";
 let app: INestApplication,
   db: Client,
   url: string,
@@ -2602,5 +2602,86 @@ describe("Demo: comprobación sin tema y retorno creado por el sistema", () => {
       )
     ).rows;
     expect(n).toBe(nodos.length);
+  });
+});
+
+describe("Árbol vivo: evento de comprobación entregada", () => {
+  let a: string, b: string, conv: string, arbol: string;
+  const entregar = async (respuesta: string, sid = a, c = arbol) => {
+    const ini = await http("/comprobaciones", "POST", { arbol_id: c }, sid);
+    expect(ini.status).toBe(201);
+    const r = await http(
+      `/comprobaciones/${ini.data.id}/respuesta`,
+      "PUT",
+      { respuesta, justificacion: "Sumé y resté el mismo 20" },
+      sid,
+    );
+    expect(r.status).toBe(200);
+    return { id: ini.data.id as string, resultado: r.data };
+  };
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    b = (await http("/sesion", "POST", {}, "")).cookie!;
+    const c = (await http("/conversaciones", "POST", { tema: "porcentajes" }, a))
+      .data as { id: string; arbol_id: string };
+    conv = c.id;
+    arbol = c.arbol_id;
+  });
+  it("al entregar, el agente responde solo y el mensaje del sistema no se muestra como del estudiante", async () => {
+    const c = await entregar("100");
+    const key = `evento-${c.id}`;
+    const r = await http(
+      `/conversaciones/${conv}/eventos`,
+      "POST",
+      { tipo: "comprobacion_entregada", comprobacion_id: c.id },
+      a,
+      key,
+    );
+    expect(r.status).toBe(201);
+    expect(r.data.estudiante.evento).toBe("comprobacion_entregada");
+    expect(r.data.estudiante.texto).toBe("Entregaste una comprobación.");
+    expect(r.data.tutor.rol).toBe("tutor");
+    const fila = (
+      await db.query(
+        `SELECT texto,evento,rol FROM ${schema}.mensajes WHERE conversacion_id=$1 AND clave=$2`,
+        [conv, key],
+      )
+    ).rows[0];
+    expect(fila.rol).toBe("estudiante");
+    expect(fila.evento).toBe("comprobacion_entregada");
+    expect(fila.texto).toContain("EVENTO_DEL_SISTEMA");
+    expect(fila.texto).toContain("cambio-de-base");
+    const guardado = (await http(`/conversaciones/${conv}`, "GET", undefined, a)).data;
+    const evento = guardado.mensajes.find((m: { evento: string | null }) => m.evento);
+    expect(evento.texto).toBe("Entregaste una comprobación.");
+    expect(JSON.stringify(guardado)).not.toContain("EVENTO_DEL_SISTEMA");
+  });
+  it("reintentar con la misma clave no duplica mensajes", async () => {
+    const c = await entregar("96");
+    const key = `evento-${c.id}`;
+    const body = { tipo: "comprobacion_entregada", comprobacion_id: c.id };
+    const uno = await http(`/conversaciones/${conv}/eventos`, "POST", body, a, key);
+    const dos = await http(`/conversaciones/${conv}/eventos`, "POST", body, a, key);
+    expect(dos.data.tutor.id).toBe(uno.data.tutor.id);
+    const [{ n }] = (
+      await db.query(
+        `SELECT count(*)::int AS n FROM ${schema}.mensajes WHERE conversacion_id=$1 AND clave IN ($2,$3)`,
+        [conv, key, "r:" + key],
+      )
+    ).rows;
+    expect(n).toBe(2);
+  });
+  it("rechaza comprobaciones ajenas, no entregadas o de otra charla", async () => {
+    const body = (id: string) => ({ tipo: "comprobacion_entregada", comprobacion_id: id });
+    const ini = await http("/comprobaciones", "POST", { arbol_id: arbol }, a);
+    const pendiente = await http(`/conversaciones/${conv}/eventos`, "POST", body(ini.data.id), a, "evento-pendiente-1");
+    expect(pendiente.status).toBe(409);
+    await http(`/comprobaciones/${ini.data.id}/cancelar`, "POST", {}, a);
+    const cancelada = await http(`/conversaciones/${conv}/eventos`, "POST", body(ini.data.id), a, "evento-cancelada-1");
+    expect(cancelada.status).toBe(409);
+    const ajena = await http(`/conversaciones/${conv}/eventos`, "POST", body(ini.data.id), b, "evento-ajena-001");
+    expect(ajena.status).toBe(404);
+    const invalido = await http(`/conversaciones/${conv}/eventos`, "POST", { tipo: "otro", comprobacion_id: ini.data.id }, a, "evento-invalido-1");
+    expect(invalido.status).toBe(400);
   });
 });

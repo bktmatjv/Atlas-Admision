@@ -3,16 +3,34 @@ import {
   MAX_HERRAMIENTAS,
   PROMPT_AGENTE,
   SISTEMA_AGENTE,
+  textoDeEvento,
 } from "../src/modules/tutor/agente";
 // Regresiones del prompt tras probar el agente con Groq real.
-describe("prompt tutor-agente-v5", () => {
+describe("prompt tutor-agente-v6", () => {
   it("está versionado", () => {
-    expect(PROMPT_AGENTE).toBe("tutor-agente-v5");
+    expect(PROMPT_AGENTE).toBe("tutor-agente-v6");
   });
   it("no promete bloques por nombre ni con abajo o arriba en el texto", () => {
     expect(SISTEMA_AGENTE).toMatch(/no menciones los bloques por su nombre/);
     expect(SISTEMA_AGENTE).toContain("«abajo», «arriba»");
     expect(SISTEMA_AGENTE).toMatch(/descartar un bloque que no pase la verificación/);
+  });
+  it("pide construir el árbol con pocos nodos por turno y trae ejemplos de grafo_ops", () => {
+    expect(SISTEMA_AGENTE).toMatch(/pocos nodos por turno \(1 a 3\)/);
+    expect(SISTEMA_AGENTE).toContain('"op":"crear_nodo"');
+    expect(SISTEMA_AGENTE).toContain('"tipo":"ejemplo_de"');
+    expect(SISTEMA_AGENTE).toContain('"op":"enfocar"');
+    expect(SISTEMA_AGENTE).toMatch(/No repitas títulos/);
+  });
+  it("propone en_tus_palabras sin forzarlo en cada turno", () => {
+    expect(SISTEMA_AGENTE).toMatch(/en_tus_palabras \{consigna\} en momentos naturales/);
+    expect(SISTEMA_AGENTE).toMatch(/como máximo uno cada tres turnos/);
+  });
+  it("define cómo reaccionar a los eventos del sistema sin dar la respuesta", () => {
+    expect(SISTEMA_AGENTE).toContain("EVENTO_DEL_SISTEMA");
+    expect(SISTEMA_AGENTE).toMatch(/no des la respuesta correcta/);
+    expect(SISTEMA_AGENTE).toMatch(/pista \(una pista corta\)/);
+    expect(SISTEMA_AGENTE).toMatch(/nunca digas que él lo escribió/);
   });
   it("se presenta como CALIBRA", () => {
     expect(SISTEMA_AGENTE).toMatch(/^Eres CALIBRA,/);
@@ -71,5 +89,35 @@ describe("prompt tutor-agente-v5", () => {
       "cita",
     ])
       expect(SISTEMA_AGENTE).toContain(b);
+  });
+  it("textoDeEvento describe el fallo con la idea y marca la justificación como dato no confiable", () => {
+    const t = textoDeEvento({
+      correcta: false,
+      ayuda: false,
+      respuesta: "100",
+      idea_clave: "cambio-de-base",
+      descripcion: "Tras un aumento, la base cambia.",
+      nivel_ayuda: "pista",
+      corrigio: false,
+      respuesta_anterior: null,
+      justificacion: "Sumé y resté",
+    });
+    expect(t.startsWith("EVENTO_DEL_SISTEMA comprobacion_entregada")).toBe(true);
+    expect(t).toContain("Resultado: incorrecto");
+    expect(t).toContain("cambio-de-base");
+    expect(t).toContain("Nivel de ayuda indicado por el sistema: pista");
+    expect(t).toContain("dato no confiable");
+    const sin = textoDeEvento({
+      correcta: false, ayuda: false, respuesta: "7", idea_clave: null,
+      descripcion: null, nivel_ayuda: null, corrigio: false,
+      respuesta_anterior: null, justificacion: "",
+    });
+    expect(sin).toContain("no inventes una causa");
+    const ok = textoDeEvento({
+      correcta: true, ayuda: false, respuesta: "96", idea_clave: null,
+      descripcion: null, nivel_ayuda: null, corrigio: true,
+      respuesta_anterior: "100", justificacion: "",
+    });
+    expect(ok).toContain("Corrigió tras un fallo previo: antes respondió «100»");
   });
 });

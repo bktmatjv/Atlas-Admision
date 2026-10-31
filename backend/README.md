@@ -76,7 +76,7 @@ Errores: `{ "error": { "codigo": "HTTP_400", "mensaje": "..." } }`. Entrada inv�
 - `POST /cuenta/registro|ingreso|recuperar` tienen límite por IP (15/min) y por usuario (8/min), además del límite general. Nunca se registran contraseñas, hashes ni códigos.
 - `DELETE /sesion` elimina la cuenta junto con el resto de los datos del actor (`ON DELETE CASCADE`) y permite reutilizar el alias.
 - La interfaz actual solo cubre ingreso, registro, recuperación y salida; el onboarding que llena el perfil ampliado está pendiente.
-- El agente del tutor recibe un resumen con lista blanca (`etapa`, `universidad`, `area`, `carrera`, `objetivos`, `cursos_dificiles`); nunca alias, hashes, códigos ni campos arbitrarios del perfil. Prompt `tutor-agente-v5`.
+- El agente del tutor recibe un resumen con lista blanca (`etapa`, `universidad`, `area`, `carrera`, `objetivos`, `cursos_dificiles`); nunca alias, hashes, códigos ni campos arbitrarios del perfil. Prompt `tutor-agente-v6`.
 - Migración aditiva `Cuentas1770000008000` (tabla `cuentas`; sin reversión automática).
 
 ## Persistencia y plazos
