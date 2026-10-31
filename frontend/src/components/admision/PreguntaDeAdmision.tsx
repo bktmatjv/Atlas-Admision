@@ -193,7 +193,7 @@ export function PreguntaDeAdmision({
                       type="button"
                       aria-pressed={respuesta?.confianza === nivel}
                       onClick={() => onConfiar(nivel)}
-                      className={cn("min-h-9 rounded-md px-2.5 text-sm font-semibold", respuesta?.confianza === nivel ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")}
+                      className={cn("min-h-9 rounded-md px-2.5 text-sm font-semibold", respuesta?.confianza === nivel ? "bg-primary text-primary-foreground hover:bg-primary-hover" : "text-muted-foreground hover:bg-muted")}
                     >
                       {rotulo}
                     </button>
@@ -201,7 +201,7 @@ export function PreguntaDeAdmision({
                 </div>
               )}
               {puedeRevelar && elegida && (
-                <button type="button" onClick={onRevelar} className="flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                <button type="button" onClick={onRevelar} className="flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
                   <Eye className="h-4 w-4" aria-hidden /> Ver la solución
                 </button>
               )}
@@ -209,7 +209,7 @@ export function PreguntaDeAdmision({
           )}
 
           {mostrarCorreccion && (
-            <section aria-label="Solución de Atlas" className="space-y-2 rounded-xl border border-border bg-muted/40 p-4">
+            <section aria-label="Solución de CALIBRA" className="space-y-2 rounded-xl border border-border bg-muted/40 p-4">
               <p className="font-bold text-foreground">
                 {elegida === null ? "La dejaste en blanco." : elegida === clave ? "¡Bien! Acertaste." : `La correcta es la ${clave}.`}
               </p>

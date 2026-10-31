@@ -17,7 +17,7 @@ const tarjeta = "min-w-0 space-y-3 rounded-2xl border border-border bg-card p-5"
 const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 function Sello({ item }: { item: ItemDelDia }) {
-  if (/^Recomendaci[oó]n de Atlas/.test(item.fuente)) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Consejo de Atlas</span>;
+  if (/^Recomendaci[oó]n de (Atlas|CALIBRA)/.test(item.fuente)) return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Consejo de CALIBRA</span>;
   const url = item.fuente.match(/https?:\/\/\S+/)?.[0];
   const texto = item.verificado ? "Dato oficial" : "Por verificar";
   return url ? (

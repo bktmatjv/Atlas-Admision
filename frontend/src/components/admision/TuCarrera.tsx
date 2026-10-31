@@ -50,12 +50,16 @@ export function TuCarrera({ userId, titulo = "Tu carrera" }: { userId: string | 
             </p>
           )}
           {!buscando && otraUniversidad && (
-            <p className="text-sm text-muted-foreground">Postulas a otra universidad. Los simulacros de Atlas siguen el examen de San Marcos.</p>
+            <p className="text-sm text-muted-foreground">Postulas a otra universidad. Los simulacros de CALIBRA siguen el examen de San Marcos.</p>
           )}
-          {buscando && <p className="text-sm text-muted-foreground">Elige tu escuela y te decimos si con tu puntaje ingresabas.</p>}
+          {buscando && <p className="text-sm text-muted-foreground">Elige tu carrera y te decimos si con tu puntaje ingresabas.</p>}
         </div>
         {!buscando && (
-          <button type="button" onClick={() => setEditando(true)} className="min-h-11 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted">
+          <button
+            type="button"
+            onClick={() => setEditando(true)}
+            className="min-h-11 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
             Cambiar
           </button>
         )}
@@ -63,7 +67,7 @@ export function TuCarrera({ userId, titulo = "Tu carrera" }: { userId: string | 
 
       {buscando && (
         <div className="space-y-2">
-          <label htmlFor={idCampo} className="block text-sm font-semibold">¿A qué escuela de San Marcos postulas?</label>
+          <label htmlFor={idCampo} className="block text-sm font-semibold">¿A qué carrera de San Marcos postulas?</label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <input
@@ -73,19 +77,19 @@ export function TuCarrera({ userId, titulo = "Tu carrera" }: { userId: string | 
               value={consulta}
               onChange={(e) => setConsulta(e.target.value)}
               placeholder="Por ejemplo: medicina, ing sistemas, derecho"
-              className="block min-h-11 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm"
+              className="block min-h-11 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           {consulta.trim() !== "" && (
             resultados.length ? (
-              <ul aria-label="Escuelas que coinciden" className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+              <ul aria-label="Carreras que coinciden" className="divide-y divide-border overflow-hidden rounded-xl border border-border">
                 {resultados.map((c) => (
                   <li key={c.id}>
                     <button
                       type="button"
                       disabled={perfil.guardar.isPending}
                       onClick={() => elegir("unmsm", c.id)}
-                      className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted disabled:opacity-60"
+                      className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:opacity-60"
                     >
                       <span className="font-semibold text-foreground">{c.nombre}</span>
                       <span className="shrink-0 text-muted-foreground">Área {c.area}</span>
@@ -94,15 +98,23 @@ export function TuCarrera({ userId, titulo = "Tu carrera" }: { userId: string | 
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">No hay ninguna escuela con ese nombre. Prueba con una sola palabra.</p>
+              <p className="text-sm text-muted-foreground">No hay ninguna carrera con ese nombre. Prueba con una sola palabra.</p>
             )
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            <button type="button" onClick={() => elegir("otra", null)} className="min-h-11 font-semibold text-primary hover:underline">
+            <button
+              type="button"
+              onClick={() => elegir("otra", null)}
+              className="min-h-11 font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-1"
+            >
               No postulo a San Marcos
             </button>
             {editando && (
-              <button type="button" onClick={() => { setEditando(false); setConsulta(""); }} className="min-h-11 font-semibold text-muted-foreground hover:underline">
+              <button
+                type="button"
+                onClick={() => { setEditando(false); setConsulta(""); }}
+                className="min-h-11 font-semibold text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md px-1"
+              >
                 Cancelar
               </button>
             )}

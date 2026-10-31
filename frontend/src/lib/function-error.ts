@@ -22,7 +22,7 @@ const GENERIC = "No se pudo procesar";
  */
 export const SIN_MOTIVO = "No se pudo completar. Vuelve a intentarlo en un momento.";
 /** La función todavía no está desplegada (404 sin motivo): no es culpa de su conexión. */
-export const SIN_SERVICIO = "Esta parte de Atlas todavía no está disponible. Vuelve a intentarlo más tarde.";
+export const SIN_SERVICIO = "Esta parte de CALIBRA todavía no está disponible. Vuelve a intentarlo más tarde.";
 
 const DE_SUPABASE_JS = /Edge Function returned a non-2xx status code|Failed to send a request to the Edge Function|Relay Error invoking the Edge Function/i;
 
