@@ -1,0 +1,9 @@
+- dialog "Bienvenida a CALIBRA" [ref=e1]:
+  - generic [ref=e2]: CALIBRA • ESPACIO PARA PENSAR
+  - generic [ref=e5]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - img "Isotipo CALIBRA"
+      - heading "CALIBRA" [level=1] [ref=e11]
+      - paragraph [ref=e18]: Aprende a pensar.
+    - button "Entrar a CALIBRA" [active] [ref=e20] [cursor=pointer]

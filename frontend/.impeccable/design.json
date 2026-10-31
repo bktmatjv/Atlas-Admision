@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-31T00:00:00Z",
+  "title": "Design System: CALIBRA",
+  "extensions": {
+    "colorMeta": {
+      "cancha": { "role": "primary", "displayName": "Verde Cancha", "canonical": "hsl(162 62% 14%)", "tonalRamp": ["hsl(162 62% 8%)", "hsl(162 62% 14%)", "hsl(162 60% 22%)", "hsl(162 55% 32%)", "hsl(162 48% 45%)", "hsl(162 42% 62%)", "hsl(162 40% 80%)", "hsl(162 38% 94%)"] },
+      "cancha-vivo": { "role": "primary", "displayName": "Cancha Vivo", "canonical": "hsl(158 58% 24%)", "tonalRamp": ["hsl(158 58% 10%)", "hsl(158 58% 17%)", "hsl(158 58% 24%)", "hsl(158 55% 30%)", "hsl(158 50% 42%)", "hsl(158 45% 58%)", "hsl(158 40% 76%)", "hsl(158 38% 92%)"] },
+      "cancha-claro": { "role": "primary", "displayName": "Cancha Claro", "canonical": "hsl(145 38% 90%)", "tonalRamp": ["hsl(145 38% 15%)", "hsl(145 38% 27%)", "hsl(145 38% 39%)", "hsl(145 38% 51%)", "hsl(145 38% 63%)", "hsl(145 38% 75%)", "hsl(145 38% 90%)", "hsl(145 38% 95%)"] },
+      "menta": { "role": "primary", "displayName": "Menta (dark primary)", "canonical": "hsl(151 62% 52%)", "tonalRamp": ["hsl(151 62% 15%)", "hsl(151 62% 26%)", "hsl(151 62% 38%)", "hsl(151 62% 52%)", "hsl(151 66% 60%)", "hsl(151 62% 70%)", "hsl(151 62% 82%)", "hsl(151 62% 94%)"] },
+      "ambar": { "role": "secondary", "displayName": "Ámbar Marcador", "canonical": "hsl(40 100% 58%)", "tonalRamp": ["hsl(36 90% 20%)", "hsl(34 90% 30%)", "hsl(36 90% 44%)", "hsl(40 100% 58%)", "hsl(40 100% 64%)", "hsl(42 100% 74%)", "hsl(44 100% 86%)", "hsl(44 100% 94%)"] },
+      "ambar-hover": { "role": "secondary", "displayName": "Ámbar Encendido", "canonical": "hsl(40 100% 64%)" },
+      "coral": { "role": "tertiary", "displayName": "Coral Error", "canonical": "hsl(358 75% 59%)", "tonalRamp": ["hsl(358 70% 18%)", "hsl(358 70% 30%)", "hsl(358 68% 42%)", "hsl(358 75% 59%)", "hsl(358 80% 66%)", "hsl(358 80% 76%)", "hsl(358 100% 88%)", "hsl(358 100% 96%)"] },
+      "coral-texto": { "role": "tertiary", "displayName": "Coral Texto", "canonical": "hsl(358 68% 47%)" },
+      "grafito": { "role": "neutral", "displayName": "Grafito Tablero", "canonical": "hsl(220 13% 9%)", "tonalRamp": ["hsl(220 14% 6%)", "hsl(220 13% 9%)", "hsl(220 11% 14%)", "hsl(220 9% 21%)", "hsl(220 8% 35%)", "hsl(220 8% 55%)", "hsl(220 8% 75%)", "hsl(220 8% 92%)"] },
+      "grafito-2": { "role": "neutral", "displayName": "Grafito Noche", "canonical": "hsl(220 11% 14%)" },
+      "tiza": { "role": "neutral", "displayName": "Blanco Tiza", "canonical": "hsl(96 27% 96%)" },
+      "superficie": { "role": "neutral", "displayName": "Superficie", "canonical": "hsl(0 0% 100%)" },
+      "tinta": { "role": "neutral", "displayName": "Tinta", "canonical": "hsl(150 21% 10%)" },
+      "tinta-suave": { "role": "neutral", "displayName": "Tinta Suave", "canonical": "hsl(152 7% 34%)" },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "hsl(120 14% 92%)" },
+      "linea": { "role": "neutral", "displayName": "Línea de Cal", "canonical": "hsl(125 12% 86%)" },
+      "noche": { "role": "neutral", "displayName": "Noche", "canonical": "hsl(220 13% 8%)" },
+      "noche-superficie": { "role": "neutral", "displayName": "Noche Superficie", "canonical": "hsl(220 12% 12%)" },
+      "noche-linea": { "role": "neutral", "displayName": "Noche Línea", "canonical": "hsl(220 9% 21%)" },
+      "tiza-noche": { "role": "neutral", "displayName": "Tiza Noche", "canonical": "hsl(96 27% 94%)" },
+      "exito": { "role": "status", "displayName": "Éxito", "canonical": "hsl(152 62% 28%)" },
+      "aviso": { "role": "status", "displayName": "Aviso", "canonical": "hsl(33 92% 40%)" },
+      "info": { "role": "status", "displayName": "Info", "canonical": "hsl(205 70% 38%)" }
+    },
+    "typographyMeta": {
+      "scoreboard": { "displayName": "Cifra de Marcador", "purpose": "The student's score on the graphite board, amber, tabular, rolling digits." },
+      "display": { "displayName": "Display", "purpose": "Every h1, uppercase condensed; 2.25rem mobile, 3rem desktop." },
+      "headline": { "displayName": "Headline", "purpose": "Uppercase section titles in the display face." },
+      "title": { "displayName": "Title", "purpose": "Row and cell titles in Figtree." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and interface text; 1rem from sm." },
+      "label": { "displayName": "Rótulo de cifra", "purpose": "Small uppercase caption attached to a figure. Never an eyebrow above a heading." },
+      "reading": { "displayName": "Lectura", "purpose": "Long chapter reading in the lesson only." }
+    },
+    "shadows": [
+      { "name": "hairline", "value": "0 1px 2px hsl(160 30% 10% / 0.06)", "purpose": "Tokens xs/medium; small controls at most." },
+      { "name": "card-rule", "value": "0 1px 0 hsl(160 30% 10% / 0.05)", "purpose": "Token card; one-pixel base line." }
+    ],
+    "motion": [
+      { "name": "digit-roll", "value": "transform 900ms cubic-bezier(0.16, 1, 0.3, 1), 70ms stagger per digit", "purpose": "Scoreboard digit strips rolling to value; disabled under reduced motion." },
+      { "name": "atlas-salida", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Default exit easing for entrances and page fade (220ms)." },
+      { "name": "atlas-vaiven", "value": "cubic-bezier(0.77, 0, 0.175, 1)", "purpose": "In-out easing for wrong-answer shake and path drawing." },
+      { "name": "press", "value": "transform 150ms, scale(0.98)", "purpose": "Button press feedback." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1400px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Green fill action on chalk surfaces.",
+      "html": "<button class=\"ds-btn-primary\">Practicar ahora</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 4px; background: hsl(162 62% 14%); color: #fff; font-family: Figtree, system-ui, sans-serif; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: background-color 150ms, transform 150ms; } .ds-btn-primary:hover { background: hsl(158 58% 22%); } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid hsl(158 58% 30%); outline-offset: 2px; }"
+    },
+    {
+      "name": "Scoreboard CTA",
+      "kind": "button",
+      "refersTo": "button-scoreboard",
+      "description": "Amber action on graphite or on the pitch.",
+      "html": "<div style=\"background:hsl(220 13% 9%);padding:24px\"><button class=\"ds-btn-ambar\">Elegir mi carrera <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button></div>",
+      "css": ".ds-btn-ambar { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 4px; background: hsl(40 100% 58%); color: hsl(220 13% 9%); font-family: Figtree, system-ui, sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background-color 150ms, transform 150ms; } .ds-btn-ambar svg { transition: transform 150ms; } .ds-btn-ambar:hover { background: hsl(40 100% 64%); } .ds-btn-ambar:hover svg { transform: translateX(2px); } .ds-btn-ambar:active { transform: scale(0.98); } .ds-btn-ambar:focus-visible { outline: 2px solid hsl(40 100% 58%); outline-offset: 4px; }"
+    },
+    {
+      "name": "Top Bar",
+      "kind": "nav",
+      "refersTo": "top-bar",
+      "description": "Sticky pitch-green bar with brand, five destinations and amber active underline.",
+      "html": "<header class=\"ds-bar\"><span class=\"ds-bar-brand\"><svg viewBox=\"0 0 32 32\" width=\"28\" height=\"28\"><rect x=\"0.5\" y=\"0.5\" width=\"31\" height=\"31\" rx=\"6\" fill=\"hsl(220 13% 9%)\" stroke=\"hsl(0 0% 100% / 0.14)\"/><g fill=\"hsl(40 100% 58%)\"><path d=\"M10.6 6.5h11.2l-1.6 2.6h-8z\"/><path d=\"M9.4 7.6l2.4 2.4v4.9l-1.3 1.1-1.1-1.1z\"/><path d=\"M9.4 24.4l2.4-2.4v-4.9l-1.3-1.1-1.1 1.1z\"/><path d=\"M10.6 25.5h11.2l-1.6-2.6h-8z\"/></g><circle cx=\"22.4\" cy=\"16\" r=\"1.6\" fill=\"hsl(151 62% 52%)\"/></svg>CALIBRA</span><nav class=\"ds-bar-nav\"><a href=\"#\" class=\"ds-bar-link is-active\">Inicio</a><a href=\"#\" class=\"ds-bar-link\">Temario</a><a href=\"#\" class=\"ds-bar-link\">Tutor</a><a href=\"#\" class=\"ds-bar-link\">Explorar</a><a href=\"#\" class=\"ds-bar-link\">Mis apuntes</a></nav></header>",
+      "css": ".ds-bar { display: flex; align-items: stretch; gap: 24px; height: 56px; padding: 0 24px; background: hsl(162 62% 14%); color: #fff; font-family: Figtree, system-ui, sans-serif; } .ds-bar-brand { display: flex; align-items: center; gap: 10px; font-family: 'Big Shoulders Display', Figtree, sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: 0.04em; text-transform: uppercase; } .ds-bar-nav { display: flex; align-items: stretch; } .ds-bar-link { position: relative; display: flex; align-items: center; padding: 0 12px; font-size: 0.9375rem; font-weight: 600; color: hsl(0 0% 100% / 0.7); text-decoration: none; transition: color 150ms; } .ds-bar-link::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 3px; border-radius: 2px 2px 0 0; background: transparent; } .ds-bar-link:hover { color: #fff; } .ds-bar-link.is-active { color: #fff; } .ds-bar-link.is-active::after { background: hsl(40 100% 58%); } .ds-bar-link:focus-visible { outline: 2px solid hsl(40 100% 58%); outline-offset: -4px; }"
+    },
+    {
+      "name": "Marcador",
+      "kind": "custom",
+      "refersTo": "scoreboard",
+      "description": "Graphite scoreboard: career strip, amber score figure with uppercase caption, verdict headline and amber CTA.",
+      "html": "<section class=\"ds-marcador\"><div class=\"ds-marcador-top\">Medicina Humana <span>· A · Ciencias de la Salud</span></div><div class=\"ds-marcador-body\"><div><p class=\"ds-marcador-label\">Tu puntaje</p><p class=\"ds-marcador-cifra\">1 284,5</p></div><div class=\"ds-marcador-verdict\"><h2>Te faltan 12 preguntas</h2><p>Para alcanzar al último ingresante de 2026-I.</p><button class=\"ds-marcador-cta\">Practicar ahora</button></div></div></section>",
+      "css": ".ds-marcador { overflow: hidden; border-radius: 10px; background: hsl(220 13% 9%); color: #fff; font-family: Figtree, system-ui, sans-serif; } .ds-marcador-top { padding: 12px 28px; border-bottom: 1px solid hsl(0 0% 100% / 0.1); font-size: 0.875rem; font-weight: 600; color: hsl(0 0% 100% / 0.85); } .ds-marcador-top span { color: hsl(0 0% 100% / 0.5); } .ds-marcador-body { display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center; padding: 32px 28px; } .ds-marcador-label { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(0 0% 100% / 0.55); } .ds-marcador-cifra { margin: 4px 0 0; font-family: 'Big Shoulders Display', Figtree, sans-serif; font-weight: 800; font-size: clamp(3.5rem, 11vw, 6rem); line-height: 1; font-variant-numeric: tabular-nums; color: hsl(40 100% 58%); } .ds-marcador-verdict { padding-left: 40px; border-left: 1px solid hsl(0 0% 100% / 0.1); } .ds-marcador-verdict h2 { margin: 0; font-family: 'Big Shoulders Display', Figtree, sans-serif; font-weight: 800; font-size: 2.4rem; line-height: 1.02; text-transform: uppercase; } .ds-marcador-verdict p { margin: 4px 0 16px; font-size: 0.9375rem; color: hsl(0 0% 100% / 0.7); } .ds-marcador-cta { min-height: 48px; padding: 0 24px; border: 0; border-radius: 4px; background: hsl(40 100% 58%); color: hsl(220 13% 9%); font-weight: 700; font-size: 1rem; cursor: pointer; } .ds-marcador-cta:hover { background: hsl(40 100% 64%); } .ds-marcador-cta:focus-visible { outline: 2px solid hsl(40 100% 58%); outline-offset: 4px; }"
+    },
+    {
+      "name": "Unlit Digit Cells",
+      "kind": "custom",
+      "refersTo": "scoreboard-digit",
+      "description": "Empty scoreboard state: cells waiting for a figure instead of an invented number.",
+      "html": "<div style=\"background:hsl(220 13% 9%);padding:24px\"><p class=\"ds-celdas\" role=\"img\" aria-label=\"Sin puntaje todavía\"><span></span><span></span><span></span><span></span></p></div>",
+      "css": ".ds-celdas { display: flex; gap: 6px; margin: 0; } .ds-celdas span { display: block; width: 3.4rem; height: 6rem; border-radius: 4px; border: 1px solid hsl(0 0% 100% / 0.15); background: hsl(0 0% 100% / 0.04); }"
+    },
+    {
+      "name": "Accesses Band",
+      "kind": "card",
+      "refersTo": "ruled-panel",
+      "description": "Three equal-weight accesses in one ruled panel; inactive cell dimmed without an action.",
+      "html": "<div class=\"ds-band\"><a href=\"#\" class=\"ds-cell\"><strong>Simulacro</strong><span>Examen completo de tu área, con reloj.</span><em>Empezar →</em></a><div class=\"ds-cell is-off\"><strong>Repasar errores</strong><span>Aún no hay errores.</span></div><a href=\"#\" class=\"ds-cell\"><strong>Tutor</strong><span>Te ayuda a ver dónde se rompió tu razonamiento.</span><em>Conversar →</em></a></div>",
+      "css": ".ds-band { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid hsl(125 12% 86%); border-radius: 10px; background: #fff; font-family: Figtree, system-ui, sans-serif; } .ds-cell { display: flex; flex-direction: column; gap: 6px; min-height: 7.5rem; padding: 16px 20px; color: hsl(150 21% 10%); text-decoration: none; transition: background-color 150ms; } .ds-cell + .ds-cell { border-left: 1px solid hsl(125 12% 86%); } .ds-cell strong { font-weight: 600; } .ds-cell span { font-size: 0.875rem; color: hsl(152 7% 34%); } .ds-cell em { margin-top: auto; font-style: normal; font-size: 0.875rem; font-weight: 700; color: hsl(162 62% 14%); } .ds-cell:hover { background: hsl(120 14% 92% / 0.5); } .ds-cell.is-off { opacity: 0.75; } .ds-cell:focus-visible { outline: 2px solid hsl(158 58% 30%); outline-offset: -2px; }"
+    },
+    {
+      "name": "Ruled Row with Count Chip",
+      "kind": "chip",
+      "refersTo": "count-chip",
+      "description": "Row in a ruled sheet led by a graphite chip with an amber figure.",
+      "html": "<ul class=\"ds-sheet\"><li><a href=\"#\" class=\"ds-row\"><span class=\"ds-chip\">42</span><span class=\"ds-row-text\"><strong>Aritmética</strong><span>3 apuntes</span></span><span class=\"ds-row-act\">Abrir →</span></a></li><li><a href=\"#\" class=\"ds-row\"><span class=\"ds-chip\">18</span><span class=\"ds-row-text\"><strong>Química</strong><span>Sin apuntes</span></span><span class=\"ds-row-act\">Añadir apuntes →</span></a></li></ul>",
+      "css": ".ds-sheet { list-style: none; margin: 0; padding: 0; overflow: hidden; border: 1px solid hsl(125 12% 86%); border-radius: 10px; background: #fff; font-family: Figtree, system-ui, sans-serif; } .ds-sheet li + li { border-top: 1px solid hsl(125 12% 86%); } .ds-row { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 12px 20px; color: hsl(150 21% 10%); text-decoration: none; transition: background-color 150ms; } .ds-row:hover { background: hsl(120 14% 92% / 0.6); } .ds-row:focus-visible { outline: 2px solid hsl(158 58% 30%); outline-offset: -2px; } .ds-chip { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 4px; background: hsl(220 13% 9%); color: hsl(40 100% 58%); font-family: 'Big Shoulders Display', Figtree, sans-serif; font-weight: 800; font-size: 1.5rem; font-variant-numeric: tabular-nums; } .ds-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; } .ds-row-text strong { font-weight: 600; } .ds-row-text span { font-size: 0.875rem; color: hsl(152 7% 34%); } .ds-row-act { font-size: 0.875rem; font-weight: 600; color: hsl(162 62% 14%); }"
+    },
+    {
+      "name": "Mobile Tab Bar",
+      "kind": "nav",
+      "refersTo": "top-bar",
+      "description": "Fixed bottom bar below md with five icon-over-label tabs.",
+      "html": "<nav class=\"ds-tabs\"><a href=\"#\" class=\"is-active\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z\"/></svg>Inicio</a><a href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M4 6h16M4 12h16M4 18h10\"/></svg>Temario</a><a href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z\"/></svg>Tutor</a></nav>",
+      "css": ".ds-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid hsl(125 12% 86%); background: #fff; font-family: Figtree, system-ui, sans-serif; } .ds-tabs a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 3.75rem; font-size: 0.6875rem; font-weight: 600; color: hsl(152 7% 34%); text-decoration: none; transition: color 150ms; } .ds-tabs a.is-active { color: hsl(162 62% 14%); } .ds-tabs a:focus-visible { outline: 2px solid hsl(158 58% 30%); outline-offset: -2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Marcador de Partido",
+    "overview": "CALIBRA reads like a stadium scoreboard for exam preparation: a deep pitch-green field carries the navigation and the main actions, a graphite board holds the student's real score in amber stadium figures, and everything else sits on chalk-white ground divided by thin chalk lines. Only what the student scores alone goes on the board; when there is no number yet, the board shows unlit cells instead of inventing one.\n\nThe system is flat and ruled. Rank comes from weight, uppercase condensed display type and the inverted graphite panel, not from shadows, gradients or card stacks. Lists are rows in a single bordered sheet, not grids of equal floating cards. Motion is reserved for one signature moment: the scoreboard digits roll vertically into place. Dark mode is a night match: graphite ground, mint tint for text accents, and the pitch green kept as the action fill.\n\nConfirmed rejections (from the direction thesis): the SaaS dashboard of identical cards, and pastel edtech with streaks. No streak, flame or day-count gamification appears in the shipped surfaces.",
+    "keyCharacteristics": [
+      "Pitch-green top bar with an amber underline on the active destination.",
+      "Graphite scoreboard with giant amber tabular figures against small uppercase stat labels.",
+      "Ruled sheets: grouped rows and three-cell bands share one border and internal 1px dividers.",
+      "Condensed uppercase display (Big Shoulders Display) for screen titles and figures; Figtree for all interface text.",
+      "Short corners (4–10px), 1px shadows at most, no glass.",
+      "Rolling digit strips as the only celebratory motion, frozen under reduced motion."
+    ],
+    "rules": [
+      { "name": "The Coral Is For Errors Rule", "body": "Coral marks wrong answers, failures and destructive actions. It is never decoration, never a brand accent.", "section": "colors" },
+      { "name": "The Split Green Rule", "body": "In dark mode, green has two jobs: menta for text and icons on graphite, cancha-vivo for filled actions with white text. Never put white text on menta, never fill a button with menta.", "section": "colors" },
+      { "name": "The Amber On Graphite Rule", "body": "Any primary action placed on the graphite board or the green pitch is amber with graphite text. Green on graphite is too weak; green on green disappears.", "section": "colors" },
+      { "name": "The Big Figure, Small Label Rule", "body": "A number that matters is set huge in the display face; its name sits above it in a small uppercase label. Never the reverse, and never a label without its figure.", "section": "typography" },
+      { "name": "The Uppercase Is The Display Voice Rule", "body": "Uppercase belongs to the condensed display face (titles, brand wordmark, footer signature) and to figure labels. Interface text in Figtree stays sentence case.", "section": "typography" },
+      { "name": "The Equal Weight Rule", "body": "Sibling accesses (Simulacro, Repasar errores, Tutor) share one band with equal columns and dividers. None is promoted with color or size over the others; an access with nothing to do today is shown dimmed (75% opacity, no action line) rather than hidden or faked.", "section": "layout" },
+      { "name": "The No Lift Rule", "body": "Nothing floats. No diffuse shadows, no blur, no glass, no gradient fills; the gradient tokens are flattened to a single color. Hover changes the fill (muted at 50–60%), not the elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put the student's score, counts and timers in the display face with tabular numerals, amber on graphite.",
+      "Do use amber for any CTA on graphite or on the pitch, and green fills for actions on chalk.",
+      "Do group sibling items into one ruled sheet with 1px dividers and a single 10px outer radius.",
+      "Do show unlit cells, a dimmed cell or a plain instruction when there is no data, instead of a placeholder number.",
+      "Do keep the active destination marked by the 3px amber underline in the green bar.",
+      "Do respect reduced motion: digit strips and entrances arrive still."
+    ],
+    "donts": [
+      "Don't show streaks, day counts as rewards, flames or any gamified tally; progress moves only with evidence.",
+      "Don't build grids of identical floating cards with shadows; use ruled rows or the equal-weight band.",
+      "Don't use diffuse shadows, glass, blur or gradient fills; shadows stop at the 1px hairline tokens.",
+      "Don't put a small uppercase label above a heading as an eyebrow; uppercase labels caption figures only.",
+      "Don't use coral for anything but errors and destructive actions.",
+      "Don't fill a button with menta or put white text on menta in dark mode.",
+      "Don't round past 10px on panels or past 4px on buttons and chips."
+    ]
+  }
+}

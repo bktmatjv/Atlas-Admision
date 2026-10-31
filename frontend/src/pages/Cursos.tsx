@@ -10,14 +10,16 @@ import {
   Trash2,
 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
-import { ThemeToggle } from "@/components/system/ThemeToggle";
 import { MathMarkdown } from "@/components/shared/MathMarkdown";
+import { CursosDeMiArea } from "@/components/cursos/CursosDeMiArea";
+import { mismoCurso } from "@/lib/admision/mismo-curso";
+import { CURSOS } from "@/lib/admision/temario";
 import { api, post } from "@/integrations/api/client";
-const card = "rounded-2xl border border-border bg-card p-5 sm:p-6";
+const card = "rounded-[10px] border border-border bg-card p-5 sm:p-6";
 const button =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2 font-bold text-primary-foreground disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2 font-bold text-primary-foreground disabled:opacity-50";
 const secondary =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-50";
 type Course = {
   id: string;
   titulo: string;
@@ -64,7 +66,7 @@ export default function Cursos() {
     [showSolution, setShowSolution] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false);
   useEffect(() => {
-    document.title = "Mis cursos | CALIBRA";
+    document.title = "Mis apuntes | CALIBRA";
     setShowSolution(false);
     setAttempt("");
     setConfirmDelete(false);
@@ -95,6 +97,15 @@ export default function Cursos() {
   });
   const create = useMutation({
     mutationFn: () => post<Course>("/cursos", { titulo, objetivo }),
+    onSuccess: (c) => {
+      void list.refetch();
+      nav(`/cursos/${c.id}`);
+    },
+  });
+  // Carpeta de un curso del examen: se crea la primera vez que se abre.
+  const createArea = useMutation({
+    mutationFn: (nombre: string) =>
+      post<Course>("/cursos", { titulo: nombre, objetivo: "Apuntes para el examen de San Marcos" }),
     onSuccess: (c) => {
       void list.refetch();
       nav(`/cursos/${c.id}`);
@@ -159,7 +170,9 @@ export default function Cursos() {
       }),
     onSuccess: () => setShowSolution(true),
   });
+  const otros = (list.data ?? []).filter((c) => !CURSOS.some((k) => mismoCurso(k.nombre, c.titulo)));
   const error =
+    createArea.error ??
     list.error ??
     course.error ??
     doc.error ??
@@ -175,23 +188,16 @@ export default function Cursos() {
       <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:px-6">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <Link
-              to="/cursos"
-              className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
-            >
-              CALIBRA · Mis cursos
-            </Link>
-            <h1 className="mt-3 text-3xl font-extrabold">
+            <h1 className="text-balance">
               {doc.data?.nombre ??
                 course.data?.titulo ??
-                "El conocimiento también lo traes tú."}
+                "Mis apuntes"}
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Convierte tus apuntes en un punto de partida para explorar,
-              preguntar y practicar. Tu material es privado.
+              Sube tus apuntes de cada curso y el tutor los usa para explicarte y
+              ponerte a prueba. Tu material es privado.
             </p>
           </div>
-          <ThemeToggle />
         </header>
         {error && (
           <p
@@ -203,77 +209,78 @@ export default function Cursos() {
         )}
         {!cursoId && (
           <>
-            <section className={card}>
-              <h2 className="flex items-center gap-2 text-xl font-bold">
-                <Plus className="h-5 w-5 text-primary" />
-                Crear un curso personal
+            <CursosDeMiArea
+              personales={list.data ?? []}
+              creando={createArea.isPending}
+              onAbrir={(nombre, existente) =>
+                existente ? nav(`/cursos/${existente.id}`) : createArea.mutate(nombre)
+              }
+            />
+            <section aria-labelledby="otros-cursos" className="space-y-4">
+              <h2 id="otros-cursos" className="text-lg font-bold">
+                Otros cursos
               </h2>
-              <form
-                className="mt-5 grid gap-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  create.mutate();
-                }}
-              >
-                <label className="text-sm font-semibold">
-                  Nombre del curso
-                  <input
-                    required
-                    maxLength={120}
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value)}
-                    className="mt-2 min-h-11 w-full rounded-lg border bg-background px-3"
-                    placeholder="Por ejemplo: Aritmética · mis apuntes"
-                  />
-                </label>
-                <label className="text-sm font-semibold">
-                  ¿Qué quieres aprender?
-                  <textarea
-                    value={objetivo}
-                    maxLength={1000}
-                    onChange={(e) => setObjetivo(e.target.value)}
-                    className="mt-2 min-h-24 w-full rounded-lg border bg-background p-3"
-                  />
-                </label>
-                <button
-                  className={`${button} justify-self-start`}
-                  disabled={create.isPending}
-                >
-                  Crear curso <ArrowRight className="h-4 w-4" />
-                </button>
-              </form>
-            </section>
-            <section>
-              <h2 className="mb-4 text-xl font-bold">Tu biblioteca</h2>
               {list.isPending ? (
-                <p role="status">Cargando cursos…</p>
-              ) : !list.data?.length ? (
-                <p className={`${card} text-muted-foreground`}>
-                  Aún no tienes cursos personales. Crea uno y añade tu primer
-                  material.
-                </p>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {list.data.map((c) => (
+                <p role="status" className="text-sm text-muted-foreground">Cargando cursos…</p>
+              ) : otros.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {otros.map((c) => (
                     <Link
                       key={c.id}
                       className={`${card} flex items-center gap-3 hover:border-primary/50`}
                       to={`/cursos/${c.id}`}
                     >
-                      <BookOpen className="h-6 w-6 shrink-0 text-primary" />
-                      <span className="font-bold">{c.titulo}</span>
+                      <BookOpen className="h-5 w-5 shrink-0 text-primary" />
+                      <span className="font-semibold">{c.titulo}</span>
                       <ArrowRight className="ml-auto h-4 w-4 shrink-0" />
                     </Link>
                   ))}
                 </div>
-              )}
+              ) : null}
+              <details className={`${card} group`}>
+                <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold [&::-webkit-details-marker]:hidden">
+                  <Plus className="h-5 w-5 text-primary transition-transform group-open:rotate-45" />
+                  Crear un curso fuera del examen
+                </summary>
+                <form
+                  className="mt-5 grid gap-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    create.mutate();
+                  }}
+                >
+                  <label className="text-sm font-semibold">
+                    Nombre del curso
+                    <input
+                      required
+                      maxLength={120}
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      className="mt-2 min-h-11 w-full rounded-md border bg-background px-3"
+                      placeholder="Por ejemplo: Inglés del colegio"
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    ¿Qué quieres aprender?
+                    <textarea
+                      value={objetivo}
+                      maxLength={1000}
+                      onChange={(e) => setObjetivo(e.target.value)}
+                      className="mt-2 min-h-24 w-full rounded-md border bg-background p-3"
+                    />
+                  </label>
+                  <button className={`${button} justify-self-start`} disabled={create.isPending}>
+                    Crear curso <ArrowRight className="h-4 w-4" />
+                  </button>
+                </form>
+              </details>
             </section>
           </>
         )}
         {cursoId && !documentoId && (
           <>
             <Link to="/cursos" className={secondary}>
-              ← Todos mis cursos
+              ← Mis apuntes
             </Link>
             <section className={card}>
               <h2 className="flex items-center gap-2 text-xl font-bold">
@@ -478,7 +485,7 @@ export default function Cursos() {
                   )}
                   {proposal.data && (
                     <section className={card}>
-                      <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                      <p className="inline-flex rounded-sm bg-ambar/25 px-2 py-0.5 text-xs font-bold text-foreground">
                         Generada por IA · no revisada
                       </p>
                       <h2 className="mt-2 text-xl font-bold">

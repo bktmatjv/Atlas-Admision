@@ -1,0 +1,221 @@
+{
+  "title": "Elige el mundo visual de CALIBRA",
+  "question": "La tirada asignó «Marcador de partido». Quédatela, elige una alternativa o vuelve a tirar.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Marcador de partido",
+      "kicker": "LA TIRADA",
+      "lineage": "Marcadores de estadio y gráficas de transmisión del fútbol peruano",
+      "thesis": "Prepararte es entrenar; solo cuenta lo que anotas en la cancha, sin ayuda.",
+      "palette": [
+        "#0E3B2E",
+        "#F4F7F2",
+        "#FFB627",
+        "#14161A",
+        "#E5484D"
+      ],
+      "materials": [
+        "tablero de marcador con dígitos ámbar",
+        "líneas de cal sobre verde cancha",
+        "hojas de alineación blancas"
+      ],
+      "viewport": "Arriba, un marcador grande: tu último puntaje contra el corte de tu carrera y los puntos que faltan. Debajo, un botón enorme «Practicar ahora» y tres tarjetas: simulacro, repaso de errores y tutor.",
+      "risk": "Si se pasa de literal (balones, césped), cae en disfraz y presión competitiva para un público nervioso; las etiquetas se quedan claras y sin jerga futbolera.",
+      "raised": [
+        {
+          "from": "challenger-timetable",
+          "raise": "Escala tipográfica corta y estricta: el rango lo dan el peso, la mayúscula y el panel invertido, no veinte tamaños."
+        },
+        {
+          "from": "challenger-botanical",
+          "raise": "Un solo vocabulario de estados (sin explorar, explorado, falló, aplicado) idéntico en tamaño y forma en práctica, tutor y grafo."
+        },
+        {
+          "from": "challenger-specimen",
+          "raise": "Jerarquía por contraste de escala: cifras gigantes del marcador contra rótulos pequeños y precisos."
+        }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Hoja óptica",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "La tarjeta de respuestas que todo postulante rellena el día del examen",
+      "thesis": "La app entera como la hoja de respuestas: marcar, corregir y ver dónde se rompió la idea.",
+      "palette": [
+        "#FFFFFF",
+        "#F26B3A",
+        "#1C2B4A",
+        "#FFE3D3",
+        "#2F9E6E"
+      ],
+      "materials": [
+        "tinta de imprenta salmón",
+        "burbujas para rellenar con lápiz 2B",
+        "columnas numeradas y marcas de registro"
+      ],
+      "viewport": "Una franja de hoja óptica con tu carrera y código, y las burbujas de tus últimas 20 respuestas: llenas las correctas, tachadas las falladas; un botón «Seguir practicando».",
+      "risk": "Puede recordar la ansiedad del examen y verse como formulario; exige mucho cuidado para que se sienta ligera."
+    },
+    {
+      "id": "challenger-metro",
+      "label": "Mapa de líneas",
+      "verdict": "competitive",
+      "lineage": "Diagramas de metro esmaltados (Metro de Lima, Metropolitano)",
+      "thesis": "Cada curso es una línea, cada tema una estación y tu carrera el destino.",
+      "palette": [
+        "#0F1E3D",
+        "#FFFFFF",
+        "#E5484D",
+        "#2D6CDF",
+        "#FFB627",
+        "#2F9E6E"
+      ],
+      "materials": [
+        "esmalte azul medianoche",
+        "líneas a 45° y 90°",
+        "círculos de transbordo"
+      ],
+      "viewport": "Tu recorrido hacia la carrera: la línea del curso que toca practicar resaltada, la estación actual y el botón «Siguiente estación».",
+      "case": "Encaja muy bien con el temario y el grafo; pierde claridad en práctica y simulacros, que no son mapas.",
+      "risk": "Las pantallas de pregunta y tutor no tienen forma de mapa y podrían sentirse de otro producto."
+    },
+    {
+      "id": "challenger-feed",
+      "label": "Una pregunta por pantalla",
+      "verdict": "competitive",
+      "lineage": "Feeds verticales de video corto",
+      "thesis": "Practicar como deslizar: una pregunta ocupa todo, la siguiente ya está cargada.",
+      "palette": [
+        "#0B0B0F",
+        "#FFFFFF",
+        "#FF3D7F",
+        "#FFD84D"
+      ],
+      "materials": [
+        "pantalla completa",
+        "riel de acciones a la derecha",
+        "salto vertical"
+      ],
+      "viewport": "La pregunta llena el celular; a la derecha, iconos para pista, tutor y guardar; abajo, curso y tema.",
+      "case": "Máxima identificación con el público; pierde claridad en panel, temario y cursos.",
+      "risk": "Invita a deslizar sin pensar, justo el problema que CALIBRA combate."
+    },
+    {
+      "id": "challenger-tiles",
+      "label": "Mosaicos tipográficos",
+      "verdict": "competitive",
+      "lineage": "Interfaz Metro de mosaicos planos",
+      "thesis": "Sin adornos: palabras enormes y bloques de color son las puertas.",
+      "palette": [
+        "#000000",
+        "#00B7C3",
+        "#E3008C",
+        "#A4C400",
+        "#FFFFFF"
+      ],
+      "materials": [
+        "mosaicos planos",
+        "titulares gigantes recortados",
+        "cero bordes"
+      ],
+      "viewport": "«practicar» en minúscula gigante cortada al borde; mosaicos de color para simulacro, errores y tutor.",
+      "case": "Puertas muy claras y llamativas; menos identificación con el mundo del postulante.",
+      "risk": "Fondo negro y titulares recortados pueden cansar en sesiones largas."
+    },
+    {
+      "id": "challenger-timetable",
+      "label": "Horario en diapositivas",
+      "verdict": "declined",
+      "lineage": "Horarios de aerolínea sobre mesa de luz",
+      "palette": [
+        "#D9A21B",
+        "#1E1E1E",
+        "#F3EEDC",
+        "#D0391E"
+      ],
+      "materials": [
+        "vidrio tintado",
+        "un solo tamaño de letra"
+      ],
+      "thesis": "Todo a un solo tamaño; el rango lo da el peso.",
+      "viewport": "Columnas de cursos inclinadas sobre una mesa dorada.",
+      "case": "Ajeno al postulante y difícil en celular.",
+      "risk": "Lectura lenta.",
+      "kept": "Escala tipográfica estricta: rango por peso y panel invertido."
+    },
+    {
+      "id": "challenger-botanical",
+      "label": "Folio botánico",
+      "verdict": "declined",
+      "lineage": "Láminas de una planta por estaciones",
+      "palette": [
+        "#F3EAD6",
+        "#3E6B3A",
+        "#C2352B",
+        "#6E6A63"
+      ],
+      "materials": [
+        "láminas a escala fija",
+        "filetes sepia"
+      ],
+      "thesis": "Una idea creciendo por etapas a la misma escala.",
+      "viewport": "Cinco láminas de una idea, de semilla a fruto.",
+      "case": "Bonito pero lento y cae en crema + serif.",
+      "risk": "Se siente de museo, no de examen.",
+      "kept": "Vocabulario de estados fijo y comparable en todas las pantallas."
+    },
+    {
+      "id": "challenger-specimen",
+      "label": "Espécimen tipográfico",
+      "verdict": "declined",
+      "lineage": "Especímenes de fuentes variables",
+      "palette": [
+        "#FAFAF7",
+        "#111111",
+        "#3D5AFE"
+      ],
+      "materials": [
+        "papel blanco",
+        "glifos gigantes"
+      ],
+      "thesis": "Una letra gigante que cambia al arrastrar.",
+      "viewport": "Una cifra enorme y una rejilla viva.",
+      "case": "No dice nada del postulante ni de la práctica.",
+      "risk": "Puro ejercicio formal.",
+      "kept": "Jerarquía por contraste de escala: cifras gigantes contra rótulos pequeños."
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": false
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "El estándar de las apps educativas",
+    "thesis": "Lo que ya hacen las apps de estudio populares, ejecutado con mucho oficio.",
+    "palette": [
+      "#FFFFFF",
+      "#1F2937",
+      "#4F46E5",
+      "#22C55E"
+    ],
+    "materials": [
+      "tarjetas redondeadas",
+      "ilustraciones amables",
+      "barras de progreso"
+    ],
+    "viewport": "Saludo, racha, botón «Continuar práctica» y tarjetas de cursos.",
+    "risk": "Indistinguible de cualquier otra app de estudio."
+  },
+  "steer": true,
+  "seedKey": "6105a743",
+  "seedOutput": "DIRECTION CONCEPT SEED (key: 6105a743; mode: operate; source: api; approved pool: c3b204a1eed6) ASSIGNED INDEX: 6"
+}

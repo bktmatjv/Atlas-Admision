@@ -375,7 +375,7 @@ try {
     "Explorar mi grafo",
     "Temas recomendados para ti",
   ])
-    assert(textoInicio.includes(t), "Falta en la pantalla inicial: " + t);
+    assert(textoInicio.toLowerCase().includes(t.toLowerCase()), "Falta en la pantalla inicial: " + t);
   for (const falso of ["Ecuaciones", "Progresiones"])
     assert(
       !textoInicio.includes(falso),
@@ -532,22 +532,22 @@ try {
     );
   await tecla("Escape");
   await until(`!document.querySelector('[role=dialog]')`);
-  // Apariencia propia del tutor: noche por defecto, variante clara a pedido.
-  const fondoNoche = await evalJS(
+  // El tutor sigue el tema global (botón de la cabecera): claro por defecto, oscuro a pedido.
+  const fondoClaro = await evalJS(
     `getComputedStyle(document.querySelector('.tutor-layout')).getPropertyValue('--background')`,
   );
-  await hacerClicEnTexto("Claro");
-  await until(`Boolean(document.querySelector('.tc-claro'))`);
-  const fondoClaro = await evalJS(
+  await click(`button[aria-label="Cambiar a modo oscuro"]`);
+  await until(`!document.querySelector('.tc-claro')`);
+  const fondoNoche = await evalJS(
     `getComputedStyle(document.querySelector('.tutor-layout')).getPropertyValue('--background')`,
   );
   assert.notEqual(
     fondoNoche.trim(),
     fondoClaro.trim(),
-    "La variante clara debe cambiar la paleta",
+    "El modo oscuro debe cambiar la paleta del tutor",
   );
-  await hacerClicEnTexto("Noche");
-  await until(`!document.querySelector('.tc-claro')`);
+  await click(`button[aria-label="Cambiar a modo claro"]`);
+  await until(`Boolean(document.querySelector('.tc-claro'))`);
   // ---------- Panel con teclado, hoja móvil y evidencia sin animaciones inventadas ----------
   await metricas(1440);
   await until(`document.querySelector('.tw-divisor')`);
@@ -655,10 +655,10 @@ try {
   await metricas(375);
   await send("Page.navigate", { url: `http://127.0.0.1:${port}/__design.html?integrada=1` });
   await until(`document.querySelector('[aria-label="Bienvenida a CALIBRA"]')`);
-  assert.equal(await evalJS(`document.activeElement?.getAttribute('aria-label')`), "Entrar a CALIBRA");
+  assert.equal(await evalJS(`document.activeElement?.innerText.trim()`), "Empezar");
   assert.equal(await evalJS(`document.querySelector('.tc-page')`), null, "La bienvenida no debe dejar controles del tutor detrás");
   await tecla("Tab");
-  assert.equal(await evalJS(`document.activeElement?.getAttribute('aria-label')`), "Entrar a CALIBRA");
+  assert.equal(await evalJS(`document.activeElement?.innerText.trim()`), "Empezar");
   assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
   await capturar("bienvenida-integrada", 375);
   await tecla("Enter");
@@ -685,7 +685,7 @@ try {
           "error del proveedor: conserva borrador y reintenta con la misma clave",
           "mapa plegable y foco del tutor",
           "historial en hoja",
-          "modo noche/claro del tutor",
+          "tema global claro/oscuro también en el tutor",
           "artefactos compactos y pestañas",
           "divisor con teclado y preferencias guardadas",
           "comprobación inline, retropropagación y corrección con evidencia",

@@ -38,8 +38,8 @@ export function HistorialIntentos({ intentos, className }: HistorialIntentosProp
   return (
     <section aria-labelledby="t-historial" className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between">
-        <h2 id="t-historial" className="text-base font-extrabold uppercase tracking-wider text-muted-foreground">
-          Tus Intentos y Evaluaciones
+        <h2 id="t-historial" className="font-display text-[1.75rem] font-extrabold uppercase leading-none tracking-[0.01em] text-foreground">
+          Tus intentos
         </h2>
         {intentos.length > 0 && (
           <span className="text-xs font-semibold text-muted-foreground">

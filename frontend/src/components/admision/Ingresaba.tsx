@@ -36,7 +36,7 @@ export function IngresabaVista({ puntaje, aviso, carreraId, datos }: { puntaje: 
   return (
     <section aria-label="¿Ingresabas?" className="min-w-0 space-y-4 rounded-2xl border border-border bg-card p-5">
       <div className="flex items-start gap-3">
-        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted">
+        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center">
           {reciente?.ingresaba ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Target className="h-5 w-5 text-primary" />}
         </span>
         <div className="min-w-0 space-y-1">

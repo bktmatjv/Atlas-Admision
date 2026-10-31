@@ -1,16 +1,8 @@
 import { useRef } from "react";
 import {
-  Layers,
-  MessageCircle,
-  Network,
-  Percent,
-  Scale,
-  Sparkles,
-  Target,
   TrendingUp,
   TriangleAlert,
 } from "lucide-react";
-import mountainTrail from "@/assets/tutor/mountain-trail.svg";
 import {
   INTENCIONES,
   type Intencion,
@@ -19,16 +11,17 @@ import {
   type TemaOrdenado,
 } from "@/lib/tutor/inicio";
 import { ComposerTutor, type ComposerRef } from "./ComposerTutor";
-const ICONO_INTENCION: Record<Intencion["id"], typeof MessageCircle> = {
-  duda: MessageCircle,
-  analizar: Target,
-  practicar: Layers,
-  grafo: Network,
+import { Ilustracion, type IdIlustracion } from "@/components/arcade/Ilustracion";
+const ICONO_INTENCION: Record<Intencion["id"], IdIlustracion> = {
+  duda: "conversacion",
+  analizar: "diana-flecha",
+  practicar: "pila-de-libros",
+  grafo: "mapa-mental",
 };
-const ICONO_TEMA: Record<TemaId, typeof Percent> = {
-  porcentajes: Percent,
-  proporciones: Scale,
-  fracciones: Layers,
+const ICONO_TEMA: Record<TemaId, IdIlustracion> = {
+  porcentajes: "grafico-circular",
+  proporciones: "balanza",
+  fracciones: "fracciones",
 };
 type Props = {
   temas: TemaOrdenado[];
@@ -52,20 +45,7 @@ export function InicioTutor(p: Props) {
     : null;
   return (
     <section className="tc-home" aria-labelledby="tc-titulo">
-      <img
-        src={mountainTrail}
-        alt=""
-        aria-hidden="true"
-        className="tc-home-art"
-      />
       <div className="tc-home-inner">
-        <p className="tc-eyebrow">
-          <i aria-hidden="true" /> CALIBRA · Tutor
-        </p>
-        <br />
-        <span className="tc-home-icon" aria-hidden="true">
-          <Sparkles size={40} />
-        </span>
         <h1 id="tc-titulo">
           ¿Qué quieres <em>aprender</em> hoy?
         </h1>
@@ -73,12 +53,8 @@ export function InicioTutor(p: Props) {
           Conversa con tu tutor, resuelve dudas y entiende por qué fallas, no
           solo cómo resolver.
         </p>
-        <span className="tc-divider" aria-hidden="true">
-          <i />
-        </span>
         <ul className="tc-cards" aria-label="¿Cómo quieres empezar?">
           {INTENCIONES.map((i) => {
-            const Icono = ICONO_INTENCION[i.id];
             return (
               <li key={i.id}>
                 <button
@@ -91,7 +67,7 @@ export function InicioTutor(p: Props) {
                     if (i.accion === "texto") compositor.current?.enfocar();
                   }}
                 >
-                  <Icono size={28} aria-hidden="true" />
+                  <Ilustracion nombre={ICONO_INTENCION[i.id]} className="tc-card-dibujo" sizes="56px" />
                   <strong>{i.titulo}</strong>
                   <span>{i.descripcion}</span>
                 </button>
@@ -106,7 +82,6 @@ export function InicioTutor(p: Props) {
           </h2>
           <ul className="tc-chips">
             {p.temas.map((t) => {
-              const Icono = ICONO_TEMA[t.id];
               return (
                 <li key={t.id}>
                   <button
@@ -118,7 +93,7 @@ export function InicioTutor(p: Props) {
                       p.onContexto(temaElegido === t.id ? "" : `tema:${t.id}`)
                     }
                   >
-                    <Icono size={18} aria-hidden="true" />
+                    <Ilustracion nombre={ICONO_TEMA[t.id]} className="tc-chip-dibujo" sizes="32px" />
                     {t.nombre}
                     {t.pendiente && <small>Para revisar</small>}
                   </button>

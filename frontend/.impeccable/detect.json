@@ -1,0 +1,52 @@
+[
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\Atlas-AdmisionHackaton\\frontend\\src\\index.css",
+    "line": 876,
+    "snippet": "animation: typing-bounce"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\Atlas-AdmisionHackaton\\frontend\\src\\index.css",
+    "line": 921,
+    "snippet": "animation: badge-bounce"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\Atlas-AdmisionHackaton\\frontend\\src\\index.css",
+    "line": 1050,
+    "snippet": "animation: scale-in-bounce"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\Atlas-AdmisionHackaton\\frontend\\src\\index.css",
+    "line": 1095,
+    "snippet": "animation: icon-bounce"
+  },
+  {
+    "antipattern": "layout-transition",
+    "name": "Layout property animation",
+    "description": "Animating width, height, padding, or margin causes layout thrash and janky performance. Use transform and opacity instead, or grid-template-rows for height animations.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\Atlas-AdmisionHackaton\\frontend\\src\\index.css",
+    "line": 1132,
+    "snippet": "transition: width, height"
+  }
+]

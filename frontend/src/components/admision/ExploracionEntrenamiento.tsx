@@ -87,23 +87,23 @@ export function ExploracionEntrenamiento({
     }
   };
 
-  const campo = "mt-1.5 block min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary";
-  const tarjetaColapsable = "rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/40 shadow-sm";
-  const botonSecundario = "inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.99] disabled:opacity-60";
-  const botonPrimario = "inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.99] disabled:opacity-60";
+  const campo = "mt-1.5 block min-h-11 w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary";
+  const tarjetaColapsable = "px-4 py-3 transition-colors hover:bg-muted/40 sm:px-5";
+  const botonSecundario = "inline-flex min-h-11 w-full items-center justify-center rounded-md border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.99] disabled:opacity-60";
+  const botonPrimario = "inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.99] disabled:opacity-60";
 
   return (
     <section aria-labelledby="t-modalidades-titulo" className={cn("space-y-3", className)}>
       <div className="space-y-1">
-        <h2 id="t-modalidades-titulo" className="text-base font-extrabold uppercase tracking-wider text-muted-foreground">
-          Modalidades de Entrenamiento
+        <h2 id="t-modalidades-titulo" className="font-display text-[1.75rem] font-extrabold uppercase leading-none tracking-[0.01em] text-foreground">
+          Entrena a tu ritmo
         </h2>
-        <p className="text-xs text-muted-foreground">
-          Selecciona una modalidad para desplegar sus opciones de práctica.
+        <p className="text-sm text-muted-foreground">
+          Toca una modalidad para elegir sus opciones.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="divide-y divide-border overflow-hidden rounded-[10px] border border-border bg-card">
         {/* 1. Tarjeta Colapsable: Simulacro nuevo */}
         <div className={tarjetaColapsable}>
           <div
@@ -113,30 +113,27 @@ export function ExploracionEntrenamiento({
             aria-controls="panel-simulacro"
             onClick={() => alternar("simulacro")}
             onKeyDown={(e) => handleKeyDown(e, "simulacro")}
-            className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 py-1 select-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 py-1 select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span
                 aria-hidden="true"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"
+                className="grid h-10 w-10 shrink-0 place-items-center text-primary"
               >
                 <Sliders className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <h3 className="font-extrabold text-foreground text-sm sm:text-base">Simulacro nuevo</h3>
-                <p className="text-xs text-muted-foreground truncate">
-                  Molde oficial de tu área y banco de preguntas no vistas
+                <h3 className="font-extrabold text-foreground text-sm sm:text-base">Simulacro a tu medida</h3>
+                <p className="text-sm text-muted-foreground">
+                  Elige el área y si va con reloj; preguntas que aún no viste
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 min-h-[44px]">
-              <span className="text-xs font-bold text-primary hidden sm:inline">
-                {modalidadAbierta === "simulacro" ? "Cerrar" : "Configurar"}
-              </span>
               <span
                 className={cn(
-                  "grid h-9 w-9 place-items-center rounded-lg border border-border bg-muted/60 text-muted-foreground transition-transform duration-200",
+                  "grid h-9 w-9 place-items-center text-muted-foreground transition-transform duration-200",
                   modalidadAbierta === "simulacro" && "rotate-180 text-primary"
                 )}
               >
@@ -151,7 +148,7 @@ export function ExploracionEntrenamiento({
               className="mt-4 border-t border-border/60 pt-4 space-y-3.5 animate-in fade-in-50 duration-200"
             >
               <div>
-                <label htmlFor={idSimArea} className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor={idSimArea} className="block text-sm font-semibold text-foreground">
                   Área del examen
                 </label>
                 <select
@@ -206,30 +203,27 @@ export function ExploracionEntrenamiento({
             aria-controls="panel-practica"
             onClick={() => alternar("practica")}
             onKeyDown={(e) => handleKeyDown(e, "practica")}
-            className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 py-1 select-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 py-1 select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span
                 aria-hidden="true"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"
+                className="grid h-10 w-10 shrink-0 place-items-center text-primary"
               >
                 <FileText className="h-5 w-5" />
               </span>
               <div className="min-w-0">
                 <h3 className="font-extrabold text-foreground text-sm sm:text-base">Practicar curso o tema</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground">
                   Práctica sin reloj con solución explicada inmediata
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 min-h-[44px]">
-              <span className="text-xs font-bold text-primary hidden sm:inline">
-                {modalidadAbierta === "practica" ? "Cerrar" : "Configurar"}
-              </span>
               <span
                 className={cn(
-                  "grid h-9 w-9 place-items-center rounded-lg border border-border bg-muted/60 text-muted-foreground transition-transform duration-200",
+                  "grid h-9 w-9 place-items-center text-muted-foreground transition-transform duration-200",
                   modalidadAbierta === "practica" && "rotate-180 text-primary"
                 )}
               >
@@ -244,7 +238,7 @@ export function ExploracionEntrenamiento({
               className="mt-4 border-t border-border/60 pt-4 space-y-3.5 animate-in fade-in-50 duration-200"
             >
               <div>
-                <label htmlFor={idPracCurso} className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor={idPracCurso} className="block text-sm font-semibold text-foreground">
                   Curso
                 </label>
                 <select
@@ -265,7 +259,7 @@ export function ExploracionEntrenamiento({
               </div>
 
               <div>
-                <label htmlFor={idPracTema} className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor={idPracTema} className="block text-sm font-semibold text-foreground">
                   Tema específico
                 </label>
                 <select
@@ -284,7 +278,7 @@ export function ExploracionEntrenamiento({
               </div>
 
               <div>
-                <label htmlFor={idPracN} className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor={idPracN} className="block text-sm font-semibold text-foreground">
                   Número de preguntas
                 </label>
                 <input
@@ -339,30 +333,27 @@ export function ExploracionEntrenamiento({
             aria-controls="panel-real"
             onClick={() => alternar("real")}
             onKeyDown={(e) => handleKeyDown(e, "real")}
-            className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 py-1 select-none rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 py-1 select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span
                 aria-hidden="true"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"
+                className="grid h-10 w-10 shrink-0 place-items-center text-primary"
               >
                 <History className="h-5 w-5" />
               </span>
               <div className="min-w-0">
                 <h3 className="font-extrabold text-foreground text-sm sm:text-base">Examen real histórico</h3>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground">
                   Un examen pasado completo tal cual fue tomado
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 min-h-[44px]">
-              <span className="text-xs font-bold text-primary hidden sm:inline">
-                {modalidadAbierta === "real" ? "Cerrar" : "Configurar"}
-              </span>
               <span
                 className={cn(
-                  "grid h-9 w-9 place-items-center rounded-lg border border-border bg-muted/60 text-muted-foreground transition-transform duration-200",
+                  "grid h-9 w-9 place-items-center text-muted-foreground transition-transform duration-200",
                   modalidadAbierta === "real" && "rotate-180 text-primary"
                 )}
               >
@@ -377,7 +368,7 @@ export function ExploracionEntrenamiento({
               className="mt-4 border-t border-border/60 pt-4 space-y-3.5 animate-in fade-in-50 duration-200"
             >
               <div>
-                <label htmlFor={idRealExamen} className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <label htmlFor={idRealExamen} className="block text-sm font-semibold text-foreground">
                   Seleccionar examen oficial
                 </label>
                 <select

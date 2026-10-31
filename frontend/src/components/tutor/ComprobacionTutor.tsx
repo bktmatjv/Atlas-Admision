@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Check, ShieldCheck, Undo2 } from "lucide-react";
+import { IlustracionAnimada } from "@/components/arcade/Ilustracion";
 import { api, post } from "@/integrations/api/client";
 import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import type { Rastro } from "@/lib/tutor/wow";
@@ -60,7 +61,7 @@ export function ComprobacionTutor({
         <strong>
           {resultado.correcta ? (
             <>
-              <Check size={19} /> Resultado correcto
+              <IlustracionAnimada nombre="aplauso" unaVez className="tw-aplauso" sizes="56px" /> Resultado correcto
               {resultado.ayuda ? " con ayuda" : " sin ayudas de CALIBRA"}.
             </>
           ) : (
