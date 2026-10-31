@@ -71,6 +71,9 @@ export type MensajeChat = {
   degradado: boolean;
   descartes: number;
   pasos?: string[];
+  // Mensaje que disparó el sistema (no lo escribió el estudiante) e ideas que el tutor sumó al mapa.
+  evento?: string | null;
+  ideas_nuevas?: number;
 };
 export type Conversacion = {
   id: string;
