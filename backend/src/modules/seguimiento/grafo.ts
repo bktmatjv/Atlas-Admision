@@ -85,7 +85,7 @@ export class GrafoService {
     const nodos = await this.db.query<NodoFila>(
       `SELECT n.id,n.arbol_id,n.padre_id,n.tipo,n.titulo,n.contenido,n.idea_clave,n.senal,n.procedencia,a.concepto,
         EXISTS(SELECT 1 FROM nodos h WHERE h.padre_id=n.id AND h.procedencia<>'Generado por el tutor agente; no revisado') AS con_hijos,
-        EXISTS(SELECT 1 FROM revisiones_nodo r WHERE r.nodo_id=n.id) AS con_revision
+        EXISTS(SELECT 1 FROM revisiones_nodo r WHERE r.nodo_id=n.id AND r.por='estudiante') AS con_revision
        FROM nodos n JOIN arboles a ON a.id=n.arbol_id WHERE a.actor_id=$1
        ORDER BY a.created_at,n.profundidad,n.orden`,
       [actor],
@@ -274,7 +274,7 @@ export class GrafoService {
           continue;
         }
         await m.query(
-          "INSERT INTO revisiones_nodo(id,nodo_id,titulo,contenido) SELECT $1,id,titulo,contenido FROM nodos WHERE id=$2",
+          "INSERT INTO revisiones_nodo(id,nodo_id,titulo,contenido,por) SELECT $1,id,titulo,contenido,'agente' FROM nodos WHERE id=$2",
           [randomUUID(), n],
         );
         await m.query(

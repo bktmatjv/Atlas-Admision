@@ -82,3 +82,51 @@ export type RespuestaBloque = {
   mensaje?: string | null;
   nota: string;
 };
+export type TipoBloque = Bloque["tipo"];
+export const TIPOS_BLOQUE = [
+  "pregunta_socratica",
+  "contraste",
+  "razonamiento_anotado",
+  "prediccion",
+  "ejemplo_paso_a_paso",
+  "visual",
+  "practica",
+  "en_tus_palabras",
+  "invitacion_comprobar",
+  "cita",
+] as const satisfies readonly TipoBloque[];
+// Bloques que reciben una respuesta del estudiante (POST /bloques/:id/respuesta).
+const CON_RESPUESTA: readonly TipoBloque[] = [
+  "pregunta_socratica",
+  "prediccion",
+  "ejemplo_paso_a_paso",
+  "practica",
+  "en_tus_palabras",
+];
+// Las opciones numéricas se corrigen en el servidor; el texto libre vuelve a la charla.
+const TEXTO_LIBRE: readonly TipoBloque[] = [
+  "pregunta_socratica",
+  "ejemplo_paso_a_paso",
+  "en_tus_palabras",
+];
+export const admiteRespuesta = (t: TipoBloque) => CON_RESPUESTA.includes(t);
+export const reenviaALaCharla = (t: TipoBloque) => TEXTO_LIBRE.includes(t);
+export const MAX_RESPUESTA = 2000;
+export const respuestaValida = (t: string) =>
+  t.trim().length > 0 && t.length <= MAX_RESPUESTA;
+export const textoParaEnviar = (t: string) =>
+  respuestaValida(t) ? t.trim() : null;
+export const formatearOpcion = (n: number) => String(n).replace(".", ",");
+const TITULOS: Record<TipoBloque, string> = {
+  pregunta_socratica: "Pregunta para pensar",
+  contraste: "Contraste",
+  razonamiento_anotado: "Tu razonamiento anotado",
+  prediccion: "Predicción",
+  ejemplo_paso_a_paso: "Ejemplo paso a paso",
+  visual: "Visual verificado",
+  practica: "Práctica",
+  en_tus_palabras: "En tus palabras",
+  invitacion_comprobar: "Invitación a comprobar",
+  cita: "Fuente",
+};
+export const tituloAccesible = (t: TipoBloque) => TITULOS[t];

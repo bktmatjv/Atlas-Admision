@@ -187,7 +187,9 @@ export class BloquesService {
     }
   }
 }
-@Throttle({ default: { limit: 40, ttl: 60000 } })
+@Throttle({
+  default: { limit: Number(process.env.ATLAS_LIMITE_IA) || 40, ttl: 60000 },
+})
 @Controller("bloques")
 export class BloquesController {
   constructor(@Inject(BloquesService) private s: BloquesService) {}

@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { post, ApiError } from "@/integrations/api/client";
-import type { Bloque, RespuestaBloque } from "@/lib/tutor/chat";
+import {
+  formatearOpcion,
+  textoParaEnviar,
+  tituloAccesible,
+  type Bloque,
+  type RespuestaBloque,
+} from "@/lib/tutor/chat";
 import { VisualView } from "./Visual";
 const caja = "rounded-xl border border-border bg-background p-4 space-y-3";
 const boton =
@@ -94,7 +100,8 @@ function TextoLibre({
       className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (texto.trim()) void enviar(texto.trim());
+        const t = textoParaEnviar(texto);
+        if (t) void enviar(t);
       }}
     >
       {rapidas && rapidas.length > 0 && (
@@ -121,7 +128,7 @@ function TextoLibre({
           className="mt-2 min-h-20 w-full rounded-lg border bg-background p-3 font-normal"
         />
       </label>
-      <button className={boton} disabled={enviando || !texto.trim()}>
+      <button className={boton} disabled={enviando || !textoParaEnviar(texto)}>
         Enviar mi respuesta
       </button>
       <Resultado res={res} error={error} />
@@ -163,7 +170,7 @@ function Opciones({
               checked={elegida === o}
               onChange={() => setElegida(o)}
             />
-            {String(o).replace(".", ",")}
+            {formatearOpcion(o)}
           </label>
         ))}
       </fieldset>
@@ -174,7 +181,15 @@ function Opciones({
     </form>
   );
 }
-function PasoAPaso({ pasos }: { pasos: { texto: string; cuenta?: string }[] }) {
+function PasoAPaso({
+  id,
+  pasos,
+  alResponder,
+}: {
+  id: string;
+  pasos: { texto: string; cuenta?: string }[];
+  alResponder: (respuesta?: string) => void;
+}) {
   const [visibles, setVisibles] = useState(1);
   return (
     <div className="space-y-3">
@@ -198,6 +213,11 @@ function PasoAPaso({ pasos }: { pasos: { texto: string; cuenta?: string }[] }) {
           Mostrar el siguiente paso ({visibles} de {pasos.length})
         </button>
       )}
+      <TextoLibre
+        id={id}
+        etiqueta="Tu intento con otro ejemplo (opcional)"
+        alResponder={alResponder}
+      />
     </div>
   );
 }
@@ -211,7 +231,10 @@ export function BloqueView({
   switch (b.tipo) {
     case "pregunta_socratica":
       return (
-        <section className={caja} aria-label="Pregunta para pensar">
+        <section
+          className={caja}
+          aria-label={tituloAccesible("pregunta_socratica")}
+        >
           <p className="font-semibold">{b.texto}</p>
           <TextoLibre
             id={b.id}
@@ -223,7 +246,7 @@ export function BloqueView({
       );
     case "contraste":
       return (
-        <section className={caja} aria-label="Contraste">
+        <section className={caja} aria-label={tituloAccesible("contraste")}>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <h4 className="text-sm font-bold">Lo que hiciste</h4>
@@ -246,7 +269,10 @@ export function BloqueView({
       );
     case "razonamiento_anotado":
       return (
-        <section className={caja} aria-label="Tu razonamiento anotado">
+        <section
+          className={caja}
+          aria-label={tituloAccesible("razonamiento_anotado")}
+        >
           <ol className="space-y-2">
             {b.pasos.map((p, i) => (
               <li key={i} className="rounded-lg border border-border p-3">
@@ -266,7 +292,7 @@ export function BloqueView({
       );
     case "prediccion":
       return (
-        <section className={caja} aria-label="Predicción">
+        <section className={caja} aria-label={tituloAccesible("prediccion")}>
           <p className="font-semibold">{b.pregunta}</p>
           <Opciones
             id={b.id}
@@ -278,7 +304,7 @@ export function BloqueView({
       );
     case "practica":
       return (
-        <section className={caja} aria-label="Práctica">
+        <section className={caja} aria-label={tituloAccesible("practica")}>
           <p className="text-xs font-bold uppercase tracking-wider text-primary">
             Práctica generada y verificada por Atlas
           </p>
@@ -293,19 +319,25 @@ export function BloqueView({
       );
     case "ejemplo_paso_a_paso":
       return (
-        <section className={caja} aria-label="Ejemplo paso a paso">
-          <PasoAPaso pasos={b.pasos} />
+        <section
+          className={caja}
+          aria-label={tituloAccesible("ejemplo_paso_a_paso")}
+        >
+          <PasoAPaso id={b.id} pasos={b.pasos} alResponder={alResponder} />
         </section>
       );
     case "visual":
       return (
-        <section className={caja} aria-label="Visual verificado">
+        <section className={caja} aria-label={tituloAccesible("visual")}>
           <VisualView v={b} />
         </section>
       );
     case "en_tus_palabras":
       return (
-        <section className={caja} aria-label="En tus palabras">
+        <section
+          className={caja}
+          aria-label={tituloAccesible("en_tus_palabras")}
+        >
           <p className="font-semibold">{b.consigna}</p>
           <TextoLibre
             id={b.id}
@@ -316,7 +348,10 @@ export function BloqueView({
       );
     case "invitacion_comprobar":
       return (
-        <section className={caja} aria-label="Invitación a comprobar">
+        <section
+          className={caja}
+          aria-label={tituloAccesible("invitacion_comprobar")}
+        >
           <p>{b.texto}</p>
           {comprobando ? (
             <Link className={boton} to={`/aprender/${arbolId}`}>
@@ -331,7 +366,7 @@ export function BloqueView({
       );
     case "cita":
       return (
-        <section className={caja} aria-label="Fuente">
+        <section className={caja} aria-label={tituloAccesible("cita")}>
           <p className="text-sm">Fragmento de tu material.</p>
           <Link
             className={secundario}

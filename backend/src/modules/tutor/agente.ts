@@ -801,7 +801,10 @@ export class AgenteService {
     return clavesExpuestas(this.db, actor);
   }
 }
-@Throttle({ default: { limit: 40, ttl: 60000 } })
+// El tope por minuto se puede subir con ATLAS_LIMITE_IA (las pruebas lo hacen); por defecto 40.
+@Throttle({
+  default: { limit: Number(process.env.ATLAS_LIMITE_IA) || 40, ttl: 60000 },
+})
 @Controller("conversaciones")
 export class ConversacionesController {
   constructor(@Inject(AgenteService) private s: AgenteService) {}
