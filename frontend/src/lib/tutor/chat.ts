@@ -70,6 +70,7 @@ export type MensajeChat = {
   bloques: Bloque[];
   degradado: boolean;
   descartes: number;
+  pasos?: string[];
 };
 export type Conversacion = {
   id: string;
