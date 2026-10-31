@@ -22,7 +22,7 @@ export default function AdmisionIntento() {
   const userId = useAuthUserId();
   const [actual, setActual] = useState(0);
 
-  useEffect(() => { document.title = "Examen de admisión | Atlas"; }, []);
+  useEffect(() => { document.title = "Examen de admisión | CALIBRA"; }, []);
   // Al cambiar de pregunta, a la PREGUNTA, no al principio de la página: corregido, arriba está el
   // resumen del puntaje, y cada clic en la cuadrícula mandaba ahí y perdía la pregunta de vista. Si el
   // encabezado ya se ve, no se mueve nada.
@@ -112,7 +112,7 @@ export default function AdmisionIntento() {
                           </button>
                           {actual < x.preguntas.length - 1 && (
                             <button type="button" onClick={() => setActual((i) => i + 1)}
-                              className="flex min-h-11 items-center gap-1 rounded-lg bg-primary px-5 font-semibold text-primary-foreground hover:opacity-90">
+                              className="flex min-h-11 items-center gap-1 rounded-lg bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary-hover">
                               Siguiente <ChevronRight className="h-4 w-4" aria-hidden />
                             </button>
                           )}

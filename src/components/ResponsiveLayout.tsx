@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { AtlasLogo } from "@/components/AtlasLogo";
+import { CalibraBrand } from "@/components/brand/CalibraBrand";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -32,9 +32,8 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
     <div className="flex min-h-screen w-full flex-col overflow-x-clip bg-background">
       <header className="sticky top-0 z-40 border-b border-border/30 bg-card/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] backdrop-blur-xl dark:shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
         <div className="px-4 md:px-6 lg:px-8"><div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3">
-          <NavLink to="/admision" end className="flex items-center gap-2">
-            <AtlasLogo size="sm" />
-            <span className="text-sm font-extrabold tracking-tight">Atlas <span className="text-primary">Admisión</span></span>
+          <NavLink to="/admision" end className="flex items-center">
+            <CalibraBrand size="sm" subtitle="Admisión" />
           </NavLink>
           <nav aria-label="Secciones" className="flex items-center gap-1">
             <NavLink to="/admision" end className={enlace}>Inicio</NavLink>
@@ -45,36 +44,58 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
       <div className="atlas-pagina flex flex-1 flex-col overflow-x-clip">{children}</div>
 
-      <footer className="border-t border-border/40">
-        <div className="px-4 md:px-6 lg:px-8"><div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 py-4 text-xs text-muted-foreground">
-          <p>Tu progreso se guarda en este navegador. Si cambias de dispositivo o borras sus datos, empiezas de cero.</p>
-          <AlertDialog>
-            <AlertDialogTrigger className="min-h-11 rounded-lg px-3 font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
-              {borrado ? "Progreso borrado" : "Empezar de cero"}
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>¿Borrar todo tu progreso?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Se borran tus intentos, tu escuela y tu cuaderno de errores de este navegador. No se puede deshacer.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    borrarTodo();
-                    cliente.clear();
-                    setBorrado(true);
-                    window.location.assign("/admision");
-                  }}
-                >
-                  Borrar todo
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div></div>
+      <footer className="border-t border-border/40 bg-card/20">
+        <div className="px-4 md:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-5xl flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
+            <AlertDialog>
+              <p className="max-w-md text-xs text-muted-foreground leading-relaxed">
+                Tu progreso se guarda en este navegador. Si cambias de dispositivo o borras sus datos,{" "}
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="font-bold text-foreground underline underline-offset-4 decoration-primary/60 hover:text-primary hover:decoration-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-0.5 inline cursor-pointer"
+                  >
+                    {borrado ? "progreso borrado" : "empiezas de cero"}
+                  </button>
+                </AlertDialogTrigger>
+                .
+              </p>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Borrar todo tu progreso?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Se borran tus intentos, tu carrera y tu cuaderno de errores de este navegador. No se puede deshacer.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      borrarTodo();
+                      cliente.clear();
+                      setBorrado(true);
+                      window.location.assign("/admision");
+                    }}
+                  >
+                    Borrar todo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Identidad de marca CALIBRA con el mensaje APRENDE A PENSAR en tamaño más grande */}
+            <div className="flex items-center gap-3 sm:justify-end">
+              <CalibraBrand
+                size="lg"
+                tagline="APRENDE A PENSAR"
+                className="select-none"
+                textClassName="text-xl sm:text-2xl font-black tracking-wider"
+                taglineClassName="text-xs sm:text-sm font-extrabold uppercase tracking-[0.22em] text-primary"
+              />
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
