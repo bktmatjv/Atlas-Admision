@@ -38,7 +38,7 @@ async function http(
   sid = cookie,
   key?: string,
 ) {
-  const headers: Record<string, string> = { "X-Atlas-Request": "1" };
+  const headers: Record<string, string> = { "X-Calibra-Request": "1" };
   if (sid) headers.Cookie = sid;
   if (key) headers["Idempotency-Key"] = key;
   if (!(body instanceof FormData)) headers["Content-Type"] = "application/json";
@@ -103,7 +103,7 @@ afterAll(async () => {
   }
   if (folder) await rm(folder, { recursive: true, force: true });
 }, 60000);
-describe("Atlas integrado con PostgreSQL real", () => {
+describe("CALIBRA integrado con PostgreSQL real", () => {
   it("importa sin duplicar y no sirve el banco con claves", async () => {
     const c = await db.query(
       `SELECT count(*)::int AS n FROM ${schema}.preguntas`,
@@ -470,7 +470,7 @@ describe("Atlas integrado con PostgreSQL real", () => {
   });
   it("rechaza JSON malformado o demasiado grande con errores seguros", async () => {
     const headers = {
-      "X-Atlas-Request": "1",
+      "X-Calibra-Request": "1",
       Cookie: cookie,
       "Content-Type": "application/json",
     };
@@ -493,7 +493,7 @@ describe("Atlas integrado con PostgreSQL real", () => {
       headers: {
         Origin: "http://localhost:8090",
         "Access-Control-Request-Method": "POST",
-        "Access-Control-Request-Headers": "X-Atlas-Request",
+        "Access-Control-Request-Headers": "X-Calibra-Request",
       },
     });
     expect(r.headers.get("access-control-allow-origin")).toBe(
@@ -766,7 +766,7 @@ describe("Harness de comprensión: nodos etiquetados y nodo faltante", () => {
         raiz,
       ])
     ).rows;
-    expect(fila.prompt_version).toBe("tutor-v2");
+    expect(fila.prompt_version).toBe("tutor-v3");
   });
   it("una idea_clave fuera del catálogo propuesta por la IA se guarda como NULL", async () => {
     const c = await crear("Explica proporciones [[clave-invalida]]");

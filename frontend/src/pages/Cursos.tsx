@@ -64,7 +64,7 @@ export default function Cursos() {
     [showSolution, setShowSolution] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false);
   useEffect(() => {
-    document.title = "Mis cursos | Atlas";
+    document.title = "Mis cursos | CALIBRA";
     setShowSolution(false);
     setAttempt("");
     setConfirmDelete(false);
@@ -179,7 +179,7 @@ export default function Cursos() {
               to="/cursos"
               className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
             >
-              Atlas · Mis cursos
+              CALIBRA · Mis cursos
             </Link>
             <h1 className="mt-3 text-3xl font-extrabold">
               {doc.data?.nombre ??
@@ -318,7 +318,7 @@ export default function Cursos() {
                     fragmentos podrán enviarse al proveedor IA configurado para
                     organizarlo y explicarlo. No adjuntaré datos personales
                     sensibles. Puedo eliminar el documento y sus exploraciones
-                    desde Atlas.
+                    desde CALIBRA.
                   </span>
                 </label>
                 <button

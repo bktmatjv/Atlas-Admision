@@ -1,4 +1,4 @@
-# Backend Atlas
+# Backend CALIBRA
 
 API NestJS independiente del frontend. Monolito modular con PostgreSQL/TypeORM y migraciones explícitas (`synchronize: false`). Ver [arranque local](../README.md) antes de ejecutar comandos.
 
@@ -16,7 +16,7 @@ Los servicios usan `Database`, que centraliza TypeORM y normaliza el resultado d
 
 ## Contrato HTTP
 
-Prefijo: `/api/v1`. Las escrituras requieren `X-Atlas-Request: 1`; las solicitudes del navegador deben provenir del origen configurado o del mismo origen de la API. CORS tiene un origen explícito, credenciales y preflight; no se acepta `*` con cookies.
+Prefijo: `/api/v1`. Las escrituras requieren `X-Calibra-Request: 1`; las solicitudes del navegador deben provenir del origen configurado o del mismo origen de la API. CORS tiene un origen explícito, credenciales y preflight; no se acepta `*` con cookies.
 
 La sesión usa cookie HttpOnly `atlas_sid`; la DB guarda solo el hash del token. Cada recurso privado se autoriza por el actor resuelto desde esa cookie. Nunca se acepta `user_id` del cliente como identidad.
 

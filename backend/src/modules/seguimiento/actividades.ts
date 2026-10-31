@@ -1,5 +1,5 @@
 // Casos propios con clave comprobada aritméticamente. Pendiente revisión pedagógica externa.
-// Se muestran como actividades de Atlas, nunca como preguntas oficiales UNMSM.
+// Se muestran como actividades de CALIBRA, nunca como preguntas oficiales UNMSM.
 export type IdeaClave = {
   concepto: string;
   clave: string;

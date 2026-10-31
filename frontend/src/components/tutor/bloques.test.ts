@@ -134,7 +134,7 @@ describe("render de los diez bloques", () => {
     }
     expect(vista(bloques.prediccion)).toContain("112,5");
     expect(vista(bloques.practica)).toContain("Una tienda ajusta sus precios.");
-    expect(vista(bloques.practica)).toContain("verificada por Atlas");
+    expect(vista(bloques.practica)).toContain("verificada por CALIBRA");
   });
   it("ejemplo_paso_a_paso revela solo el primer paso y ofrece un intento opcional", () => {
     const html = vista(bloques.ejemplo_paso_a_paso);

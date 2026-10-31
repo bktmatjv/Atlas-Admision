@@ -244,7 +244,7 @@ export class GrafoService {
             o.titulo,
             o.resumen,
             PROCEDENCIA_AGENTE,
-            "tutor-agente-v1",
+            "tutor-agente-v2",
             o.idea_clave ?? null,
           ],
         );

@@ -68,7 +68,7 @@ Para desarrollo del backend fuera de Docker: `docker compose up -d db`, configur
 Implementado: sesiones invitadas del servidor, banco persistido, prácticas/diagnóstico/simulacros, corrección y repasos, árbol con expansión/aclaración, comprobaciones numéricas y evidencias, importación privada PDF con texto/TXT/Markdown y prácticas generadas guardadas.
 
 - Las claves y soluciones del banco están en `backend/data/`, **no** en los archivos públicos del frontend.
-- «Sin ayuda» significa sin ayudas de Atlas durante la comprobación, no una evaluación vigilada ni una prueba de comprensión profunda. La justificación se conserva sin calificación automática.
+- «Sin ayuda» significa sin ayudas de CALIBRA durante la comprobación, no una evaluación vigilada ni una prueba de comprensión profunda. La justificación se conserva sin calificación automática.
 - Material generado por IA no equivale a contenido revisado académicamente. Sus prácticas formativas no suman evidencia de transferencia verificada.
 - OCR, fuentes web externas, recuperación de cuentas y sincronización entre dispositivos siguen pendientes.
 - La sesión invitada dura 30 días. Todavía no hay recuperación de su credencial si se borran las cookies; definir retención operativa y copias de seguridad antes de uso público.

@@ -306,7 +306,7 @@ export function BloqueView({
       return (
         <section className={caja} aria-label={tituloAccesible("practica")}>
           <p className="text-xs font-bold uppercase tracking-wider text-primary">
-            Práctica generada y verificada por Atlas
+            Práctica generada y verificada por CALIBRA
           </p>
           {b.historia && <p>{b.historia}</p>}
           <Opciones

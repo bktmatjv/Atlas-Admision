@@ -10,7 +10,7 @@ Las instrucciones explícitas del usuario tienen prioridad sobre este documento.
 
 ## 2. Contexto del producto
 
-El proyecto se ha trabajado como **Atlas Admisión**, una plataforma de apoyo a postulantes a San Marcos. Confirmar el nombre, alcance y terminología vigentes en el repositorio antes de introducir cambios globales.
+El producto se llama **CALIBRA** (decisión del equipo, 30/10/2026; antes «Atlas Admisión»), una plataforma de apoyo a postulantes a San Marcos. Los textos visibles, los prompts y la documentación usan CALIBRA. Se conservan a propósito identificadores técnicos con el nombre anterior, porque renombrarlos rompería datos o sesiones existentes: la cookie `atlas_sid`, la base y el usuario `atlas` de PostgreSQL, el proyecto y los volúmenes de Compose (`atlas`, `atlas-db`, `atlas-uploads`), los paquetes `@atlas/*`, la variable `ATLAS_LIMITE_IA`, las clases CSS `atlas-*` y el nombre del repositorio. No renombrarlos sin una migración planificada.
 
 La propuesta incluye diagnóstico, práctica por curso y tema, simulacros, revisión de errores, recomendaciones y seguimiento del progreso. Estas capacidades describen la intención del producto; no asumir que todas están implementadas o que sus reglas ya están definidas.
 

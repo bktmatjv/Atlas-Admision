@@ -34,7 +34,7 @@ export default function Tutor() {
   const clave = useRef<{ texto: string; key: string } | null>(null);
   const fin = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    document.title = "Conversar con el tutor · Atlas";
+    document.title = "Conversar con el tutor | CALIBRA";
   }, []);
   const conv = useQuery({
     queryKey: ["conversacion", id],
@@ -110,14 +110,14 @@ export default function Tutor() {
               to="/aprender"
               className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
             >
-              Atlas · conversar para comprender
+              CALIBRA · conversar para comprender
             </Link>
             <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
               Entiende el porqué de tus errores
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
               Conversa con el tutor. Tu mapa se arma con lo que exploras; el
-              estado de cada idea lo calcula Atlas desde tus comprobaciones, no
+              estado de cada idea lo calcula CALIBRA desde tus comprobaciones, no
               desde lo que diga la IA.
             </p>
           </div>

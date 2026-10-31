@@ -139,7 +139,7 @@ export class SeguimientoController {
         id,
         enunciado,
         origen: curada ? "curada" : "plantilla",
-        nota: "Sin ayudas de Atlas durante este intento. No detectamos ayuda externa; tu justificación no se calificará automáticamente.",
+        nota: "Sin ayudas de CALIBRA durante este intento. No detectamos ayuda externa; tu justificación no se calificará automáticamente.",
       };
     });
   }
