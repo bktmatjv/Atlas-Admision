@@ -172,6 +172,7 @@ type FilaMensaje = {
   descartes: unknown[];
   degradado: boolean;
   clave: string | null;
+  pasos: string[];
 };
 const proyectar = (m: FilaMensaje) => ({
   id: m.id,
@@ -181,6 +182,7 @@ const proyectar = (m: FilaMensaje) => ({
   bloques: m.bloques,
   degradado: m.degradado,
   descartes: m.descartes.length,
+  pasos: m.pasos ?? [],
 });
 const aTexto = (valor: unknown, max = 6000) =>
   JSON.stringify(valor).slice(0, max);
@@ -311,7 +313,7 @@ export class AgenteService {
   async obtener(actor: string, id: string) {
     const c = await this.propia(actor, id);
     const mensajes = await this.db.query<FilaMensaje>(
-      "SELECT id,orden,rol,texto,bloques,descartes,degradado,clave FROM mensajes WHERE conversacion_id=$1 ORDER BY orden",
+      "SELECT id,orden,rol,texto,bloques,descartes,degradado,clave,pasos FROM mensajes WHERE conversacion_id=$1 ORDER BY orden",
       [id],
     );
     return {
@@ -378,6 +380,7 @@ export class AgenteService {
           descartes: [],
           degradado: false,
           clave: key,
+          pasos: [],
         } as FilaMensaje,
         resp: null,
       };
@@ -474,9 +477,10 @@ export class AgenteService {
         descartes,
         degradado: bruto.degradado,
         clave: "r:" + key,
+        pasos: bruto.pasos,
       };
       await m.query(
-        "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,bloques,grafo_ops,descartes,prompt_version,degradado,clave,destino_ia) VALUES($1,$2,$3,'tutor',$4,$5,$6,$7,$8,$9,$10,$11)",
+        "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,bloques,grafo_ops,descartes,prompt_version,degradado,clave,destino_ia,pasos) VALUES($1,$2,$3,'tutor',$4,$5,$6,$7,$8,$9,$10,$11,$12)",
         [
           fila.id,
           id,
@@ -489,6 +493,7 @@ export class AgenteService {
           fila.degradado,
           fila.clave,
           bruto.destino,
+          JSON.stringify(fila.pasos),
         ],
       );
       return fila;
@@ -673,9 +678,11 @@ export class AgenteService {
     invitar: boolean;
     // Destino del router que respondió por última vez en el turno; null sin router.
     destino: string | null;
+    pasos: string[];
   }> {
     const limite = Date.now() + TIMEOUT_TURNO_MS;
     let destino: string | null = null;
+    const pasos: string[] = [];
     // Con una comprobación activa no hay lectura de intentos ni práctica generada.
     const herramientas = HERRAMIENTAS.filter(
       (h) =>
@@ -711,7 +718,7 @@ export class AgenteService {
     const mensajes: MensajeIA[] = c.historial
       .slice(-HISTORIAL)
       .map((h) =>
-        (h as unknown as { rol: string }).rol === "estudiante"
+        h.rol === "estudiante"
           ? ({ rol: "user", texto: h.texto } as MensajeIA)
           : ({ rol: "assistant", texto: h.texto } as MensajeIA),
       );
@@ -754,6 +761,9 @@ export class AgenteService {
               actor,
               conv,
             );
+            // Solo llamadas disponibles y completadas, en su orden real (incluye repeticiones).
+            if (herramientas.some((h) => h.nombre === l.nombre))
+              pasos.push(l.nombre);
           }
           mensajes.push({
             rol: "tool",
@@ -812,6 +822,7 @@ export class AgenteService {
           degradado: true,
           invitar: false,
           destino,
+          pasos,
         };
       }
     }
@@ -821,6 +832,7 @@ export class AgenteService {
       degradado: false,
       invitar,
       destino,
+      pasos,
     };
   }
   private async ejecutar(
