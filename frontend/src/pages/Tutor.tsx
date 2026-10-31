@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ApiError } from "@/integrations/api/client";
 import {
   Link,
   useNavigate,
@@ -49,6 +50,7 @@ import type { Grafo } from "@/lib/tutor/grafo";
 import type { ItemHistorial } from "@/lib/tutor/historial";
 import {
   TEMAS_SOPORTADOS,
+  type TemaId,
   cuerpoDeCreacion,
   opcionesDeContexto,
   ordenarTemas,
@@ -269,13 +271,20 @@ export default function Tutor() {
     },
   });
   const comprobar = useMutation({
-    mutationFn: () =>
-      post("/comprobaciones", { arbol_id: conv.data!.arbol_id }),
+    mutationFn: (tema?: TemaId) =>
+      post("/comprobaciones", {
+        arbol_id: conv.data!.arbol_id,
+        ...(tema ? { tema } : {}),
+      }),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["comprobacion-activa"] });
       // La comprobación ocurre aquí: el error y su recorrido se ven juntos, sin cambiar de pantalla.
     },
   });
+  // Una conversación libre no tiene tema: se le pide uno en línea y se reintenta con el elegido.
+  const eligeTema =
+    comprobar.error instanceof ApiError &&
+    comprobar.error.codigo === "elige_tema";
   const empezar = (texto: string, contexto = contextoElegido) =>
     crear.mutate({ texto: texto.trim(), contexto });
   const alElegirIntencion = (i: Intencion) => {
@@ -523,11 +532,13 @@ export default function Tutor() {
                   pendiente={
                     enviar.isPending ? (enviar.variables ?? null) : null
                   }
-                  error={enviar.error ?? comprobar.error}
+                  error={enviar.error ?? (eligeTema ? null : comprobar.error)}
+                  eligeTema={!enviar.error && eligeTema}
+                  onElegirTema={(tema) => comprobar.mutate(tema)}
                   onReintentar={() =>
                     enviar.isError && enviar.variables
                       ? enviar.mutate(enviar.variables)
-                      : comprobar.mutate()
+                      : comprobar.mutate(undefined)
                   }
                   borrador={borrador}
                   onBorrador={setBorrador}

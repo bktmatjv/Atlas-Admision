@@ -22,6 +22,8 @@ import {
 } from "./ComprobacionTutor";
 import { BloqueView } from "./Bloques";
 import { ComposerTutor } from "./ComposerTutor";
+import { ElegirTema } from "./ElegirTema";
+import type { TemaId } from "@/lib/tutor/inicio";
 import { TutorAvatar } from "./TutorAvatar";
 type Props = {
   conv: Conversacion;
@@ -30,6 +32,9 @@ type Props = {
   // Mensaje en vuelo: se muestra al instante, antes de que el servidor responda.
   pendiente: string | null;
   error: Error | null;
+  // La conversación libre aún no tiene tema: se pide en línea para crear la comprobación.
+  eligeTema?: boolean;
+  onElegirTema?: (tema: TemaId) => void;
   onReintentar: () => void;
   borrador: string;
   onBorrador: (v: string) => void;
@@ -130,6 +135,9 @@ export function ConversacionTutor(p: Props) {
             <ArrowRight size={14} style={{ display: "inline" }} />
           </Link>
         </p>
+      )}
+      {p.eligeTema && p.onElegirTema && (
+        <ElegirTema onElegir={p.onElegirTema} ocupado={p.ocupado} />
       )}
       {p.error && (
         <div className="tc-banner tc-banner--error" role="alert">
