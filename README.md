@@ -102,6 +102,14 @@ Más detalle: [backend/README.md](backend/README.md) · [diseño del tutor agent
 
 ---
 
+## Tutor: diseño para la demo
+
+En `/tutor?demo=1` se amplían los textos principales y se ralentizan las animaciones; no cambia la corrección ni los datos. El panel lateral permite abrir artefactos, redimensionarlo con teclado y explorar el grafo; en móvil es una hoja con tres alturas. La bienvenida y la identidad visual de `feat/ui-calibra-completa` están integradas; la mascota se conserva fuera del tutor para no tapar sus controles.
+
+La retropropagación solo usa aristas y rastros existentes: sin idea o camino verificable no se anima. «Lo explicaste» y «Practicaste» quedan deshabilitadas porque la API no publica el historial necesario. El antes/después exige ambas evidencias guardadas. No se inventa un indicador de failover: el contrato del turno no lo informa explícitamente.
+
+Las capturas de `npm run test:tutor-ui` se guardan en `.atl/` (ignoradas por Git). Las pruebas de interfaz usan transporte simulado identificado; no prueban la calidad del modelo real ni el despliegue público.
+
 ## 🔗 Demo desplegada
 
 **Pendiente.** Todavía no hay una URL pública. El despliegue previsto es el frontend en Vercel y el backend en Docker sobre una VM de Azure.
@@ -155,6 +163,7 @@ El estado de cada modelo (cerrado, abierto hasta cuándo, ocupado) se ve en `cur
 | `npm run build` | Compilar motor, backend y frontend |
 | `npm test` | Pruebas unitarias, sin llamadas a IA de pago |
 | `npm run test:docker` | Integración con un PostgreSQL temporal en Docker |
+| `npm run test:tutor-ui` | Navegador Chromium aislado: tutor, panel, móvil, movimiento reducido y bienvenida; sin llamadas a IA |
 | `npm run verify` | Lint, tipos, pruebas, build, integración y auditoría de dependencias |
 
 ### Estructura
@@ -171,7 +180,7 @@ compose.yaml       API + PostgreSQL para desarrollo local
 
 ## 🧪 Calidad
 
-- **410 pruebas** en el frontend y el motor compartido, y **310 pruebas** del backend, incluidas pruebas de integración con PostgreSQL real.
+- **477 pruebas** en el frontend y el motor compartido, y **310 pruebas** del backend, incluidas pruebas de integración con PostgreSQL real.
 - Cada artefacto del tutor tiene tres niveles de prueba: validador (acepta lo válido, descarta lo inválido con su motivo), integración con la API y render en la interfaz.
 - Las pruebas automáticas nunca llaman a la IA real: los adaptadores de Groq y Cloudflare y el router de modelos se prueban con respuestas simuladas, incluidos errores, límites de uso (HTTP 429), timeouts y failover entre modelos.
 

@@ -1,6 +1,6 @@
 /**
  * Plan de puntos: en qué cursos rinde más cada hora de estudio de la semana. Traído de Audix Admisión
- * (src/plan), con el peso del molde real de Atlas y el acierto del propio alumno.
+ * (src/plan), con el peso del molde real de CALIBRA y el acierto del propio alumno.
  *
  * Es una heurística a la vista, no un dato oficial: las horas que cuesta subir 10 puntos porcentuales de
  * acierto en cada curso son SUPUESTOS de Audix (sin validar con alumnos) y la pantalla lo dice.

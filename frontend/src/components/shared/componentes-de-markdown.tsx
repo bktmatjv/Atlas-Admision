@@ -1,7 +1,7 @@
 import type { Components } from "react-markdown";
 
 /**
- * Las piezas con las que se pinta el markdown de Atlas. Las comparten el renderizador sin
+ * Las piezas con las que se pinta el markdown de Calibra. Las comparten el renderizador sin
  * fórmulas y el de KaTeX, para que un mensaje se vea igual traiga o no matemáticas.
  */
 export const componentesDeMarkdown: Components = {
@@ -40,7 +40,7 @@ export const componentesDeMarkdown: Components = {
    * se carga ninguna: se deja su descripción (bucle de calidad, vuelta 9).
    */
   img: ({ alt }) => (alt ? <span className="italic text-muted-foreground">[{alt}]</span> : null),
-  // Un enlace en la misma pestaña sacaba al alumno de Atlas a mitad de la conversación.
+  // Un enlace en la misma pestaña sacaba al alumno de Calibra a mitad de la conversación.
   a: ({ href, children }) => (
     <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
       {children}

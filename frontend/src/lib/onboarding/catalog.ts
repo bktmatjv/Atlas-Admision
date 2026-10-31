@@ -3,7 +3,7 @@
  *
  * **Los pesos de esta tabla no son inventados.** Son la cantidad de preguntas que cada
  * asignatura tiene en el Examen General de Admisión de la UNMSM 2026-I, por área
- * académico-profesional. Eso importa porque el flujo le promete al postulante que Atlas
+ * académico-profesional. Eso importa porque el flujo le promete al postulante que Calibra
  * «prioriza los temas con más peso en tu examen»: si el peso fuera un número redondeado a
  * ojo, la promesa sería decorado. Con la distribución real, priorizar significa
  * literalmente empezar por Biología si postulas a Salud —8 preguntas— y no por

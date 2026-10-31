@@ -117,6 +117,6 @@ Abrir o leer un nodo registra una interacción, no demuestra dominio. Las respue
 
 El árbol de comprensión es una funcionalidad del tutor, no la totalidad de la plataforma. Puede utilizarse cuando surge una duda durante el estudio o la revisión de un ejercicio.
 
-En Atlas Admisión, una entrada posible sería una pregunta fallada o una solución que el postulante no comprende. Desde ahí se exploran los conceptos relevantes y se ofrecen oportunidades de aplicación. Esto describe una integración posible, no una funcionalidad ya implementada.
+En CALIBRA, una entrada posible sería una pregunta fallada o una solución que el postulante no comprende. Desde ahí se exploran los conceptos relevantes y se ofrecen oportunidades de aplicación. Esto describe una integración posible, no una funcionalidad ya implementada.
 
 La idea central es **transformar una consulta aislada en una exploración de explicaciones, preguntas y ejemplos conectados, donde el estudiante participa y puede comprobar qué logra comprender y aplicar**.

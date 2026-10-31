@@ -1,5 +1,5 @@
 /**
- * El informe de un intento entregado (spec §4 de Atlas + lo que trajo Audix Admisión). Lo calcula el
+ * El informe de un intento entregado (spec §4 de CALIBRA + lo que trajo Audix Admisión). Lo calcula el
  * navegador con lo que ya devuelve `admision_preguntas_del_intento` al entregar: el servidor corrige
  * (`_shared/admision-correccion.ts`) y aquí se explica, con la misma fórmula (`formula.test.ts`).
  * Sin análisis del tiempo (decisión de Axel).

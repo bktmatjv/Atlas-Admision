@@ -1,8 +1,8 @@
 # Fuentes de los datos de San Marcos (UNMSM)
 
-Consultado el **2026-10-15** por Audix Admisión y traído a Atlas el mismo día. Regla: todo registro lleva
+Consultado el **2026-10-15** por Audix Admisión y traído a CALIBRA el mismo día. Regla: todo registro lleva
 `fuente` y `verificado`. `verificado: true` solo si el dato sale de un sitio oficial de la UNMSM. Lo demás se
-muestra en Atlas con la etiqueta **«Dato por verificar»** hasta que Axel lo confirme.
+muestra en CALIBRA con la etiqueta **«Dato por verificar»** hasta que Axel lo confirme.
 
 Estos JSON son la fuente única: `node scripts/admision/sql-de-datos-unmsm.mjs` los pasa a SQL
 (`docs/despliegue/admision-audix/`) y `node scripts/admision/importar-oca.mjs 20271 20262 20261` los regenera
@@ -10,7 +10,7 @@ desde la OCA cuando salgan resultados nuevos.
 
 ## Resumen
 
-| Dato | Dónde vive en Atlas | Fuente | Verificado |
+| Dato | Dónde vive en CALIBRA | Fuente | Verificado |
 |---|---|---|---|
 | 5 áreas (A–E) y sus nombres | código (`AREAS` en `src/pages/Admision.tsx`) | API oficial `unmsm.edu.pe/pagina_unmsm/api/v1/carreras-pregrado/areas` | ✅ |
 | 120 escuelas (incluye sedes Chilca, Huaral, S.J.L., Villa Rica, Oyón, Chancay) con su área | `carreras.json` → `admision_carreras` | Área: API oficial de carreras por área. Escuelas: listas oficiales de la OCA | ✅ (salvo Geofísica) |
@@ -99,7 +99,7 @@ la Nación. Otras fuentes de prensa reparten la sección de habilidades de otra 
 | Ingreso de 6:00 a 8:30 a. m. | idem | ❌ |
 | Prohibidos celulares y aparatos electrónicos | idem | ❌ |
 | Duración 3 horas | Infobae (ver estructura) | ❌ |
-| Borrador/tajador, recorrido al local, dormir bien | Consejos de Atlas (no son reglas) | — |
+| Borrador/tajador, recorrido al local, dormir bien | Consejos de CALIBRA (no son reglas) | — |
 
 Nota: esa misma publicación indica que la universidad "exhorta a evitar respuestas al azar". La pantalla de
 estrategia lo menciona junto al cálculo de valor esperado (+3,1 al adivinar entre 5), que es un promedio y no

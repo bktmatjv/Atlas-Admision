@@ -58,43 +58,59 @@
   animation: shimmer 2s infinite ease-in-out;
 }
 
-/* Atlas Design System — Edición Cálida / Carmesí
- * Vino/Carmesí de marca sobre escala cálida editorial (papel crema y ciruela oscuro).
- * Primary (Claro): #941F3D (345 65% 35%) — botones, elementos activos, seleccionados
- * Primary (Oscuro): #F07B91 (349 80% 71%) — realce luminoso sobre fondo oscuro
- * Ink: #30252A (333 13% 17%) — texto principal y superficies de alto contraste
- * Mobile-first. Todos los colores en canales HSL para soporte de opacidad en Tailwind.
+/* CALIBRA Design System — Sistema de Colores y Modo Oscuro
+ * Paleta oficial aprobada:
+ * Modo Claro (:root):
+ * - Principal (Carmesí): #941F3D (345 65% 35%)
+ * - Secundario (Carmesí): #B83A56 (347 52% 47%)
+ * - Fondo (Crema): #F7F1E8 (36 48% 94%)
+ * - Superficie (Blanco): #FFFFFF (0 0% 100%)
+ * - Texto (Oscuro): #292329 (300 8% 15%)
+ *
+ * Modo Oscuro (.dark):
+ * - Principal (Carmesí claro): #E56B83 (348 70% 66%)
+ * - Secundario (Carmesí): #B83A56 (347 52% 47%)
+ * - Fondo (Oscuro): #211B20 (310 10% 12%)
+ * - Superficie: #30262D (318 12% 17%)
+ * - Texto (Claro): #F7F1E8 (36 48% 94%)
  */
 
 @layer base {
   :root {
-    /* Background: #F7F0E6 | Text Primary: #30252A */
-    --background: 35 52% 94%;
-    --foreground: 333 13% 17%;
+    /* Paleta semántica oficial CALIBRA */
+    --carmesi-principal: 345 65% 35%; /* #941F3D */
+    --carmesi-secundario: 347 52% 47%; /* #B83A56 */
+    --fondo: 36 48% 94%; /* #F7F1E8 */
+    --superficie: 0 0% 100%; /* #FFFFFF */
+    --texto: 300 8% 15%; /* #292329 */
 
-    /* Surface: #FFFCF7 — separa la tarjeta del fondo crema cálido */
-    --card: 38 100% 98%;
-    --card-foreground: 333 13% 17%;
+    /* Background: #F7F1E8 | Text Primary: #292329 */
+    --background: 36 48% 94%;
+    --foreground: 300 8% 15%;
 
-    --popover: 38 100% 98%;
-    --popover-foreground: 333 13% 17%;
+    /* Surface: #FFFFFF */
+    --card: 0 0% 100%;
+    --card-foreground: 300 8% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 300 8% 15%;
 
     /* Primary: #941F3D | Primary Hover: #79182F */
     --primary: 345 65% 35%;
     --primary-hover: 346 67% 28%;
-    --primary-foreground: 38 100% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Surface Secondary: #F0E5DD */
-    --secondary: 25 39% 90%;
-    --secondary-foreground: 333 13% 17%;
+    /* Secondary: #B83A56 */
+    --secondary: 347 52% 47%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 25 39% 90%;
+    --muted: 36 28% 90%;
     /* Text Secondary: #706168 */
     --muted-foreground: 332 7% 41%;
 
-    /* Accent: #D89AA6 */
-    --accent: 348 44% 73%;
-    --accent-foreground: 333 13% 17%;
+    /* Accent: #B83A56 */
+    --accent: 347 52% 47%;
+    --accent-foreground: 0 0% 100%;
 
     /* Status colors — calibrados para AA sobre superficies cálidas */
     --success: 142 60% 30%;
@@ -111,24 +127,24 @@
 
     /* Achievement - ámbar contenido */
     --achievement: 38 75% 48%;
-    --achievement-foreground: 333 13% 17%;
+    --achievement-foreground: 300 8% 15%;
 
-    /* La sala de estudio: penumbra cálida armonizada con el fondo oscuro (#191519) */
-    --study-bg: 300 9% 9%;
-    --study-fg: 35 52% 94%;
+    /* La sala de estudio: penumbra cálida armonizada con el fondo oscuro (#211B20) */
+    --study-bg: 310 10% 12%;
+    --study-fg: 36 48% 94%;
     --study-muted: 340 12% 75%;
 
-    /* UI — Border: #E5D7D1 */
-    --border: 18 28% 86%;
-    --input: 18 28% 86%;
+    /* UI — Border: #E5D8CD */
+    --border: 30 20% 86%;
+    --input: 30 20% 86%;
 
-    /* Acción principal: tinta oscura en claro; en oscuro pasa al primario rosado */
-    --action: 333 13% 17%;
-    --action-foreground: 38 100% 98%;
+    /* Acción principal: carmesí */
+    --action: 345 65% 35%;
+    --action-foreground: 0 0% 100%;
 
     /* Dos niveles de borde cálido */
-    --border-section: 18 28% 86%;
-    --border-row: 25 35% 91%;
+    --border-section: 30 20% 86%;
+    --border-row: 36 28% 90%;
 
     /* La tabla del capítulo: tinte derivado del primario carmesí */
     --tabla-cabecera: 345 45% 93%;
@@ -140,13 +156,13 @@
     --radius: 0.5rem;
 
     /* Sidebar sincronizado con la paleta cálida */
-    --sidebar-background: 35 52% 94%;
-    --sidebar-foreground: 333 13% 17%;
+    --sidebar-background: 36 48% 94%;
+    --sidebar-foreground: 300 8% 15%;
     --sidebar-primary: 345 65% 35%;
-    --sidebar-primary-foreground: 38 100% 98%;
-    --sidebar-accent: 25 39% 90%;
-    --sidebar-accent-foreground: 333 13% 17%;
-    --sidebar-border: 18 28% 86%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 36 28% 90%;
+    --sidebar-accent-foreground: 300 8% 15%;
+    --sidebar-border: 30 20% 86%;
     --sidebar-ring: 345 65% 35%;
 
     /* Tonos complementarios de marca armonizados con carmesí/acento */
@@ -157,16 +173,16 @@
     --gradient-primary: linear-gradient(135deg, hsl(345 65% 35%), hsl(346 67% 28%));
     --gradient-hero: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
     --gradient-accion: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary-hover)));
-    --gradient-surface: linear-gradient(180deg, hsl(38 100% 98%) 0%, hsl(25 39% 90%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(36 48% 94%) 100%);
 
-    /* Sombras con tinte cálido (#30252A) en lugar de azul marino */
-    --shadow-xs: 0 1px 2px hsl(333 13% 17% / 0.05);
-    --shadow-medium: 0 4px 8px hsl(333 13% 17% / 0.06), 0 12px 28px hsl(333 13% 17% / 0.07);
-    --shadow-card: 0 1px 3px hsl(333 13% 17% / 0.04), 0 4px 16px hsl(333 13% 17% / 0.05);
+    /* Sombras con tinte cálido (#292329) en lugar de azul marino */
+    --shadow-xs: 0 1px 2px hsl(300 8% 15% / 0.05);
+    --shadow-medium: 0 4px 8px hsl(300 8% 15% / 0.06), 0 12px 28px hsl(300 8% 15% / 0.07);
+    --shadow-card: 0 1px 3px hsl(300 8% 15% / 0.04), 0 4px 16px hsl(300 8% 15% / 0.05);
 
-    /* Superficie translúcida cálida (#FFFCF7 al 92%) */
-    --glass-bg: hsl(38 100% 98% / 0.92);
-    --glass-border: hsl(18 28% 86% / 0.8);
+    /* Superficie translúcida cálida (#FFFFFF al 92%) */
+    --glass-bg: hsl(0 0% 100% / 0.92);
+    --glass-border: hsl(30 20% 86% / 0.8);
 
     /* Colores de característica */
     --feature-audio: 345 65% 35%;
@@ -176,98 +192,105 @@
   }
 
   .dark {
-    /* Background: #191519 | Text Primary: #F7F0E6 */
-    --background: 300 9% 9%;
-    --foreground: 35 52% 94%;
+    /* Paleta semántica oficial CALIBRA */
+    --carmesi-principal: 348 70% 66%; /* #E56B83 */
+    --carmesi-secundario: 347 52% 47%; /* #B83A56 */
+    --fondo: 310 10% 12%; /* #211B20 */
+    --superficie: 318 12% 17%; /* #30262D */
+    --texto: 36 48% 94%; /* #F7F1E8 */
 
-    /* Surface: #29222A */
-    --card: 293 11% 15%;
-    --card-foreground: 35 52% 94%;
+    /* Background: #211B20 | Text Primary: #F7F1E8 */
+    --background: 310 10% 12%;
+    --foreground: 36 48% 94%;
 
-    --popover: 293 11% 15%;
-    --popover-foreground: 35 52% 94%;
+    /* Surface: #30262D */
+    --card: 318 12% 17%;
+    --card-foreground: 36 48% 94%;
 
-    /* Primary: #F07B91 | Primary Hover: #F58DA0 */
-    --primary: 349 80% 71%;
-    --primary-hover: 349 84% 76%;
-    --primary-foreground: 300 9% 9%;
+    --popover: 318 12% 17%;
+    --popover-foreground: 36 48% 94%;
 
-    /* Surface Secondary: #32232B */
-    --secondary: 328 18% 17%;
-    --secondary-foreground: 35 52% 94%;
+    /* Primary: #E56B83 | Primary Hover: #EA8095 */
+    --primary: 348 70% 66%;
+    --primary-hover: 348 75% 72%;
+    --primary-foreground: 310 10% 12%;
 
-    --muted: 328 18% 17%;
+    /* Secondary: #B83A56 */
+    --secondary: 347 52% 47%;
+    --secondary-foreground: 36 48% 94%;
+
+    --muted: 318 12% 22%;
     /* Text Secondary: #C8B9BE */
-    --muted-foreground: 340 12% 75%;
+    --muted-foreground: 340 12% 70%;
 
-    /* Accent: #D89AA6 */
-    --accent: 348 44% 73%;
-    --accent-foreground: 300 9% 9%;
+    /* Accent: #B83A56 */
+    --accent: 347 52% 47%;
+    --accent-foreground: 36 48% 94%;
 
     --success: 142 55% 48%;
-    --success-foreground: 300 9% 9%;
+    --success-foreground: 310 10% 12%;
 
     --warning: 38 88% 55%;
-    --warning-foreground: 300 9% 9%;
+    --warning-foreground: 310 10% 12%;
 
-    --info: 349 80% 71%;
-    --info-foreground: 300 9% 9%;
+    --info: 348 70% 66%;
+    --info-foreground: 310 10% 12%;
 
     --destructive: 0 68% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --achievement: 38 80% 58%;
-    --achievement-foreground: 300 9% 9%;
+    --achievement-foreground: 310 10% 12%;
 
     /* Sala de estudio un paso más profunda que el fondo oscuro */
-    --study-bg: 300 12% 6%;
-    --study-fg: 35 52% 94%;
+    --study-bg: 310 14% 8%;
+    --study-fg: 36 48% 94%;
     --study-muted: 340 12% 65%;
 
-    /* Border: #46343D */
-    --border: 330 15% 24%;
-    --input: 328 18% 19%;
+    /* Border: #44353F */
+    --border: 318 10% 25%;
+    --input: 318 10% 25%;
 
-    /* En oscuro la acción principal usa el primario rosado sobre tinta oscura */
-    --action: 349 80% 71%;
-    --action-foreground: 300 9% 9%;
+    /* En oscuro la acción principal usa el primario claro sobre fondo oscuro */
+    --action: 348 70% 66%;
+    --action-foreground: 310 10% 12%;
 
-    --border-section: 330 15% 24%;
-    --border-row: 328 18% 17%;
+    --border-section: 318 10% 25%;
+    --border-row: 318 12% 22%;
 
     /* Tabla en modo oscuro con matiz ciruela/rosado */
-    --tabla-cabecera: 328 20% 19%;
-    --tabla-contorno: 330 18% 30%;
+    --tabla-cabecera: 318 15% 21%;
+    --tabla-contorno: 318 14% 30%;
 
-    --ring: 349 80% 71%;
+    --ring: 348 70% 66%;
 
     /* Sidebar modo oscuro */
-    --sidebar-background: 300 9% 9%;
-    --sidebar-foreground: 35 52% 94%;
-    --sidebar-primary: 349 80% 71%;
-    --sidebar-primary-foreground: 300 9% 9%;
-    --sidebar-accent: 328 18% 17%;
-    --sidebar-accent-foreground: 35 52% 94%;
-    --sidebar-border: 330 15% 24%;
-    --sidebar-ring: 349 80% 71%;
+    --sidebar-background: 310 10% 12%;
+    --sidebar-foreground: 36 48% 94%;
+    --sidebar-primary: 348 70% 66%;
+    --sidebar-primary-foreground: 310 10% 12%;
+    --sidebar-accent: 318 12% 22%;
+    --sidebar-accent-foreground: 36 48% 94%;
+    --sidebar-border: 318 10% 25%;
+    --sidebar-ring: 348 70% 66%;
 
     --brand-teal: 348 44% 73%;
     --brand-violet: 335 65% 65%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(349 80% 71%), hsl(349 84% 76%));
+    --gradient-primary: linear-gradient(135deg, hsl(348 70% 66%), hsl(348 75% 72%));
     --gradient-hero: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
     --gradient-accion: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary-hover)));
-    --gradient-surface: linear-gradient(180deg, hsl(293 11% 15%) 0%, hsl(328 18% 17%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(318 12% 17%) 0%, hsl(310 10% 12%) 100%);
 
     --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.25);
     --shadow-medium: 0 4px 8px hsl(0 0% 0% / 0.35), 0 12px 28px hsl(0 0% 0% / 0.3);
     --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.25), 0 4px 16px hsl(0 0% 0% / 0.2);
 
-    /* Surface #29222A translúcida */
-    --glass-bg: hsl(293 11% 15% / 0.9);
-    --glass-border: hsl(330 15% 24% / 0.8);
+    /* Surface #30262D translúcida */
+    --glass-bg: hsl(318 12% 17% / 0.9);
+    --glass-border: hsl(318 10% 25% / 0.8);
 
-    --feature-audio: 349 80% 71%;
+    --feature-audio: 348 70% 66%;
     --feature-video: 335 65% 65%;
     --feature-class: 142 55% 48%;
     --feature-docs: 38 88% 55%;
@@ -1319,7 +1342,7 @@
 }
 
 /* =====================================
-   ATLAS — el movimiento del asistente
+   CALIBRA — el movimiento del asistente
    ===================================== */
 :root {
   --atlas-salida: cubic-bezier(0.23, 1, 0.32, 1);
@@ -1400,7 +1423,7 @@
 }
 
 /* =====================================
-   ATLAS — practicar: preguntas y respuestas
+   CALIBRA — practicar: preguntas y respuestas
    ===================================== */
 @keyframes atlas-pregunta {
   from { opacity: 0; transform: translateX(14px); }
@@ -1431,7 +1454,7 @@
 }
 
 /* =====================================
-   ATLAS — ventanas del sendero
+   CALIBRA — ventanas del sendero
    ===================================== */
 @keyframes atlas-velo { from { opacity: 0; } }
 .atlas-velo { animation: atlas-velo 200ms var(--atlas-salida) backwards; }

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import type { Visual } from "@/lib/tutor/chat";
 import {
   marcasDeRecta,
@@ -10,32 +12,52 @@ const ANCHO = 360;
 // Los datos ya fueron recalculados y verificados por el servidor: aquí solo se dibujan.
 function Cadena({ v }: { v: Extract<Visual, { forma: "cadena_porcentual" }> }) {
   const tramos = tramosDeCadena(v.pasos);
+  const [paso, setPaso] = useState(0);
   const texto = `Cadena de cambios porcentuales: ${fmt(v.pasos[0].valor)}${tramos
     .map((t) => `, ${t.op || "cambia"} a ${fmt(t.hasta)}`)
     .join("")}`;
   return (
-    <div className="tb-cadena" role="img" aria-label={texto}>
-      <span className="tb-cadena-valor">{fmt(v.pasos[0].valor)}</span>
-      {tramos.map((t, i) => (
-        <span key={i} className="tb-cadena-tramo">
-          <span
-            className={`tb-cadena-flecha ${t.sube ? "tb-sube" : "tb-baja"}`}
-          >
-            <small>{t.op}</small>
-            <svg viewBox="0 0 64 20" aria-hidden="true">
-              <path
-                d="M2 10h54m0 0-8-7m8 7-8 7"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+    <div className="tw-cadena-interactiva">
+      <div className="tb-cadena" role="img" aria-label={texto}>
+        <span className="tb-cadena-valor">{fmt(v.pasos[0].valor)}</span>
+        {tramos.map((t, i) => (
+          <span key={i} className="tb-cadena-tramo" data-activo={i < paso}>
+            <span
+              className={`tb-cadena-flecha ${t.sube ? "tb-sube" : "tb-baja"}`}
+            >
+              <small>{t.op}</small>
+              <svg viewBox="0 0 64 20" aria-hidden="true">
+                <path
+                  d="M2 10h54m0 0-8-7m8 7-8 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="tb-cadena-valor">{fmt(t.hasta)}</span>
           </span>
-          <span className="tb-cadena-valor">{fmt(t.hasta)}</span>
+        ))}
+      </div>
+      <div className="tw-cadena-controls">
+        <button
+          className="tb-btn tb-btn--suave"
+          type="button"
+          onClick={() => setPaso(paso < tramos.length ? paso + 1 : 0)}
+        >
+          {paso < tramos.length
+            ? "Ver el siguiente cambio"
+            : "Volver al inicio"}
+        </button>
+        <span aria-live="polite">
+          Paso {paso} de {tramos.length}
+          {paso > 0
+            ? ` · La nueva base es ${fmt(v.pasos[paso].valor)}`
+            : " · Observa la base inicial"}
         </span>
-      ))}
+      </div>
     </div>
   );
 }
@@ -75,7 +97,14 @@ function Barra({ v }: { v: Extract<Visual, { forma: "barra_de_partes" }> }) {
           {v.fraccion ? ` = ${v.fraccion}` : ""}
         </text>
       </svg>
-      <figcaption>Total: {fmt(v.total)}</figcaption>
+      <figcaption>
+        Total: {fmt(v.total)}
+        {v.fraccion && (
+          <MathMarkdown
+            content={`$${v.fraccion.replace(/^(\d+)\/(\d+)$/, "\\frac{$1}{$2}")}$`}
+          />
+        )}
+      </figcaption>
     </figure>
   );
 }

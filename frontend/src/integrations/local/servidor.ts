@@ -10,7 +10,7 @@ import { escribirTabla, leerTabla } from "./almacen";
 import { ID_DEL_ALUMNO } from "./consulta";
 
 /**
- * Lo que en Atlas hacían las edge functions `admision-armar` y `admision-entregar` y las funciones SQL
+ * Lo que en CALIBRA hacían las edge functions `admision-armar` y `admision-entregar` y las funciones SQL
  * del módulo, ahora en el navegador. La lógica es la misma: los mismos módulos del motor
  * (armado, corrección y cuaderno de errores) que usaban las funciones.
  *
@@ -65,7 +65,7 @@ export async function armar(body: CuerpoDeArmar): Promise<{ intento_id: string; 
   if (modo === "real") lista = lista.filter((p) => p.examen_id === body.examen_id);
   if (modo === "practica") lista = lista.filter((p) => p.curso === String(body.curso ?? ""));
 
-  // Lo que ya vio: fecha de su último intento con cada pregunta (de los 300 más recientes, como Atlas).
+  // Lo que ya vio: fecha de su último intento con cada pregunta (de los 300 más recientes, como CALIBRA).
   const vistas = new Map<string, string>();
   for (const i of [...intentos()].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 300)) {
     for (const id of i.preguntas) if (!vistas.has(id)) vistas.set(id, i.created_at);
@@ -116,7 +116,7 @@ export async function entregar(body: { intento_id?: string }) {
   const banco = await cargarBanco();
   const ids = intento.preguntas;
   const suyas = respuestas().filter((r) => r.intento_id === intento.id);
-  // Una pregunta que ya no está en el banco entra sin clave (anulada), como en Atlas.
+  // Una pregunta que ya no está en el banco entra sin clave (anulada), como en CALIBRA.
   const r = corregir(ids.map((id) => banco.preguntaPorId.get(id) ?? { id, clave: null, curso: null }), suyas);
 
   const opcionDe = new Map(suyas.map((x) => [x.pregunta_id, x.opcion]));

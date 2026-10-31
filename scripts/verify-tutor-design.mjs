@@ -56,7 +56,7 @@ const graph = {
     titulo: names[i],
     resumen:
       "Las proporciones comparan dos cantidades mediante una razón. Aparecen en problemas de escalas, porcentajes y situaciones de la vida real. Comprueba qué cantidades cambian y cómo se relacionan.",
-    idea_clave: null,
+    idea_clave: i === 3 ? "cambio-de-base" : null,
     concepto: "proporciones",
     estado: states[i],
     senal: null,
@@ -133,11 +133,12 @@ const html = `<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta n
 import React from 'react';import{createRoot}from'react-dom/client';import{QueryClient,QueryClientProvider}from'@tanstack/react-query';import{MemoryRouter,Routes,Route,useLocation}from'react-router-dom';import{ThemeProvider}from'next-themes';import Tutor from'/src/pages/Tutor.tsx';import '/src/fuentes.css';import '/src/index.css';import '/src/arcade.css';
 const graph=${JSON.stringify(graph)},conv=${JSON.stringify(conversation)};window.__requests=[];window.__failNext=false;
 const lista=[{id:'fixture',titulo:'Variaciones sucesivas',concepto:'porcentajes',created_at:new Date().toISOString()},{id:'otra',titulo:'Regla de tres',concepto:'proporciones',created_at:new Date(Date.now()-86400000).toISOString()}];
+let evidencias=[],check=null;const guardado=JSON.parse(sessionStorage.getItem('fixture-api')||'null');if(guardado){Object.assign(graph,guardado.graph);Object.assign(conv,guardado.conv);evidencias=guardado.evidencias;check=guardado.check;}const guardar=()=>sessionStorage.setItem('fixture-api',JSON.stringify({graph,conv,evidencias,check}));
 const originalFetch=window.fetch.bind(window);window.fetch=async(input,init={})=>{const path=new URL(typeof input==='string'?input:input.url,location.href).pathname;if(!path.includes('/api/v1'))return originalFetch(input,init);const method=init.method||'GET';const body=init.body?JSON.parse(init.body):null;window.__requests.push({path,method,body,key:init.headers?.['Idempotency-Key']});let data,status=200;
-const responder=(t)=>({id:'t'+conv.mensajes.length,rol:'tutor',orden:conv.mensajes.length+2,texto:t,bloques:[],degradado:false});
-if(path.endsWith('/sesion'))data={actorId:'fixture'};else if(path.endsWith('/salud'))data={ok:true,ia:'fake',pruebas:true};else if(path.endsWith('/grafo'))data=graph;else if(path.endsWith('/comprobaciones/activa'))data=null;else if(path.endsWith('/intentos')||path.endsWith('/cursos'))data=[];else if(path.endsWith('/conversaciones/fixture'))data=conv;else if(path.endsWith('/conversaciones')&&method==='GET')data=lista;else if(path.endsWith('/conversaciones')&&method==='POST'){conv.mensajes.push({id:'u'+conv.mensajes.length,rol:'estudiante',orden:conv.mensajes.length+1,texto:body.mensaje_inicial,bloques:[],degradado:false},responder('Respuesta de prueba al primer mensaje.'));data={id:'fixture',arbol_id:'arbol-a',raiz_id:'base'};}else if(path.endsWith('/conversaciones/fixture/mensajes')&&method==='POST'){if(window.__failNext){window.__failNext=false;status=503;data={error:{mensaje:'Proveedor de prueba ocupado; reintenta.'}};}else{conv.mensajes.push({id:'u'+conv.mensajes.length,rol:'estudiante',orden:conv.mensajes.length+1,texto:body.texto,bloques:[],degradado:false},responder('Respuesta de prueba para verificar el envío y la persistencia visual.'));data={ok:true};}}else if(path.endsWith('/comprobaciones'))data={id:'check'};else throw Error('Solicitud de fixture no prevista: '+method+' '+path);return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});};
-const client=new QueryClient({defaultOptions:{queries:{staleTime:Infinity,retry:false},mutations:{retry:false}}});client.setQueryData(['grafo'],graph);client.setQueryData(['salud'],{ok:true,ia:'fake',pruebas:true});client.setQueryData(['comprobacion-activa'],null);function Destination(){return React.createElement('p',{'data-destination':true},useLocation().pathname);}
-createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client},React.createElement(ThemeProvider,{attribute:'class',defaultTheme:'light'},React.createElement(MemoryRouter,{initialEntries:['/tutor']},React.createElement(Routes,null,React.createElement(Route,{path:'/tutor',element:React.createElement(Tutor)}),React.createElement(Route,{path:'/tutor/:id',element:React.createElement(Tutor)}),React.createElement(Route,{path:'/aprender/:id',element:React.createElement(Destination)}))))));
+const responder=(t)=>({id:'t'+conv.mensajes.length,rol:'tutor',orden:conv.mensajes.length+2,texto:t,bloques:[],degradado:false,pasos:['leer_grafo','leer_evidencias']});
+if(path.endsWith('/sesion'))data={actorId:'fixture'};else if(path.endsWith('/salud'))data={ok:true,ia:'fake',pruebas:true};else if(path.endsWith('/grafo'))data=graph;else if(path.endsWith('/comprobaciones/activa'))data=check;else if(path.endsWith('/evidencias'))data=evidencias;else if(path.endsWith('/intentos')||path.endsWith('/cursos'))data=[];else if(path.endsWith('/conversaciones/fixture'))data=conv;else if(path.endsWith('/conversaciones')&&method==='GET')data=lista;else if(path.endsWith('/conversaciones')&&method==='POST'){conv.mensajes.push({id:'u'+conv.mensajes.length,rol:'estudiante',orden:conv.mensajes.length+1,texto:body.mensaje_inicial,bloques:[],degradado:false},responder('Respuesta de prueba al primer mensaje.'));data={id:'fixture',arbol_id:'arbol-a',raiz_id:'base'};}else if(path.endsWith('/conversaciones/fixture/mensajes')&&method==='POST'){if(window.__failNext){window.__failNext=false;status=503;data={error:{mensaje:'Proveedor de prueba ocupado; reintenta.'}};}else{conv.mensajes.push({id:'u'+conv.mensajes.length,rol:'estudiante',orden:conv.mensajes.length+1,texto:body.texto,bloques:[],degradado:false},responder('Respuesta de prueba para verificar el envío y la persistencia visual.'));data={ok:true};}}else if(path.endsWith('/comprobaciones')&&method==='POST'){check={id:'check-'+evidencias.length,arbol_id:'arbol-a',enunciado:evidencias.length?'Un precio de 200 sube 20% y baja 25%. ¿Cuánto queda?':'Un precio de 100 sube 20% y baja 20%. ¿Cuánto queda?'};data=check;}else if(path.includes('/comprobaciones/')&&path.endsWith('/respuesta')&&method==='PUT'){const correcta=body.respuesta==='180';const rastro=correcta?null:{respuesta:body.respuesta,idea_clave:'cambio-de-base',descripcion:'Cambio de base',nodo_retorno_id:'inversa',motivo:'mapa_error'};data={correcta,ayuda:false,solucion:correcta?'200 × 1,2 × 0,75 = 180':'100 × 1,2 × 0,8 = 96',rastro,nota:'Fixture: resultado numérico verificado.'};graph.nodos.find(n=>n.id==='inversa').estado=correcta?'aplicado':'fallo';graph.nodos.find(n=>n.id==='inversa').titulo='Cambio de base';graph.foco='inversa';graph.version++;const base={arbol_id:'arbol-a',comprobacion_id:check.id,created_at:new Date().toISOString()};evidencias.unshift({...base,id:'e-'+evidencias.length,tipo:correcta?'resolvio_sin_ayuda':'aplicacion_por_reforzar',detalle:data});if(correcta)evidencias.unshift({...base,id:'correccion-'+evidencias.length,tipo:'corrigio_tras_error',detalle:{idea_clave:'cambio-de-base'}});check=null;}else if(path.includes('/comprobaciones/')&&path.endsWith('/cancelar')){check=null;data={cancelada:true};}else throw Error('Solicitud de fixture no prevista: '+method+' '+path);guardar();return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});};
+const client=new QueryClient({defaultOptions:{queries:{staleTime:Infinity,retry:false},mutations:{retry:false}}});client.setQueryData(['grafo'],graph);client.setQueryData(['salud'],{ok:true,ia:'fake',pruebas:true});client.setQueryData(['comprobacion-activa'],null);function Destination(){return React.createElement('p',{'data-destination':true},useLocation().pathname);}function TrackedTutor(){const l=useLocation();React.useEffect(()=>sessionStorage.setItem('fixture-route',l.pathname+l.search),[l.pathname,l.search]);return React.createElement(Tutor);}
+if(new URLSearchParams(location.search).has('integrada')){history.replaceState(null,'','/tutor/fixture?demo=1');const{default:App}=await import('/src/App.tsx');createRoot(document.getElementById('root')).render(React.createElement(App));}else createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client},React.createElement(ThemeProvider,{attribute:'class',defaultTheme:'light'},React.createElement(MemoryRouter,{initialEntries:[sessionStorage.getItem('fixture-route')||'/tutor']},React.createElement(Routes,null,React.createElement(Route,{path:'/tutor',element:React.createElement(TrackedTutor)}),React.createElement(Route,{path:'/tutor/:id',element:React.createElement(TrackedTutor)}),React.createElement(Route,{path:'/aprender/:id',element:React.createElement(Destination)}))))));
 </script></body></html>`;
 process.chdir(resolve(root, "frontend"));
 const server = await createServer({
@@ -230,17 +231,24 @@ try {
       awaitPromise: true,
     });
     if (r.exceptionDetails)
-      throw Error(
+      throw new Error(
         r.exceptionDetails.exception?.description ?? r.exceptionDetails.text,
       );
     return r.result.value;
   };
   async function until(expression) {
     for (let i = 0; i < 150; i++) {
-      if (await evalJS(expression)) return;
+      if (await evalJS(`Boolean(${expression})`)) return;
       await new Promise((r) => setTimeout(r, 100));
     }
-    throw Error(
+    const falloCaptura = await send("Page.captureScreenshot", {
+      format: "png",
+    });
+    await writeFile(
+      resolve(root, ".atl/tutor-ui-fallo.png"),
+      Buffer.from(falloCaptura.data, "base64"),
+    );
+    throw new Error(
       "No se cumplió condición: " +
         expression +
         "\n" +
@@ -250,8 +258,14 @@ try {
     );
   }
   async function click(selector) {
+    await evalJS(
+      `document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({block:'center',behavior:'instant'})`,
+    );
+    await evalJS(
+      `new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>r(true))))`,
+    );
     const box = await evalJS(
-      `(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)throw Error('No existe '+${JSON.stringify(selector)});e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()`,
+      `(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)throw Error('No existe '+${JSON.stringify(selector)});const r=e.getBoundingClientRect();const x=r.x+r.width/2,y=r.y+r.height/2;const hit=document.elementFromPoint(x,y);if(!e.contains(hit))throw Error('Objetivo tapado '+${JSON.stringify(selector)}+' por '+hit?.outerHTML.slice(0,250));return{x,y}})()`,
     );
     await send("Input.dispatchMouseEvent", {
       type: "mousePressed",
@@ -279,7 +293,7 @@ try {
   });
   await until(`Boolean(document.querySelector('.tc-home'))`);
   await evalJS("document.fonts.ready");
-  const ANCHOS = [1672, 1440, 1200, 1199, 900, 899, 600, 599, 390, 360];
+  const ANCHOS = [1672, 1440, 1200, 1199, 900, 899, 600, 599, 390, 375, 360];
   const metricas = (ancho) =>
     send("Emulation.setDeviceMetricsOverride", {
       width: ancho,
@@ -409,7 +423,7 @@ try {
   await until(`Boolean(document.querySelector('.tc-chat'))`);
 
   // ---------- Conversación (S3, S4, S5) ----------
-  await until(`document.querySelectorAll('.tb').length>=2`);
+  await until(`document.querySelectorAll('.tw-compacto').length>=2`);
   const conversacion = await revisarAncho("conversacion", ".tc-chat");
   await metricas(1440);
   const log = await evalJS("document.querySelector('.tc-log').innerText");
@@ -417,11 +431,26 @@ try {
     log.includes("Respuesta de prueba al primer mensaje"),
     "El primer turno debe verse",
   );
+  await click('[aria-label="Abrir Contraste en el panel"]');
+  await until(`document.querySelector('.tw-panel .tb-contraste')`);
+  const contraste = await evalJS(
+    `document.querySelector('.tw-panel').innerText`,
+  );
   for (const t of ["Lo que hiciste", "Lo correcto", "Aquí se separan"])
     assert(
-      log.toLowerCase().includes(t.toLowerCase()),
+      contraste.toLowerCase().includes(t.toLowerCase()),
       "Falta en el contraste: " + t,
     );
+  await click('[aria-label="Abrir Visual verificado en el panel"]');
+  await until(`document.querySelectorAll('.tw-tabs [role=tab]').length===3`);
+  assert(
+    await evalJS(`Boolean(document.querySelector('.tw-panel .tb-figura'))`),
+  );
+  await hacerClicEnTexto(
+    "Grafo de comprensión",
+    "document.querySelector('.tw-tabs')",
+  );
+  await until(`document.querySelector('.tw-grafo-vivo canvas')`);
   const acciones = await evalJS(
     `[...document.querySelectorAll('.tc-actions .tc-chip')].map(b=>b.innerText.trim())`,
   );
@@ -519,6 +548,130 @@ try {
   );
   await hacerClicEnTexto("Noche");
   await until(`!document.querySelector('.tc-claro')`);
+  // ---------- Panel con teclado, hoja móvil y evidencia sin animaciones inventadas ----------
+  await metricas(1440);
+  await until(`document.querySelector('.tw-divisor')`);
+  const anchoAntes = await evalJS(
+    `document.querySelector('.tw-divisor').getAttribute('aria-valuenow')`,
+  );
+  await evalJS(`document.querySelector('.tw-divisor').focus()`);
+  await tecla("ArrowLeft");
+  assert.equal(
+    Number(
+      await evalJS(
+        `document.querySelector('.tw-divisor').getAttribute('aria-valuenow')`,
+      ),
+    ),
+    Number(anchoAntes) + 2,
+  );
+  assert.equal(
+    await evalJS(
+      `JSON.parse(localStorage.getItem('calibra-tutor-panel')).ancho`,
+    ),
+    Number(anchoAntes) + 2,
+  );
+  await hacerClicEnTexto("Dame una comprobación");
+  await until(`document.querySelector('.tw-comprobacion input')`);
+  await click(".tw-comprobacion input");
+  await send("Input.insertText", { text: "100" });
+  await hacerClicEnTexto("Comprobar mi resultado");
+  await until(
+    `document.querySelector('.tw-retro')?.textContent.includes('Cambio de base')`,
+  );
+  await until(
+    `document.querySelector('.tw-grafo-vivo')?.dataset.animando==='true'`,
+  );
+  await capturar("retropropagacion", 1440);
+  await until(
+    `document.querySelector('.tw-grafo-vivo')?.dataset.animando==='false'`,
+  );
+  assert(
+    await evalJS(
+      `document.querySelector('.tw-camino').textContent.includes('Volvamos a practicar')`,
+    ),
+  );
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  await hacerClicEnTexto("Ver cómo viajó el error");
+  assert.equal(
+    await evalJS(`document.querySelector('.tw-grafo-vivo').dataset.animando`),
+    "false",
+  );
+  assert(
+    await evalJS(
+      `document.querySelector('.tw-retro').textContent.includes('Tu error apunta a: Cambio de base')`,
+    ),
+  );
+  await capturar("retro-reducido", 1440);
+  await metricas(375);
+  await until(
+    `getComputedStyle(document.querySelector('.tw-sheet-handle')).display!=='none'`,
+  );
+  await evalJS(`document.querySelector('.tw-sheet-handle').focus()`);
+  await tecla("ArrowUp");
+  await until(`document.querySelector('.tw-panel--completa')`);
+  await capturar("hoja-completa", 375);
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  await tecla("ArrowDown");
+  await until(`document.querySelector('.tw-panel--media')`);
+  await tecla("ArrowDown");
+  await until(`!document.querySelector('.tw-panel')`);
+  await hacerClicEnTexto("Ver mapa");
+  await until(`document.querySelector('.tw-panel--media')`);
+  await metricas(1440);
+  await hacerClicEnTexto("Dame una comprobación");
+  await until(`document.querySelector('.tw-comprobacion input')`);
+  await click(".tw-comprobacion input");
+  await send("Input.insertText", { text: "180" });
+  await hacerClicEnTexto("Comprobar mi resultado");
+  await until(`document.querySelector('.tw-momento')`);
+  await until(`!document.querySelector('.tw-retro')`);
+  assert(
+    await evalJS(
+      `document.querySelector('.tw-momento').textContent.includes('100')&&document.querySelector('.tw-momento').textContent.includes('180')`,
+    ),
+  );
+  assert(
+    await evalJS(
+      `document.querySelector('.tw-camino li:last-child').dataset.hecho==='true'`,
+    ),
+  );
+  await capturar("momento-comprension", 1440);
+  await evalJS(`window.__antesRecarga=true`);
+  await send("Page.reload");
+  await until(
+    `!window.__antesRecarga&&document.querySelector('.tw-momento')&&document.querySelector('.tw-grafo-vivo canvas')`,
+  );
+  assert.equal(
+    await evalJS(`document.querySelector('.tw-grafo-vivo').dataset.animando`),
+    "false",
+  );
+  await metricas(375);
+  await capturar("comprension-movil", 375);
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  // Rama de identidad completa: bienvenida y App reales, con el mismo transporte aislado.
+  await evalJS(`sessionStorage.removeItem('calibra_welcome_seen_v1')`);
+  await metricas(375);
+  await send("Page.navigate", { url: `http://127.0.0.1:${port}/__design.html?integrada=1` });
+  await until(`document.querySelector('[aria-label="Bienvenida a CALIBRA"]')`);
+  assert.equal(await evalJS(`document.activeElement?.getAttribute('aria-label')`), "Entrar a CALIBRA");
+  assert.equal(await evalJS(`document.querySelector('.tc-page')`), null, "La bienvenida no debe dejar controles del tutor detrás");
+  await tecla("Tab");
+  assert.equal(await evalJS(`document.activeElement?.getAttribute('aria-label')`), "Entrar a CALIBRA");
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  await capturar("bienvenida-integrada", 375);
+  await tecla("Enter");
+  await until(`document.querySelector('.tc-conv')&&!document.querySelector('[aria-label="Bienvenida a CALIBRA"]')`);
+  assert.equal(await evalJS(`location.pathname+location.search`), "/tutor/fixture?demo=1", "La bienvenida debe conservar el enlace del tutor");
+  assert.equal(await evalJS(`document.querySelector('[aria-label="Compañero Calibra Gecko"]')`), null, "La mascota no debe tapar los controles del tutor");
+  assert.equal(await evalJS(`sessionStorage.getItem('calibra_welcome_seen_v1')`), "true");
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  await capturar("tutor-integrado", 375);
+  await metricas(1440);
+  await until(`document.querySelector('.tw-grafo-vivo canvas')`);
+  await capturar("tutor-integrado", 1440);
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
   assert.equal(exceptions.length, 0, exceptions.join("\n"));
   console.log(
     JSON.stringify(
@@ -533,12 +686,28 @@ try {
           "mapa plegable y foco del tutor",
           "historial en hoja",
           "modo noche/claro del tutor",
+          "artefactos compactos y pestañas",
+          "divisor con teclado y preferencias guardadas",
+          "comprobación inline, retropropagación y corrección con evidencia",
+          "hoja móvil en tres alturas y sin desbordes a 375px",
+          "movimiento reducido: estado final sin animación",
+          "recarga: reconstruye evidencia sin repetir el recorrido",
+          "App integrada: bienvenida con teclado, foco y enlace preservado",
+          "marca del compañero sin mascota superpuesta al tutor en móvil",
         ],
         screenshots: [
           ".atl/inicio-1672.png",
           ".atl/inicio-390.png",
           ".atl/conversacion-1672.png",
           ".atl/conversacion-390.png",
+          ".atl/retropropagacion-1440.png",
+          ".atl/retro-reducido-1440.png",
+          ".atl/hoja-completa-375.png",
+          ".atl/momento-comprension-1440.png",
+          ".atl/comprension-movil-375.png",
+          ".atl/bienvenida-integrada-375.png",
+          ".atl/tutor-integrado-375.png",
+          ".atl/tutor-integrado-1440.png",
         ],
         excepciones: exceptions,
         transporte: "fixture aislado, sin IA de pago",

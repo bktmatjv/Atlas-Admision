@@ -60,9 +60,13 @@ export default function Admision() {
   const { data: examenes = [] } = useQuery({
     queryKey: ["admision-examenes"],
     queryFn: async () => {
-      const { data, error: e } = await admision.examenes();
-      if (e) throw e;
-      return data ?? [];
+      try {
+        const { data, error: e } = await admision.examenes();
+        if (e) return [];
+        return data ?? [];
+      } catch {
+        return [];
+      }
     },
   });
 
@@ -70,9 +74,13 @@ export default function Admision() {
     queryKey: ["admision-intentos", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error: e } = await admision.intentos();
-      if (e) throw e;
-      return data ?? [];
+      try {
+        const { data, error: e } = await admision.intentos();
+        if (e) return leerTabla<IntentoDeAdmision>("admision_intentos");
+        return data ?? [];
+      } catch {
+        return leerTabla<IntentoDeAdmision>("admision_intentos");
+      }
     },
   });
 

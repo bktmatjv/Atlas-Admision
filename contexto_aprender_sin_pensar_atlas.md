@@ -1,10 +1,10 @@
-# Contexto para el agente: grieta «Aprender sin pensar» y Atlas Admisión
+# Contexto para el agente: grieta «Aprender sin pensar» y CALIBRA
 
 Fecha de preparación: 30 de octubre de 2026.
 
 ## 1. Propósito y estado de este documento
 
-Este documento reúne el contexto de una hackatón sobre educación peruana hacia 2036 y explica la grieta que se desea abordar: «Aprender sin pensar». También conecta el problema con Atlas Admisión, una plataforma de preparación para ingresar a la Universidad Nacional Mayor de San Marcos (UNMSM).
+Este documento reúne el contexto de una hackatón sobre educación peruana hacia 2036 y explica la grieta que se desea abordar: «Aprender sin pensar». También conecta el problema con CALIBRA, una plataforma de preparación para ingresar a la Universidad Nacional Mayor de San Marcos (UNMSM).
 
 El objetivo inmediato es que el agente comprenda el problema antes de proponer cambios. Las mejoras de producto descritas aquí son propuestas e hipótesis para evaluar; no constituyen una especificación funcional aprobada ni una orden de implementar todas las funcionalidades.
 
@@ -12,7 +12,7 @@ Distinguir siempre entre:
 
 - Contexto de la convocatoria proporcionado por el usuario.
 - Evidencia publicada y sus limitaciones.
-- Descripción de Atlas proporcionada por el usuario, sin inspección del código.
+- Descripción de CALIBRA proporcionada por el usuario, sin inspección del código.
 - Hipótesis y posibles mejoras que todavía deben validarse.
 
 ## 2. Contexto de la hackatón
@@ -112,7 +112,7 @@ Ambos se identifican aquí como documentos de trabajo, sin asumir revisión por 
 
 ## 5. Qué se debe resolver en términos de diseño
 
-Estas son implicaciones de diseño propuestas a partir de la evidencia, no efectos ya comprobados de Atlas:
+Estas son implicaciones de diseño propuestas a partir de la evidencia, no efectos ya comprobados de CALIBRA:
 
 - Hacer que el estudiante participe en la actividad intelectual necesaria para aprender.
 - Ofrecer ayuda suficiente para avanzar, adaptada a su conocimiento previo.
@@ -123,9 +123,9 @@ Estas son implicaciones de diseño propuestas a partir de la evidencia, no efect
 
 Evitar convertir el esfuerzo en un castigo. Una persona que no sabe empezar necesita un punto de entrada: una explicación, un ejemplo o una pista útil. Solicitar justificaciones en todos los pasos puede volver la experiencia agotadora.
 
-## 6. Qué es Atlas Admisión según el usuario
+## 6. Qué es CALIBRA según el usuario
 
-Atlas es una plataforma que ayuda a postulantes a San Marcos a conocer su nivel, identificar qué reforzar y aprovechar mejor su tiempo de estudio.
+CALIBRA es una plataforma que ayuda a postulantes a San Marcos a conocer su nivel, identificar qué reforzar y aprovechar mejor su tiempo de estudio.
 
 Funcionalidades descritas:
 
@@ -142,18 +142,18 @@ El usuario indica que cuenta con más de 2.000 preguntas de 26 exámenes. Esta i
 
 No se han proporcionado aquí el stack, la arquitectura, el modelo de datos, las integraciones, la calidad de clasificación de las preguntas ni el estado de implementación de cada función. No inventar esos detalles.
 
-## 7. Por qué Atlas puede encajar en esta grieta
+## 7. Por qué CALIBRA puede encajar en esta grieta
 
 La preparación para admisión exige adquirir conocimientos y capacidad de resolución, no solo producir tareas. Esto permite estudiar la distancia entre comprender una explicación asistida y resolver de forma independiente.
 
-La propuesta actual de Atlas aborda principalmente orientación y práctica. Su conexión con la grieta se fortalecería si pudiera:
+La propuesta actual de CALIBRA aborda principalmente orientación y práctica. Su conexión con la grieta se fortalecería si pudiera:
 
 1. Identificar dificultades mediante evidencia suficiente.
 2. Ayudar a trabajar esas dificultades.
 3. Comprobar la aplicación en un problema nuevo.
 4. Recuperar lo aprendido posteriormente.
 
-El público de Atlas es preuniversitario y puede incluir menores y adultos. Las cifras de universitarios no describen automáticamente a este público. Hay que validar sus hábitos reales de estudio y de uso de IA.
+El público de CALIBRA es preuniversitario y puede incluir menores y adultos. Las cifras de universitarios no describen automáticamente a este público. Hay que validar sus hábitos reales de estudio y de uso de IA.
 
 Agregar un chatbot no demuestra que se resuelva la grieta. Tampoco basta con hacer una prueba de comprensión: detectar una dificultad debe conducir a un refuerzo útil.
 
@@ -170,7 +170,7 @@ Hipótesis relacionadas:
 
 Todas deben validarse; no presentarlas como resultados del producto.
 
-## 9. Mejoras propuestas para evaluar en Atlas
+## 9. Mejoras propuestas para evaluar en CALIBRA
 
 ### 9.1. Práctica con ayuda adaptada
 
@@ -198,7 +198,7 @@ Solicitar ocasionalmente una estimación de seguridad para compararla con desemp
 
 Pregunta inicial: «Un producto recibe dos descuentos sucesivos del 20%. ¿El descuento total es del 40%?».
 
-El estudiante responde 40%. Atlas pregunta cómo llegó a ese resultado y observa si sumó los porcentajes.
+El estudiante responde 40%. CALIBRA pregunta cómo llegó a ese resultado y observa si sumó los porcentajes.
 
 Refuerzo con un precio de S/100:
 
@@ -260,7 +260,7 @@ Otros resultados:
 - Cantidad y tipo de ayuda requerida en tareas comparables.
 - Tiempo adicional, abandono y utilidad percibida.
 
-Diseño exploratorio posible: comparar el estudio habitual con IA o soluciones explicadas frente al mismo estudio más el recorrido de Atlas. Mantener tiempos comparables, medir conocimiento inicial, usar preguntas distintas y de dificultad comparable, y aplicar una rúbrica común. Si es viable, asignar condiciones al azar y revisar sin conocer el grupo.
+Diseño exploratorio posible: comparar el estudio habitual con IA o soluciones explicadas frente al mismo estudio más el recorrido de CALIBRA. Mantener tiempos comparables, medir conocimiento inicial, usar preguntas distintas y de dificultad comparable, y aplicar una rúbrica común. Si es viable, asignar condiciones al azar y revisar sin conocer el grupo.
 
 No usar exclusivamente satisfacción, mensajes enviados, sesiones completadas o aciertos mientras se recibe ayuda como prueba de aprendizaje. Un piloto pequeño produce señales exploratorias; no justifica promesas generales de eficacia.
 
@@ -276,19 +276,19 @@ No usar exclusivamente satisfacción, mensajes enviados, sesiones completadas o 
 - Mostrar criterios de evaluación y permitir revisión docente cuando corresponda.
 - Minimizar los datos recogidos y contemplar un diseño adecuado para menores cuando formen parte del público.
 - Separar los requisitos confirmados, las hipótesis de producto y las decisiones pendientes.
-- No implementar todas las ideas de este documento automáticamente ni afirmar que ya existen en Atlas.
+- No implementar todas las ideas de este documento automáticamente ni afirmar que ya existen en CALIBRA.
 
 ## 15. Encargo que este contexto deja al agente
 
-Comprender la grieta y evaluar cómo adaptar Atlas para que cada error pueda convertirse en una oportunidad de refuerzo con evidencia posterior de comprensión.
+Comprender la grieta y evaluar cómo adaptar CALIBRA para que cada error pueda convertirse en una oportunidad de refuerzo con evidencia posterior de comprensión.
 
 Antes de proponer una solución técnica, identificar el público inicial, el comportamiento problemático a validar, la intervención mínima, el resultado esperado y cómo se medirá. Si se proporciona un repositorio, revisar su estado antes de asumir funcionalidades o arquitectura.
 
-La pregunta orientadora es: «Después de estudiar con ayuda, ¿qué puede explicar y aplicar el postulante por su cuenta, y cómo puede Atlas ayudarlo a mejorar eso?».
+La pregunta orientadora es: «Después de estudiar con ayuda, ¿qué puede explicar y aplicar el postulante por su cuenta, y cómo puede CALIBRA ayudarlo a mejorar eso?».
 
 ## 16. Fuentes consultadas en la investigación previa
 
-Las fuentes documentan el problema y resultados de otras intervenciones; no prueban la eficacia de Atlas.
+Las fuentes documentan el problema y resultados de otras intervenciones; no prueban la eficacia de CALIBRA.
 
 1. uDocz. Reporte 2025: Impacto de la IA en la Educación Superior Peruana.
    https://www.udocz.com/academic_report

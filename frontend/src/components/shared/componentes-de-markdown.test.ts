@@ -9,7 +9,7 @@ import { componentesDeMarkdown } from "./componentes-de-markdown";
  * Lo que escribe el modelo se pinta con estas piezas (bucle de calidad, vuelta 9). Si un material
  * subido trae instrucciones escondidas, el modelo puede escribir una imagen que apunte fuera
  * con datos en la URL: el navegador del alumno la pediría sola. Y un enlace que se abre en la
- * misma pestaña saca al alumno de Atlas a mitad de la conversación.
+ * misma pestaña saca al alumno de Calibra a mitad de la conversación.
  */
 const pintar = (md: string) =>
   renderToStaticMarkup(createElement(ReactMarkdown, { remarkPlugins: [remarkGfm], components: componentesDeMarkdown }, md));

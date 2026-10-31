@@ -1111,6 +1111,17 @@ describe("Tutor agente: ciclo con herramientas del sistema", () => {
     expect(r.status).toBe(201);
     expect(r.data.tutor.texto).toContain("PROVEEDOR DE PRUEBAS");
     expect(r.data.tutor.degradado).toBe(false);
+    expect(r.data.tutor.pasos).toEqual(["leer_grafo"]);
+    const guardado = (
+      await http(`/conversaciones/${conv}`, "GET", undefined, a)
+    ).data;
+    expect(guardado.mensajes.at(-1).pasos).toEqual(["leer_grafo"]);
+    expect(guardado.mensajes[0].pasos).toEqual([]);
+    const fila = await db.query(
+      `SELECT pasos FROM ${schema}.mensajes WHERE id=$1`,
+      [r.data.tutor.id],
+    );
+    expect(fila.rows[0].pasos).toEqual(["leer_grafo"]);
     const ms = await mensajes();
     expect(ms.map((m) => m.rol)).toEqual(["estudiante", "tutor"]);
   });
@@ -1120,6 +1131,7 @@ describe("Tutor agente: ciclo con herramientas del sistema", () => {
     const x = await decir("Mensaje con clave", key);
     const y = await decir("Mensaje con clave", key);
     expect(y.data.tutor.id).toBe(x.data.tutor.id);
+    expect(y.data.tutor.pasos).toEqual(x.data.tutor.pasos);
     expect((await mensajes()).length).toBe(antes + 2);
     expect((await decir("Otro texto", key)).status).toBe(409);
     expect((await decir("sin clave", "corta")).status).toBe(400);
@@ -1138,6 +1150,10 @@ describe("Tutor agente: ciclo con herramientas del sistema", () => {
   it("ejecuta como máximo 4 llamadas a herramientas por turno", async () => {
     const r = await decir("[[cuatro]]");
     expect(r.data.tutor.texto).toBe("Ejecutadas: 4");
+    expect(r.data.tutor.pasos).toHaveLength(4);
+    expect(
+      r.data.tutor.pasos.every((p: unknown) => typeof p === "string"),
+    ).toBe(true);
   });
   it("repara una sola vez un turno que no pasa la forma", async () => {
     const r = await decir("[[reparable]]");
