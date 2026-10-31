@@ -28,7 +28,7 @@ Fuera de alcance: Redis o estado compartido entre instancias, streaming, panel d
 | --- | --- | --- | --- |
 | T1 | S1, S2, S4, S5, S6, S7 + pruebas 1–7, 9, 12–14 | hecha | ver `git log` (`feat(tutor): router de modelos con failover`) |
 | T2 | S3 + pruebas del adaptador Cloudflare | hecha | ver `git log` (`feat(tutor): adaptador de Cloudflare Workers AI para el router`) |
-| T3 | S8, S9 + pruebas 8, 10, 11 (+ migración aditiva) | pendiente | — |
+| T3 | S8, S9 + pruebas 8, 10, 11 (+ migración aditiva) | hecha | ver `git log` (`feat(tutor): el turno guarda el destino que respondió y /salud muestra el router`) |
 | T4 | S11 (documentación) | pendiente | — |
 
 ## Log
@@ -81,3 +81,19 @@ Las páginas oficiales **no se pudieron abrir** desde este contenedor (proxy: `C
 - Cuota gratuita (10 000 neuronas/día, reinicio 00:00 UTC), error 3036 (429), 3040 (429, capacidad), 403/5035 para modelos solo de pago: https://developers.cloudflare.com/workers-ai/platform/pricing/ , https://developers.cloudflare.com/workers-ai/platform/errors/ , https://developers.cloudflare.com/changelog/post/2026-07-28-models-require-workers-paid/
 - Límites por solicitud por modelo en Cloudflare (20 solicitudes/min por cuenta y modelo en los modelos «frontier» con facturación estándar): **solo fragmentos, no confirmado en la página**; el router no depende de ese dato.
 - Groq (https://console.groq.com/docs/rate-limits , https://console.groq.com/docs/errors , https://console.groq.com/docs/models): `retry-after` está en segundos y solo se envía con un 429; los encabezados `x-ratelimit-*` se envían siempre; los de requests se refieren al límite **diario** (RPD) y los de tokens al límite **por minuto** (TPM); el ejemplo de reinicio tiene el formato `2m59.56s`; los límites se aplican a nivel de organización y la página de modelos lista valores por modelo (RPM/TPM por modelo), de modo que otro modelo de Groq de la cadena **sí** sirve de respaldo cuando uno agota su cuota. Matiz: «por modelo» está respaldado por los fragmentos de la página de modelos; la afirmación literal de que el contador diario es independiente por modelo no apareció textualmente y se confirma con la prueba manual (el modelo B debe responder cuando A recibe un 429).
+
+### T3 — destino por turno, /salud y pruebas con el agente
+
+- Migración aditiva `backend/src/database/destino-ia.ts` (`DestinoIa1770000006000`): `ALTER TABLE mensajes ADD COLUMN destino_ia text` (nullable; sin `down` destructivo, como las anteriores) y su registro en `database.ts`.
+- `RouterIA` marca cada respuesta con `destino` («proveedor:modelo»). El agente (`agente.ts`, solo `ciclo` y el `INSERT` del turno del tutor) toma el destino de la **última** llamada del turno (la que produjo la respuesta final o la reparación) y lo guarda en `mensajes.destino_ia`. Con `groq`, `anthropic` y `fake` queda en `NULL`; los mensajes del estudiante nunca llevan destino. No se tocó la lógica pedagógica ni la forma de llamar al proveedor.
+- `GET /api/v1/salud` agrega `router`: lista de destinos con `id`, `proveedor`, `modelo`, `herramientas`, `estado` (`CERRADO | ABIERTO | SEMIABIERTO`), `hasta` (ISO mientras está `ABIERTO` y se recuperará solo; `null` si no aplica o si es hasta reiniciar), `motivo` (`limite | fallos | mal_configurado | null`), `ocupados` y `en_cola`. Es `null` cuando `AI_PROVIDER` no es `router`. El resto de la respuesta (`ok`, `ia`, `pruebas`) no cambia, así que `SessionGate` en el frontend no se ve afectado. Para exponer el estado, `Health` (en `app.ts`) inyecta `Proveedores`, que ya exporta `TutorModule`.
+- Observabilidad: una línea de log JSON por llamada al router (`[RouterIA] {"evento":"llm_router","ok":true,"destino":…,"intentos":…,"failovers":[{destino,motivo,estado}],"latencia_ms":…,"espera_cola_ms":…,"tokens":{entrada,salida},"disyuntor":{id:estado}}`), `warn` cuando no hubo respuesta, `error` cuando fue un 400 (bug de solicitud) o un destino quedó mal configurado. Nunca incluye prompts, mensajes del estudiante, documentos ni claves (hay pruebas que lo verifican).
+- Pruebas añadidas en `backend/test/system.test.ts` (describe «Router de modelos con el agente», 6 pruebas, contra PostgreSQL real y con la API de Groq simulada a nivel de `fetch` global; las llamadas a la propia app siguen siendo reales):
+  - columna `destino_ia` existe y es nullable;
+  - el turno guarda `groq:modelo-a`; con el proveedor de pruebas queda `NULL`;
+  - **11** failover a mitad del ciclo de herramientas: A responde con `leer_grafo`, A agota su cuota en la segunda vuelta y B recibe exactamente los mismos mensajes (incluido el `tool_calls` con id de A y su resultado), el turno termina sin degradarse y queda un solo mensaje del tutor con `destino_ia = groq:modelo-b`;
+  - **8** salida inválida: se repara una vez (2 llamadas, la segunda con `ERROR_DE_FORMA`) y, si la reparación también falla, el turno se degrada a solo texto sin más llamadas;
+  - **10** reintento con la misma clave: el primer intento falla con 503 («puedes reintentar») dejando 1 mensaje del estudiante y 0 del tutor; con todos los destinos abiertos el siguiente turno responde 503 de inmediato sin llamar a Groq; pasado el enfriamiento el reintento con la misma clave responde 201 y repetirlo no llama al modelo ni duplica mensajes;
+  - `/salud` muestra el estado del router (`ABIERTO` con `hasta` tras un 429) sin claves, y `router: null` con el proveedor de pruebas.
+- Resultado real: `npm run test:api` (PostgreSQL 16 local) → **310 pruebas pasan en 10 archivos** (esta vez no apareció el 429 intermitente de la línea base). `npm run lint` y `npm run typecheck` sin errores.
+- Nota: la espera de 1,15 s de la prueba 10 es real (el enfriamiento mínimo configurable es 1000 ms); es la única espera real de las pruebas nuevas.

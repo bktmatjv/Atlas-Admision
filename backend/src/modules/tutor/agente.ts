@@ -476,7 +476,7 @@ export class AgenteService {
         clave: "r:" + key,
       };
       await m.query(
-        "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,bloques,grafo_ops,descartes,prompt_version,degradado,clave) VALUES($1,$2,$3,'tutor',$4,$5,$6,$7,$8,$9,$10)",
+        "INSERT INTO mensajes(id,conversacion_id,orden,rol,texto,bloques,grafo_ops,descartes,prompt_version,degradado,clave,destino_ia) VALUES($1,$2,$3,'tutor',$4,$5,$6,$7,$8,$9,$10,$11)",
         [
           fila.id,
           id,
@@ -488,6 +488,7 @@ export class AgenteService {
           PROMPT_AGENTE,
           fila.degradado,
           fila.clave,
+          bruto.destino,
         ],
       );
       return fila;
@@ -670,8 +671,11 @@ export class AgenteService {
     mensaje: string;
     degradado: boolean;
     invitar: boolean;
+    // Destino del router que respondió por última vez en el turno; null sin router.
+    destino: string | null;
   }> {
     const limite = Date.now() + TIMEOUT_TURNO_MS;
+    let destino: string | null = null;
     // Con una comprobación activa no hay lectura de intentos ni práctica generada.
     const herramientas = HERRAMIENTAS.filter(
       (h) =>
@@ -725,6 +729,7 @@ export class AgenteService {
         herramientas: cierre ? [RESPONDER] : [...herramientas, RESPONDER],
         ...(cierre ? { forzar: "responder" } : {}),
       });
+      destino = r.destino ?? destino;
       const reales = r.llamadas.filter((l) => l.nombre !== "responder");
       if (
         !cierre &&
@@ -783,6 +788,7 @@ export class AgenteService {
         herramientas: [RESPONDER],
         forzar: "responder",
       });
+      destino = r2.destino ?? destino;
       ({ crudo, texto: plano } = extraerTurno(r2));
       forma = validarForma(crudo);
       if (!forma.ok) {
@@ -805,6 +811,7 @@ export class AgenteService {
           ).slice(0, 4000),
           degradado: true,
           invitar: false,
+          destino,
         };
       }
     }
@@ -813,6 +820,7 @@ export class AgenteService {
       mensaje: forma.turno.mensaje,
       degradado: false,
       invitar,
+      destino,
     };
   }
   private async ejecutar(

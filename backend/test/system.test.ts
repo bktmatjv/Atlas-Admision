@@ -1,5 +1,14 @@
 import "reflect-metadata";
-import { beforeAll, afterAll, describe, it, expect } from "vitest";
+import {
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  describe,
+  it,
+  expect,
+  vi,
+} from "vitest";
 import { Client } from "pg";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -13,6 +22,7 @@ import {
   instanciaDesdeClave,
 } from "../src/modules/seguimiento/plantillas";
 import { clavesExpuestas } from "../src/modules/seguimiento/expuestas";
+import { olvidarRouters } from "../src/modules/tutor/proveedor";
 let app: INestApplication,
   db: Client,
   url: string,
@@ -2172,5 +2182,262 @@ describe("Fallos del proveedor durante un turno", () => {
       [conv, texto],
     );
     expect(total.rows[0].n).toBe(1);
+  });
+});
+
+describe("Router de modelos con el agente (Groq simulado, sin llamadas reales)", () => {
+  type Llamada = {
+    modelo: string;
+    mensajes: Record<string, unknown>[];
+    herramientas: string[];
+  };
+  const fetchReal = globalThis.fetch;
+  let a: string;
+  let llamadas: Llamada[];
+  const respuestaGroq = (mensaje: Record<string, unknown>) =>
+    new Response(
+      JSON.stringify({
+        choices: [{ message: { content: null, ...mensaje } }],
+        usage: { prompt_tokens: 12, completion_tokens: 4 },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  const responder = (args: unknown) =>
+    respuestaGroq({
+      tool_calls: [
+        {
+          id: "call_resp",
+          type: "function",
+          function: { name: "responder", arguments: JSON.stringify(args) },
+        },
+      ],
+    });
+  const turno = (mensaje: string) =>
+    responder({ mensaje, bloques: [], grafo_ops: [] });
+  const limite = (segundos = 30) =>
+    new Response("{}", {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        "retry-after": String(segundos),
+      },
+    });
+  // Solo intercepta la API de Groq: las llamadas a la propia app siguen siendo reales.
+  const simular = (guion: (l: Llamada, n: number) => Response) =>
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (!String(url).startsWith("https://api.groq.com/"))
+        return fetchReal(url, init);
+      const cuerpo = JSON.parse(init.body as string);
+      llamadas.push({
+        modelo: cuerpo.model,
+        mensajes: cuerpo.messages,
+        herramientas: (cuerpo.tools ?? []).map(
+          (t: { function: { name: string } }) => t.function.name,
+        ),
+      });
+      return guion(llamadas[llamadas.length - 1], llamadas.length);
+    });
+  const usarRouter = (extra: Record<string, string> = {}) => {
+    Object.assign(process.env, {
+      AI_PROVIDER: "router",
+      AI_CADENA: "groq:modelo-a,groq:modelo-b",
+      GROQ_API_KEY: "clave-de-prueba",
+      AI_ENFRIAMIENTO_MS: "1000",
+      ...extra,
+    });
+    olvidarRouters();
+  };
+  const nuevaConversacion = async () =>
+    (await http("/conversaciones", "POST", { tema: "porcentajes" }, a)).data
+      .id as string;
+  const decir = (conv: string, texto: string, key = randomUUID()) =>
+    http(`/conversaciones/${conv}/mensajes`, "POST", { texto }, a, key);
+  const filas = async (conv: string, rol: string) =>
+    (
+      await db.query(
+        `SELECT id,texto,degradado,destino_ia FROM ${schema}.mensajes WHERE conversacion_id=$1 AND rol=$2 ORDER BY orden`,
+        [conv, rol],
+      )
+    ).rows;
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+  });
+  beforeEach(() => {
+    llamadas = [];
+    olvidarRouters();
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    process.env.AI_PROVIDER = "fake";
+    for (const k of ["AI_CADENA", "GROQ_API_KEY", "AI_ENFRIAMIENTO_MS"])
+      delete process.env[k];
+    olvidarRouters();
+  });
+
+  it("la migración agrega mensajes.destino_ia como columna nullable", async () => {
+    const r = await db.query(
+      `SELECT is_nullable FROM information_schema.columns WHERE table_schema=$1 AND table_name='mensajes' AND column_name='destino_ia'`,
+      [schema],
+    );
+    expect(r.rows).toEqual([{ is_nullable: "YES" }]);
+  });
+
+  it("el turno guarda qué destino respondió; con el proveedor de pruebas queda en null", async () => {
+    usarRouter();
+    simular(() => turno("Respuesta del modelo A"));
+    const conv = await nuevaConversacion();
+    const r = await decir(conv, "Hola, quiero repasar porcentajes");
+    expect(r.status).toBe(201);
+    expect(r.data.tutor.texto).toBe("Respuesta del modelo A");
+    expect(llamadas.map((l) => l.modelo)).toEqual(["modelo-a"]);
+    expect((await filas(conv, "tutor"))[0].destino_ia).toBe("groq:modelo-a");
+    expect((await filas(conv, "estudiante"))[0].destino_ia).toBeNull();
+    process.env.AI_PROVIDER = "fake";
+    const conv2 = await nuevaConversacion();
+    expect((await decir(conv2, "Hola")).status).toBe(201);
+    expect((await filas(conv2, "tutor"))[0].destino_ia).toBeNull();
+  });
+
+  it("11. un failover a mitad del ciclo de herramientas termina el turno y el historial es aceptado", async () => {
+    usarRouter();
+    simular((l, n) => {
+      if (n === 1)
+        return respuestaGroq({
+          tool_calls: [
+            {
+              id: "call_a1",
+              type: "function",
+              function: { name: "leer_grafo", arguments: "{}" },
+            },
+          ],
+        });
+      if (n === 2) return limite(); // el modelo A agota su cuota justo después de la herramienta
+      return turno(`Respuesta del modelo ${l.modelo}`);
+    });
+    const conv = await nuevaConversacion();
+    const r = await decir(conv, "Explícame los porcentajes");
+    expect(r.status).toBe(201);
+    expect(r.data.tutor.degradado).toBe(false);
+    expect(r.data.tutor.texto).toBe("Respuesta del modelo modelo-b");
+    expect(llamadas.map((l) => l.modelo)).toEqual([
+      "modelo-a",
+      "modelo-a",
+      "modelo-b",
+    ]);
+    // B recibe el contexto completo, igual que lo recibió A, con la llamada y el resultado de A.
+    expect(llamadas[2].mensajes).toEqual(llamadas[1].mensajes);
+    const historial = llamadas[2].mensajes;
+    expect(historial).toContainEqual(
+      expect.objectContaining({
+        role: "assistant",
+        tool_calls: [
+          expect.objectContaining({
+            id: "call_a1",
+            function: expect.objectContaining({ name: "leer_grafo" }),
+          }),
+        ],
+      }),
+    );
+    expect(historial).toContainEqual(
+      expect.objectContaining({ role: "tool", tool_call_id: "call_a1" }),
+    );
+    expect(llamadas[2].herramientas).toContain("responder");
+    expect((await filas(conv, "tutor")).map((m) => m.destino_ia)).toEqual([
+      "groq:modelo-b",
+    ]);
+    expect(await filas(conv, "estudiante")).toHaveLength(1);
+  });
+
+  it("8. una salida inválida se repara una vez y no hay bucle de llamadas", async () => {
+    usarRouter();
+    simular((_l, n) =>
+      n === 1
+        ? respuestaGroq({ content: "esto no es el JSON del turno" })
+        : turno("Respuesta reparada"),
+    );
+    const conv = await nuevaConversacion();
+    const r = await decir(conv, "Hola, ayúdame con fracciones");
+    expect(r.status).toBe(201);
+    expect(r.data.tutor.texto).toBe("Respuesta reparada");
+    expect(r.data.tutor.degradado).toBe(false);
+    expect(llamadas).toHaveLength(2);
+    const ultimo = llamadas[1].mensajes.at(-1) as {
+      role: string;
+      content: string;
+    };
+    expect(ultimo.role).toBe("user");
+    expect(ultimo.content).toMatch(/^ERROR_DE_FORMA/);
+    // Si la reparación también falla, el turno se degrada a solo texto: sin más llamadas.
+    llamadas = [];
+    olvidarRouters();
+    simular(() => respuestaGroq({ content: "sigo sin devolver JSON" }));
+    const conv2 = await nuevaConversacion();
+    const r2 = await decir(conv2, "Otro mensaje");
+    expect(r2.status).toBe(201);
+    expect(r2.data.tutor.degradado).toBe(true);
+    expect(llamadas).toHaveLength(2);
+  });
+
+  it("10. reintentar el mismo turno con la misma clave deja un solo mensaje por rol", async () => {
+    usarRouter();
+    let agotados = true;
+    simular(() => (agotados ? limite(1) : turno("Ahora sí respondo")));
+    const conv = await nuevaConversacion();
+    const texto = "Necesito ayuda con proporciones";
+    const key = randomUUID();
+    const falla = await decir(conv, texto, key);
+    expect(falla.status).toBe(503);
+    expect(falla.data.error.mensaje).toMatch(/puedes reintentar/);
+    // Cada destino se probó una vez (un 429 no se reintenta en el mismo destino).
+    expect(llamadas.map((l) => l.modelo)).toEqual(["modelo-a", "modelo-b"]);
+    expect(await filas(conv, "estudiante")).toHaveLength(1);
+    expect(await filas(conv, "tutor")).toHaveLength(0);
+    // Con todos los destinos abiertos responde de inmediato, sin llamar al proveedor.
+    const inmediato = await decir(conv, "Otro mensaje mientras tanto");
+    expect(inmediato.status).toBe(503);
+    expect(inmediato.data.error.mensaje).toMatch(/recuperar/i);
+    expect(llamadas).toHaveLength(2);
+    // Pasado el enfriamiento, el reintento con la misma clave retoma el turno.
+    agotados = false;
+    await new Promise((r) => setTimeout(r, 1150));
+    const ok = await decir(conv, texto, key);
+    expect(ok.status).toBe(201);
+    expect(ok.data.tutor.texto).toBe("Ahora sí respondo");
+    const repetido = await decir(conv, texto, key);
+    expect(repetido.status).toBe(201);
+    expect(repetido.data.tutor.id).toBe(ok.data.tutor.id);
+    const antes = llamadas.length;
+    expect(
+      (await filas(conv, "estudiante")).filter((m) => m.texto === texto),
+    ).toHaveLength(1);
+    expect(await filas(conv, "tutor")).toHaveLength(1);
+    expect(llamadas).toHaveLength(antes); // la repetición no llama al modelo
+  });
+
+  it("/salud muestra el estado del router sin claves ni datos de cuentas", async () => {
+    usarRouter();
+    simular(() => limite(30));
+    const conv = await nuevaConversacion();
+    await decir(conv, "Hola");
+    const r = await fetchReal(url + "/api/v1/salud");
+    const salud = await r.json();
+    expect(r.status).toBe(200);
+    expect(salud.ia).toBe("router");
+    expect(salud.router.map((d: { id: string }) => d.id)).toEqual([
+      "groq:modelo-a",
+      "groq:modelo-b",
+    ]);
+    expect(salud.router[0]).toMatchObject({
+      proveedor: "groq",
+      modelo: "modelo-a",
+      estado: "ABIERTO",
+      motivo: "limite",
+    });
+    expect(Number.isNaN(Date.parse(salud.router[0].hasta))).toBe(false);
+    expect(JSON.stringify(salud)).not.toContain("clave-de-prueba");
+    process.env.AI_PROVIDER = "fake";
+    const fake = await (await fetchReal(url + "/api/v1/salud")).json();
+    expect(fake.router).toBeNull();
+    expect(fake.pruebas).toBe(true);
   });
 });
