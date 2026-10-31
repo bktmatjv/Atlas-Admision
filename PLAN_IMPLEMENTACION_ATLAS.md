@@ -617,7 +617,7 @@ Comando único antes de entregar cambios: `npm run verify`. Consultar `README.md
 - Catálogo fijo de 6 ideas clave y mapa de errores típicos por actividad para los tres conceptos con comprobación (`porcentajes-1/2/3`, `proporciones-1`, `fracciones-1/2`).
 - Al fallar una comprobación, el servidor ubica la idea clave de forma determinista (sin IA), elige el nodo de retorno, escala la ayuda (pista → ejemplo → explicación completa) y guarda un rastro idempotente. Una respuesta fuera del mapa se declara «sin evidencia suficiente».
 - `GET /arboles/:id` expone `ultimo_rastro` con el camino raíz → nodo de retorno. Los nodos se etiquetan con `idea_clave` solo si pertenece al catálogo del concepto; `expandir` acepta `idea_clave` para crear el nodo que falta.
-- Un acierto posterior sin ayuda registra la evidencia `corrigio_tras_error`.
+- Un acierto posterior sin ayuda registra la evidencia `corrigio_tras_error`, una sola vez por fallo no corregido.
 - Interfaz en `Aprender.tsx`: camino resaltado y etiqueta «Volver aquí», devolución citando la respuesta, ejemplo resuelto, explicación completa y «Explicar esta idea». Sin porcentajes de comprensión.
 
 **Verificado:** pruebas HTTP con PostgreSQL real y proveedor de pruebas para los siete escenarios de la especificación, pruebas unitarias del catálogo y del mapa, y regresión de las pruebas existentes. `npm run verify` pasó completo al cerrar esta tarea: 384 pruebas de frontend, 38 de backend con PostgreSQL Docker y auditoría npm sin vulnerabilidades.
@@ -627,7 +627,7 @@ Comando único antes de entregar cambios: `npm run verify`. Consultar `README.md
 - Los mapas de error cubren solo las respuestas incorrectas típicas curadas; la causa de cualquier otra respuesta no se infiere. Pendiente revisión pedagógica del catálogo y del mapa.
 - La IA real no se probó: el etiquetado con `idea_clave` y el hijo centrado en una idea dependen de la calidad del modelo; el servidor solo garantiza que la clave pertenezca al catálogo.
 - «Mis cursos» y otros cursos no tienen catálogo ni mapa de errores. La justificación escrita no se califica ni se usa para decidir la idea clave.
-- El resaltado del camino se muestra tras el fallo en la sesión de la interfaz; al recargar la página no se vuelve a resaltar (el dato sigue disponible en `ultimo_rastro`).
+- El resaltado del camino, «Volver aquí» y la devolución se reconstruyen desde `ultimo_rastro` al recargar, mientras ese fallo no se haya corregido. La interfaz muestra el nivel de ayuda sugerido (pista → ejemplo resuelto → explicación completa) y destaca la acción correspondiente. No se hizo un recorrido visual en navegador con IA real.
 - El nodo de retorno es el nodo más reciente con esa idea; no se genera un nodo automáticamente: el estudiante lo pide con «Explicar esta idea».
 - No se validó con estudiantes ni se mide aprendizaje. `corrigio_tras_error` es una evidencia observable, no una certificación de comprensión.
 

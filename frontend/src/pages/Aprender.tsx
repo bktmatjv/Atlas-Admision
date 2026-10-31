@@ -39,6 +39,11 @@ type Node = {
   }[];
   idea_clave?: string | null;
 };
+const NIVELES_DE_AYUDA = {
+  pista: "pista breve",
+  ejemplo: "ejemplo resuelto",
+  explicacion_completa: "explicación completa",
+} as const;
 type Rastro = {
   respuesta: string;
   idea_clave: string | null;
@@ -54,7 +59,7 @@ type Tree = {
   titulo: string;
   concepto: string | null;
   nodos: Node[];
-  ultimo_rastro?: (Rastro & { camino: string[] }) | null;
+  ultimo_rastro?: (Rastro & { camino: string[]; corregido?: boolean }) | null;
 };
 type Ayuda = {
   texto: string;
@@ -214,16 +219,109 @@ export default function Aprender() {
     tree.error ??
     list.error;
   const busy = create.isPending || expand.isPending;
-  // El camino solo se resalta tras un fallo reciente con evidencia suficiente.
-  const rastro =
-    result && !result.correcta && result.rastro && !result.rastro.motivo
-      ? result.rastro
+  // Tras una entrega manda su resultado; si no, el último fallo aún no corregido que guarda el servidor.
+  const persistido = tree.data?.ultimo_rastro;
+  const panel = result
+    ? result.rastro
+    : persistido && !persistido.corregido
+      ? persistido
       : null;
-  const camino = new Set(
-    rastro ? (tree.data?.ultimo_rastro?.camino ?? []) : [],
-  );
+  // El camino solo se resalta con evidencia suficiente.
+  const rastro = panel && !panel.motivo ? panel : null;
+  const camino = new Set(rastro ? (persistido?.camino ?? []) : []);
   const volverA = rastro?.nodo_retorno_id ?? null;
   const raiz = tree.data?.nodos[0];
+  const nivel = panel?.nivel_ayuda;
+  const panelDeRastro = panel && (
+    <div
+      className="mt-4 space-y-3 rounded-xl bg-primary/5 p-4"
+      role="group"
+      aria-labelledby="rastro-title"
+    >
+      <h3 id="rastro-title" className="font-bold">
+        {panel.motivo
+          ? `Tu respuesta ${panel.respuesta}`
+          : `Tu respuesta ${panel.respuesta} apunta a una idea para revisar`}
+      </h3>
+      {panel.descripcion && (
+        <p className="text-sm font-semibold">Idea: {panel.descripcion}</p>
+      )}
+      <p>{panel.explicacion}</p>
+      <p className="text-sm">
+        <span className="font-semibold">Pista: </span>
+        {panel.pista}
+      </p>
+      {!panel.motivo && nivel && (
+        <p className="text-sm text-muted-foreground">
+          Ayuda sugerida: <strong>{NIVELES_DE_AYUDA[nivel]}</strong>. Sube si
+          vuelves a fallar en esta idea; puedes pedir más cuando quieras.
+        </p>
+      )}
+      {!panel.motivo && panel.idea_clave && (
+        <div className="flex flex-wrap gap-2">
+          {volverA ? (
+            <>
+              <button
+                className={secondary}
+                disabled={busy}
+                onClick={() => setSelected(volverA)}
+              >
+                Volver al nodo
+              </button>
+              <button
+                className={nivel === "ejemplo" ? button : secondary}
+                disabled={busy}
+                onClick={() =>
+                  expand.mutate({
+                    texto:
+                      "Muéstrame un ejemplo resuelto, con otros números, de esta idea",
+                    nodoId: volverA,
+                    modo: "expandir",
+                    idea: panel.idea_clave ?? undefined,
+                  })
+                }
+              >
+                Ver ejemplo resuelto
+              </button>
+              <button
+                className={
+                  nivel === "explicacion_completa" ? button : secondary
+                }
+                disabled={busy}
+                onClick={() =>
+                  expand.mutate({
+                    texto:
+                      "Dame la explicación completa de esta idea, paso a paso",
+                    nodoId: volverA,
+                    modo: "aclarar",
+                  })
+                }
+              >
+                Explicación completa
+              </button>
+            </>
+          ) : (
+            raiz && (
+              <button
+                className={button}
+                disabled={busy}
+                onClick={() =>
+                  expand.mutate({
+                    texto: "Explícame esta idea clave con un ejemplo distinto",
+                    nodoId: raiz.id,
+                    modo: "expandir",
+                    idea: panel.idea_clave ?? undefined,
+                  })
+                }
+              >
+                Explicar esta idea
+              </button>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
   return (
     <ResponsiveLayout>
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-7 sm:px-6 sm:py-10">
@@ -331,92 +429,16 @@ export default function Aprender() {
                 : "Hay una idea que podemos reforzar."}
             </h2>
             <p className="mt-3">{result.solucion}</p>
-            {result.rastro && (
-              <div
-                className="mt-4 space-y-3 rounded-xl bg-primary/5 p-4"
-                role="group"
-                aria-labelledby="rastro-title"
-              >
-                <h3 id="rastro-title" className="font-bold">
-                  {result.rastro.motivo
-                    ? `Tu respuesta ${result.rastro.respuesta}`
-                    : `Tu respuesta ${result.rastro.respuesta} apunta a una idea para revisar`}
-                </h3>
-                {result.rastro.descripcion && (
-                  <p className="text-sm font-semibold">
-                    Idea: {result.rastro.descripcion}
-                  </p>
-                )}
-                <p>{result.rastro.explicacion}</p>
-                <p className="text-sm">
-                  <span className="font-semibold">Pista: </span>
-                  {result.rastro.pista}
-                </p>
-                {!result.rastro.motivo && result.rastro.idea_clave && (
-                  <div className="flex flex-wrap gap-2">
-                    {volverA ? (
-                      <>
-                        <button
-                          className={secondary}
-                          disabled={busy}
-                          onClick={() => setSelected(volverA)}
-                        >
-                          Volver al nodo
-                        </button>
-                        <button
-                          className={secondary}
-                          disabled={busy}
-                          onClick={() =>
-                            expand.mutate({
-                              texto:
-                                "Muéstrame un ejemplo resuelto, con otros números, de esta idea",
-                              nodoId: volverA,
-                              modo: "expandir",
-                              idea: result.rastro?.idea_clave ?? undefined,
-                            })
-                          }
-                        >
-                          Ver ejemplo resuelto
-                        </button>
-                        <button
-                          className={secondary}
-                          disabled={busy}
-                          onClick={() =>
-                            expand.mutate({
-                              texto:
-                                "Dame la explicación completa de esta idea, paso a paso",
-                              nodoId: volverA,
-                              modo: "aclarar",
-                            })
-                          }
-                        >
-                          Explicación completa
-                        </button>
-                      </>
-                    ) : (
-                      raiz && (
-                        <button
-                          className={button}
-                          disabled={busy}
-                          onClick={() =>
-                            expand.mutate({
-                              texto:
-                                "Explícame esta idea clave con un ejemplo distinto",
-                              nodoId: raiz.id,
-                              modo: "expandir",
-                              idea: result.rastro?.idea_clave ?? undefined,
-                            })
-                          }
-                        >
-                          Explicar esta idea
-                        </button>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+            {panelDeRastro}
             <p className="mt-3 text-sm text-muted-foreground">{result.nota}</p>
+          </section>
+        )}
+        {!result && panelDeRastro && (
+          <section className={card}>
+            <h2 className="text-xl font-bold">
+              Hay una idea que podemos reforzar.
+            </h2>
+            {panelDeRastro}
           </section>
         )}
         {!id && (
