@@ -18,105 +18,120 @@
    un concepto va en Remotion (`src/remotion/`), y nunca al revés. */
 
 :root {
-  /* Identidad «Marcador»: la capa del recorrido hereda la paleta de index.css. */
-  --arc-primary: var(--cancha);
-  --arc-primary-hover: var(--cancha-vivo);
-  --arc-background: var(--tiza);
+  /* =========================================================================
+     Nueva gama cromática CALIBRA (Modo Claro)
+     Primary #941F3D, Primary Hover #79182F, Background #F7F0E6, Surface #FFFCF7,
+     Surface Secondary #F0E5DD, Text Primary #30252A, Text Secondary #706168,
+     Border #E5D7D1, Accent #D89AA6
+     ========================================================================= */
+  --arc-primary: 345 65% 35%;
+  --arc-primary-hover: 346 67% 28%;
+  --arc-background: 36 48% 94%;
   --arc-surface: 0 0% 100%;
-  --arc-surface-secondary: 120 14% 92%;
-  --arc-text-primary: 150 21% 10%;
-  --arc-text-secondary: 152 7% 34%;
-  --arc-border: 125 12% 86%;
-  --arc-accent: 40 100% 58%;
+  --arc-surface-secondary: 25 39% 90%;
+  --arc-text-primary: 300 8% 15%;
+  --arc-text-secondary: 332 7% 41%;
+  --arc-border: 18 28% 86%;
+  --arc-accent: 348 44% 73%;
 
-  --arc-azul: 162 62% 14%;
-  --arc-azul-hondo: 162 64% 9%;
-  --arc-azul-claro: 145 38% 92%;
-  --arc-azul-texto: 162 62% 18%;
-  --arc-marino: 150 21% 10%;
-  --arc-crema: 120 14% 92%;
+  /* Variables del sistema arcade mapeadas a la nueva gama */
+  --arc-azul: 345 65% 35%;
+  --arc-azul-hondo: 346 67% 28%;
+  --arc-azul-claro: 345 45% 94%;
+  --arc-azul-texto: 345 65% 35%;
+  --arc-marino: 333 13% 17%;
+  --arc-crema: 25 39% 90%;
 
   --arc-superficie: 0 0% 100%;
-  --arc-lienzo: 96 27% 96%;
-  --arc-texto: 150 21% 10%;
-  --arc-texto-suave: 152 7% 34%;
+  --arc-lienzo: 36 48% 94%;
+  --arc-texto: 300 8% 15%;
+  --arc-texto-suave: 332 7% 41%;
 
-  --arc-leccion-cuerpo: 150 21% 10%;
-  --arc-leccion-fuerte: 150 21% 8%;
-  --arc-leccion-titulo: 162 62% 16%;
+  --arc-leccion-cuerpo: 333 13% 17%;
+  --arc-leccion-fuerte: 333 13% 17%;
+  --arc-leccion-titulo: 345 65% 35%;
 
-  --arc-borde: 125 14% 80%;
-  --arc-borde-suave: 125 12% 87%;
+  --arc-borde: 345 35% 82%;
+  --arc-borde-suave: 18 28% 86%;
 
-  --arc-cian: 190 88% 40%;
-  --arc-cian-hondo: 192 90% 28%;
-  --arc-cian-texto: 192 90% 28%;
-  --arc-coral-hondo: 358 70% 44%;
-  --arc-amarillo-tostado: 36 88% 30%;
-  --arc-menta-hondo: 152 62% 26%;
-  --arc-amarillo: 40 100% 58%;
-  --arc-amarillo-hondo: 36 90% 44%;
-  --arc-amarillo-claro: 44 100% 92%;
-  --arc-coral: 358 75% 59%;
-  --arc-coral-texto: 358 68% 42%;
-  --arc-coral-claro: 358 100% 96%;
-  --arc-menta: 152 62% 30%;
-  --arc-menta-claro: 145 50% 91%;
-  --arc-amarillo-texto: 34 90% 30%;
-  --arc-menta-texto: 152 62% 26%;
+  /* Colores de estado semánticos (conservados) */
+  --arc-cian: 190 88% 46%;
+  --arc-cian-hondo: 192 90% 30%;
+  --arc-cian-texto: 192 90% 30%;
+  --arc-coral-hondo: 6 76% 46%;
+  --arc-amarillo-tostado: 36 88% 32%;
+  --arc-menta-hondo: 160 62% 30%;
+  --arc-amarillo: 44 97% 62%;
+  --arc-amarillo-hondo: 38 86% 46%;
+  --arc-amarillo-claro: 46 100% 93%;
+  --arc-coral: 6 84% 60%;
+  --arc-coral-texto: 4 70% 42%;
+  --arc-coral-claro: 6 100% 96%;
+  --arc-menta: 160 62% 34%;
+  --arc-menta-claro: 152 58% 92%;
+  --arc-amarillo-texto: 36 88% 32%;
+  --arc-menta-texto: 160 62% 30%;
 
-  --arc-radio-s: 4px;
-  --arc-radio: 6px;
-  --arc-radio-l: 10px;
+  --arc-radio-s: 10px;
+  --arc-radio: 16px;
+  --arc-radio-l: 24px;
 
-  --arc-relieve: 0 1px 2px hsl(160 30% 10% / 0.08), 0 2px 0 hsl(125 14% 80%);
-  --arc-sombra: 0 1px 2px hsl(160 30% 10% / 0.05), 0 6px 16px hsl(160 30% 10% / 0.06);
+  --arc-relieve: 0 3px 0 hsl(var(--arc-azul-hondo) / 0.85);
+  --arc-sombra: 0 14px 30px -18px hsl(333 13% 17% / 0.12);
 
   --arc-rapida: 140ms;
   --arc-media: 220ms;
 }
 
 .dark {
-  --arc-primary: 151 62% 52%;
-  --arc-primary-hover: 151 66% 60%;
-  --arc-background: 220 13% 8%;
-  --arc-surface: 220 12% 12%;
-  --arc-surface-secondary: 220 10% 16%;
-  --arc-text-primary: 96 27% 94%;
-  --arc-text-secondary: 220 8% 68%;
-  --arc-border: 220 9% 21%;
-  --arc-accent: 40 100% 58%;
+  /* =========================================================================
+     Nueva gama cromática CALIBRA (Modo Oscuro)
+     Primary #F07B91, Primary Hover #F58DA0, Background #191519, Surface #29222A,
+     Surface Secondary #32232B, Text Primary #F7F0E6, Text Secondary #C8B9BE,
+     Border #46343D, Accent #D89AA6
+     ========================================================================= */
+  --arc-primary: 348 70% 66%;
+  --arc-primary-hover: 349 84% 76%;
+  --arc-background: 310 10% 12%;
+  --arc-surface: 318 12% 17%;
+  --arc-surface-secondary: 328 18% 17%;
+  --arc-text-primary: 36 48% 94%;
+  --arc-text-secondary: 340 12% 75%;
+  --arc-border: 330 15% 24%;
+  --arc-accent: 348 44% 73%;
 
-  --arc-azul: 151 62% 52%;
-  --arc-azul-hondo: 151 66% 60%;
-  --arc-azul-claro: 158 30% 16%;
-  --arc-azul-texto: 151 62% 62%;
-  --arc-marino: 96 27% 94%;
-  --arc-crema: 220 10% 16%;
+  /* Variables del sistema arcade mapeadas a la nueva gama en oscuro */
+  --arc-azul: 349 80% 71%;
+  --arc-azul-hondo: 349 84% 76%;
+  --arc-azul-claro: 328 20% 19%;
+  --arc-azul-texto: 349 80% 71%;
+  --arc-marino: 35 52% 94%;
+  --arc-crema: 328 18% 17%;
 
-  --arc-superficie: 220 12% 12%;
-  --arc-lienzo: 220 13% 8%;
-  --arc-texto: 96 27% 94%;
-  --arc-texto-suave: 220 8% 68%;
+  --arc-superficie: 318 12% 17%;
+  --arc-lienzo: 310 10% 12%;
+  --arc-texto: 36 48% 94%;
+  --arc-texto-suave: 340 12% 75%;
 
-  --arc-leccion-cuerpo: 96 27% 92%;
-  --arc-leccion-fuerte: 0 0% 100%;
-  --arc-leccion-titulo: 151 62% 62%;
+  --arc-leccion-cuerpo: 35 52% 94%;
+  --arc-leccion-fuerte: 38 100% 98%;
+  --arc-leccion-titulo: 349 80% 71%;
 
-  --arc-borde: 220 9% 26%;
-  --arc-borde-suave: 220 9% 21%;
+  --arc-borde: 330 18% 30%;
+  --arc-borde-suave: 330 15% 24%;
 
-  --arc-amarillo-claro: 40 40% 18%;
-  --arc-coral-texto: 358 90% 74%;
-  --arc-cian-texto: 190 88% 55%;
-  --arc-coral-claro: 358 30% 18%;
-  --arc-menta: 151 62% 52%;
-  --arc-menta-claro: 158 30% 16%;
-  --arc-amarillo-texto: 40 100% 66%;
-  --arc-menta-texto: 151 62% 62%;
+  /* Colores de estado semánticos en oscuro (conservados) */
+  --arc-amarillo-claro: 40 40% 20%;
+  --arc-coral-texto: 6 90% 74%;
+  --arc-cian-texto: 190 88% 46%;
+  --arc-coral-claro: 6 30% 21%;
+  --arc-menta: 156 55% 58%;
+  --arc-menta-claro: 158 28% 20%;
+  --arc-amarillo-texto: 44 92% 66%;
+  --arc-menta-texto: 156 60% 62%;
 
-  --arc-relieve: 0 1px 2px hsl(0 0% 0% / 0.4), 0 2px 0 hsl(var(--arc-borde));
-  --arc-sombra: 0 1px 2px hsl(0 0% 0% / 0.3), 0 6px 16px hsl(0 0% 0% / 0.3);
+  --arc-relieve: 0 3px 0 hsl(var(--arc-borde));
+  --arc-sombra: 0 14px 30px -18px hsl(0 0% 0% / 0.7);
 }
 
 /* ---------- Superficies ---------- */
@@ -125,6 +140,10 @@
    gradientes del propio fondo y no nodos del DOM: no pesan ni se pueden enfocar. */
 .arc-lienzo {
   background-color: hsl(var(--arc-lienzo));
+  background-image:
+    radial-gradient(circle at -6% 38%, transparent 0 150px, hsl(var(--arc-azul) / 0.07) 151px 210px, transparent 211px),
+    radial-gradient(circle at 104% 92%, hsl(var(--arc-azul) / 0.08) 0 170px, transparent 171px);
+  background-attachment: local;
   color: hsl(var(--arc-texto));
 }
 
@@ -174,7 +193,7 @@
    Se usan a través de `<Button variant="arcade…">` (components/ui/button.tsx): un solo
    componente de botón en toda la app, con estas tres variantes para el recorrido. */
 .arc-boton {
-  border-radius: var(--arc-radio);
+  border-radius: 14px;
   border: 1.5px solid transparent;
   font-weight: 700;
   letter-spacing: -0.005em;
@@ -329,7 +348,7 @@
   flex-shrink: 0;
   width: 3rem;
   height: 3rem;
-  border-radius: var(--arc-radio);
+  border-radius: 12px;
   background: hsl(var(--arc-superficie));
   border: 1.5px solid hsl(var(--arc-borde-suave));
   box-shadow: 0 3px 0 hsl(var(--arc-borde-suave));
@@ -345,7 +364,7 @@
 .arc-opcion--compacta .arc-tecla {
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: var(--arc-radio);
+  border-radius: 10px;
   font-size: 1.05rem;
 }
 
@@ -462,7 +481,7 @@
   width: 2.25rem;
   height: 2.25rem;
   flex-shrink: 0;
-  border-radius: var(--arc-radio);
+  border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -579,7 +598,7 @@
 }
 /* El texto secundario de la sala: 6,5:1 sobre el fondo. */
 .arc-sala-suave {
-  color: hsl(220 8% 70%);
+  color: hsl(340 12% 75%);
 }
 
 /* La tarjeta. Clara en los dos temas, con el texto de la nueva paleta. */
@@ -635,7 +654,7 @@
    menta 6,5). */
 .arc-valoracion {
   position: relative;
-  border-radius: var(--arc-radio);
+  border-radius: 16px;
   border: 1.5px solid transparent;
   box-shadow: 0 4px 0 var(--canto);
   background: var(--relleno);
@@ -706,7 +725,7 @@
 
 /* La caja «En pocas palabras»: el amarillo claro del recorrido, con su marino. */
 .arc-en-pocas {
-  border-radius: var(--arc-radio);
+  border-radius: 16px;
   background: hsl(46 100% 93%);
   border: 1px solid hsl(44 90% 78%);
   color: hsl(var(--arc-texto));
@@ -790,7 +809,7 @@
   position: relative;
   perspective: 900px;
   min-height: 7.5rem;
-  border-radius: var(--arc-radio);
+  border-radius: 18px;
   touch-action: manipulation;
 }
 .arc-carta-giro {
@@ -808,7 +827,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  border-radius: var(--arc-radio);
+  border-radius: 18px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }

@@ -25,15 +25,13 @@ const nodo: NodoGrafo = {
   evidencias: 1,
 };
 describe("superficies del tutor wow", () => {
-  it("el camino muestra solo las estaciones registrables y dice cómo avanzar", () => {
+  it("el camino expone cinco estaciones y explica los datos no disponibles", () => {
     const html = render(
       createElement(CaminoComprension, { nodo, evidencias: [] }),
     );
-    // «Lo explicaste» y «Practicaste» no tienen historial en la API: no se muestran como candados.
-    expect(html.match(/<li /g)).toHaveLength(3);
-    expect(html).not.toContain("Lo explicaste");
-    expect(html).not.toContain('aria-disabled="true"');
-    expect(html).toContain("Dame una comprobación");
+    expect(html.match(/<li /g)).toHaveLength(5);
+    expect(html).toContain("La API no expone");
+    expect(html).toContain('aria-disabled="true"');
     expect(html).toContain("Volvamos a practicar");
     expect(html).toContain('aria-live="polite"');
   });

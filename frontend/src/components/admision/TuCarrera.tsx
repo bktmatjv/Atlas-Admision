@@ -39,7 +39,7 @@ export function TuCarrera({ userId, titulo = "Tu carrera" }: { userId: string | 
   return (
     <section aria-labelledby={`${idCampo}-titulo`} className="space-y-3 rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start gap-3">
-        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center">
+        <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted">
           <GraduationCap className="h-5 w-5 text-muted-foreground" />
         </span>
         <div className="min-w-0 flex-1">
@@ -52,7 +52,7 @@ export function TuCarrera({ userId, titulo = "Tu carrera" }: { userId: string | 
           {!buscando && otraUniversidad && (
             <p className="text-sm text-muted-foreground">Postulas a otra universidad. Los simulacros de CALIBRA siguen el examen de San Marcos.</p>
           )}
-          {buscando && <p className="text-sm text-muted-foreground">Escribe su nombre y la comparamos con los últimos ingresantes de San Marcos.</p>}
+          {buscando && <p className="text-sm text-muted-foreground">Elige tu carrera y te decimos si con tu puntaje ingresabas.</p>}
         </div>
         {!buscando && (
           <button

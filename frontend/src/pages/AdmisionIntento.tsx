@@ -56,7 +56,7 @@ function AdmisionIntento() {
   const comparable = x.intento ? puntajeParaIngresaba({ ...x.intento, informe: x.informe ?? x.intento.informe }, x.intento.area) : null;
 
   return (
-    <ResponsiveLayout sinBarraInferior>
+    <ResponsiveLayout>
       <main className="min-w-0 flex-1 px-4 pb-24 md:px-6 lg:pb-8">
         <div className="mx-auto max-w-6xl space-y-5">
           {x.cargando && <p className="py-10 text-center text-muted-foreground" role="status">Cargando el examen…</p>}

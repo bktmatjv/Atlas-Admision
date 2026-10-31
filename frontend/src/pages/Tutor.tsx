@@ -7,13 +7,14 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTheme } from "next-themes";
 import {
   ChevronLeft,
   History,
+  Moon,
   Network,
   Search,
   SquarePen,
+  Sun,
   UserRound,
 } from "lucide-react";
 import { ResponsiveLayout } from "@/components/ResponsiveLayout";
@@ -101,6 +102,7 @@ async function cargarMaterial() {
 const anchoGrande = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(min-width: 1100px)").matches;
+const CLAVE_MODO = "calibra-tutor-modo";
 function preferenciaPanel() {
   try {
     const p = JSON.parse(localStorage.getItem("calibra-tutor-panel") ?? "{}");
@@ -112,6 +114,13 @@ function preferenciaPanel() {
     return { ancho: 44, activo: "grafo" };
   }
 }
+const modoGuardado = () => {
+  try {
+    return localStorage.getItem(CLAVE_MODO) === "claro";
+  } catch {
+    return false;
+  }
+};
 export default function Tutor() {
   const { id } = useParams(),
     [search, setSearch] = useSearchParams(),
@@ -157,8 +166,17 @@ export default function Tutor() {
         }
       : null;
   const [contextoClave, setContextoClave] = useState(deUrl ? "url" : "");
-  // El tutor sigue el tema global de la app (el botón está en la cabecera).
-  const claro = useTheme().resolvedTheme !== "dark";
+  // Apariencia propia del tutor: noche CALIBRA por defecto, con variante clara.
+  const [claro, setClaro] = useState(modoGuardado);
+  const alternarModo = () =>
+    setClaro((c) => {
+      try {
+        localStorage.setItem(CLAVE_MODO, c ? "noche" : "claro");
+      } catch {
+        // Sin almacenamiento, el modo vale solo para esta visita.
+      }
+      return !c;
+    });
   const claveCrear = useRef<{ huella: string; key: string } | null>(null);
   const claveEnvio = useRef<{ texto: string; key: string } | null>(null);
   useEffect(() => {
@@ -424,9 +442,18 @@ export default function Tutor() {
   return (
     <ResponsiveLayout
       appearance="tutor"
-      sinBarraInferior
       headerTools={
         <>
+          <button
+            type="button"
+            className="tc-modo"
+            aria-pressed={claro}
+            aria-label={claro ? "Cambiar a modo noche" : "Cambiar a modo claro"}
+            onClick={alternarModo}
+          >
+            {claro ? <Moon size={16} /> : <Sun size={16} />}
+            {claro ? "Noche" : "Claro"}
+          </button>
           <span className="tutor-guest">
             <UserRound size={17} />
             <span>Invitado</span>

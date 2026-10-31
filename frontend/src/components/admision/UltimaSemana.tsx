@@ -95,7 +95,7 @@ export function UltimaSemana({ userId, area }: { userId: string | null; area: Ar
     <div className="space-y-4">
       <section aria-labelledby="ultima-titulo" className={tarjeta}>
         <div className="flex flex-wrap items-start gap-3">
-          <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center">
+          <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-border bg-muted">
             <CalendarClock className="h-5 w-5 text-primary" />
           </span>
           <div className="min-w-0 flex-1">
