@@ -15,7 +15,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options,
       credentials: "include",
       headers: {
-        "X-Atlas-Request": "1",
+        "X-Calibra-Request": "1",
         ...(options.body instanceof FormData
           ? {}
           : { "Content-Type": "application/json" }),
@@ -24,7 +24,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     });
   } catch {
     throw new ApiError(
-      "No se pudo conectar con Atlas. Comprueba que el backend esté iniciado y reintenta.",
+      "No se pudo conectar con CALIBRA. Comprueba que el backend esté iniciado y reintenta.",
       0,
     );
   }

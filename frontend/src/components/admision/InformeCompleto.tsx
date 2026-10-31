@@ -157,7 +157,7 @@ export function InformeCompleto({ area, preguntas, respuestas, userId, onIr }: P
             ))}
           </ul>
           <p className="text-xs text-muted-foreground">
-            Estimación de Atlas: cuánto cuesta subir en cada curso son supuestos, no datos oficiales.
+            Estimación de CALIBRA: cuánto cuesta subir en cada curso son supuestos, no datos oficiales.
             {perfil.data?.horas_semana ? "" : ` Supone ${HORAS_SUPUESTAS} horas a la semana: cámbialo arriba${perfil.data ? "" : " cuando elijas tu escuela"}.`}
           </p>
         </section>

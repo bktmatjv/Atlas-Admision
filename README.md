@@ -1,77 +1,179 @@
-# Atlas
+# CALIBRA
 
-Tutor y práctica para pasar de consultar una explicación a aplicar una idea. Incluye banco de admisión UNMSM, árbol de comprensión, comprobaciones y cursos personales con material propio.
+**Un tutor con IA que no te da la respuesta: te ayuda a encontrar dónde se rompió tu razonamiento.**
 
-## Estructura
+Plataforma para postulantes a la Universidad Nacional Mayor de San Marcos (UNMSM). Combina práctica con preguntas de admisiones anteriores, un tutor conversacional y un **grafo de comprensión** que muestra qué ideas exploraste, dónde fallaste y qué ya aplicaste por tu cuenta.
+
+> **Estado:** MVP funcional en entorno local. Demo desplegada y validación con postulantes: **pendientes** (ver [Limitaciones](#limitaciones-actuales)).
+
+---
+
+## 🎯 Problema y solución
+
+### El problema: «aprender sin pensar»
+
+Los estudiantes ya usan IA para estudiar, pero leer una explicación convincente no es lo mismo que poder resolver un problema nuevo.
+
+- El reporte 2025 de uDocz sobre educación superior peruana, reseñado por la UPC, reporta que **el 95% de los estudiantes universitarios encuestados usa IA** para estudiar ([uDocz](https://www.udocz.com/academic_report), [UPC](https://innovacioneducativa.upc.edu.pe/2025/10/13/el-impacto-de-la-ia-en-la-educacion-superior-peruana-hallazgos-y-aprendizajes-del-primer-estudio-2025-2/)). Es una muestra de universitarios, no un censo nacional ni un dato de postulantes.
+- Un estudio en PNAS con cerca de mil escolares encontró que un asistente general basado en GPT-4 mejoró el desempeño **durante** la práctica, pero el rendimiento posterior **sin IA** fue un 17% inferior al del grupo de control; un tutor con salvaguardas pedagógicas mitigó ese perjuicio ([PNAS](https://doi.org/10.1073/pnas.2422633122)). Es un estudio de matemáticas, en una escuela y a corto plazo.
+
+El estudiante se queda con la sensación de haber entendido. En el examen, sin ayuda, aparece la diferencia.
+
+### La solución: separar lo que leíste de lo que puedes resolver solo
+
+CALIBRA usa la IA para **conversar y hacer pensar**, no para entregar respuestas, y deja la verdad sobre el progreso en manos del sistema:
+
+1. **Practicas** con preguntas reales de admisiones anteriores.
+2. Cuando fallas, el sistema **rastrea tu error hasta la idea que lo explica**. Por ejemplo, responder 100 en «S/100 sube 20% y baja 20%» indica que tomaste la misma base para los dos porcentajes.
+3. El **tutor conversa** contigo sobre tu razonamiento: te pregunta por qué, contrasta tu cálculo con el correcto y te muestra diagramas verificados.
+4. Lo **compruebas** con un problema nuevo, sin ayudas del tutor.
+5. Tu **grafo de comprensión** se actualiza **solo con evidencia**: practicar en la charla no pinta nada de verde; resolver una variante nueva sin ayuda, sí.
+
+> **La IA aporta la conversación; el sistema aporta la verdad.**
+
+---
+
+## ✅ Funcionalidades implementadas
+
+| Funcionalidad | Qué hace | Estado |
+| --- | --- | --- |
+| Práctica de admisión | 2.027 preguntas de 26 exámenes UNMSM anteriores; práctica por curso y tema, diagnóstico y simulacros cronometrados; corrección en el servidor | ✅ Funciona |
+| Cuaderno de errores | Repasos espaciados (sistema Leitner) de las preguntas falladas | ✅ Funciona |
+| Rastro de error | Cada respuesta incorrecta conocida apunta a una «idea clave»; el sistema resalta el nodo donde se rompió la comprensión y escala la ayuda (pista → ejemplo → explicación completa) | ✅ Funciona |
+| Tutor agente | Conversación con un LLM que usa herramientas del sistema (leer tu grafo, tu rastro, tus evidencias y tu intento; generar prácticas; proponer comprobaciones) | ✅ Funciona con Groq |
+| Artefactos del tutor | 10 tipos de bloque: pregunta socrática, contraste «lo que hiciste / lo correcto», razonamiento anotado, predicción, ejemplo paso a paso, visual matemático, práctica, «explícalo con tus palabras», invitación a comprobar y cita | ✅ Funciona |
+| Visuales verificados | Cadena porcentual, barra de partes, tabla de proporción y recta numérica; el sistema recalcula cada cuenta antes de mostrarla | ✅ Funciona |
+| Grafo de comprensión | Vista tipo Obsidian de tus ideas y sus relaciones; estado de cada nodo (sin explorar, explorado, falló, aplicado) calculado desde la evidencia | ✅ Funciona |
+| Comprobaciones | 7 actividades curadas y, cuando se agotan, problemas generados por plantillas paramétricas con respuesta calculada por el sistema | ✅ Funciona (Aritmética: porcentajes, proporciones y fracciones) |
+| Mis cursos | Importas un PDF con texto, TXT o Markdown; se extrae por páginas y el tutor lo cita | ✅ Funciona (sin OCR) |
+| Sesión invitada | Sin registro: cookie segura de 30 días | ✅ Funciona |
+
+---
+
+## 🧭 Cómo usarlo
+
+Con el proyecto levantado (ver [Instrucciones de ejecución](#-instrucciones-de-ejecución)):
+
+1. Abre `http://localhost:8090/admision` y resuelve una práctica.
+2. En una pregunta fallada, usa **«Entender esta pregunta con CALIBRA»** para abrir el tutor sobre tu propio intento.
+3. En `http://localhost:8090/tutor`, conversa con el tutor: prueba «No sé por dónde empezar» o explícale cómo lo pensaste.
+4. Pide **comprobar** cuando quieras: te toca un problema nuevo, sin ayudas.
+5. Mira cómo cambia tu **grafo de comprensión** según lo que realmente resolviste.
+
+| Ruta | Pantalla |
+| --- | --- |
+| `/admision` | Inicio y práctica de admisión |
+| `/admision/temas` | Temario oficial |
+| `/tutor` | Tutor conversacional y grafo de comprensión |
+| `/aprender` | Exploraciones y árbol de comprensión |
+| `/cursos` | Mis cursos (material propio) |
+
+---
+
+## ⚙️ Arquitectura y tecnologías
 
 ```text
-frontend/          React + Vite; su compilación queda en frontend/dist/
-backend/           API NestJS, migraciones, datos privados y Dockerfile
-packages/motor/    Reglas compartidas de armado, corrección y repasos
-scripts/           Herramientas del monorepo y pruebas aisladas
-compose.yaml       Backend + PostgreSQL para desarrollo local
+React + Vite ──HTTP──▶ API NestJS (monolito modular) ──▶ PostgreSQL 16
+                               │
+                               └──▶ Proveedor de IA (Groq) detrás de una interfaz propia
 ```
 
-Se usa **npm workspaces y un solo `package-lock.json` en la raíz**. Las carpetas de dependencias y compilaciones no se versionan. Los documentos de contexto y el plan permanecen en la raíz.
+| Capa | Tecnología |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite, Tailwind, TanStack Query, `react-force-graph-2d` para el grafo |
+| Backend | NestJS, TypeORM 0.3 (migraciones), validación con Zod, Node 22 |
+| Base de datos | PostgreSQL 16 |
+| IA | Groq (API compatible con OpenAI) por defecto; adaptador Anthropic como alternativa; proveedor de pruebas para tests |
+| Infraestructura local | Docker Compose para API y base de datos |
+| Pruebas | Vitest, integración con PostgreSQL real en Docker |
 
-## Arranque local: backend Docker, frontend separado
+**Módulos del backend:** identidad (sesión invitada), contenido (banco y documentos), práctica (intentos y corrección), tutor (agente, artefactos, proveedor de IA) y seguimiento (rastros, evidencias, grafo y plantillas).
+
+**Decisiones técnicas clave:**
+
+- **El LLM propone, el sistema decide.** El agente emite mensajes, bloques y operaciones sobre el grafo; el servidor valida cada uno en cinco capas (forma, referencias, matemática, atribución al estudiante y filtración de respuestas) y descarta lo que no pasa.
+- **El estado de comprensión sale de la evidencia**, nunca de lo que escriba el modelo.
+- **Ejercicios verificables:** las plantillas paramétricas generan los números, la respuesta y los distractores (cada uno ligado a una idea clave); la IA solo redacta la historia.
+- **Lecturas provisionales honestas:** cuando la IA interpreta un texto libre del estudiante, debe citarlo literalmente; si la cita no existe en lo que escribió, la lectura se descarta.
+- **Independiente del proveedor:** cambiar de Groq a otro modelo es cambiar una variable de entorno.
+- **Seguridad:** sesiones con cookie HttpOnly y token con hash en el servidor, autorización por estudiante, las claves del banco nunca llegan al navegador, límites de uso para la IA.
+
+Más detalle: [backend/README.md](backend/README.md) · [diseño del tutor agente](diseno_tutor_agente.md) · [harness de comprensión](idea_tutor_harness_comprension.md).
+
+---
+
+## 🔗 Demo desplegada
+
+**Pendiente.** Todavía no hay una URL pública. El despliegue previsto es el frontend en Vercel y el backend en Docker sobre una VM de Azure.
+
+---
+
+## 📖 Instrucciones de ejecución
 
 Requisitos: Node **22.13+** y Docker Desktop funcionando.
 
 ```bash
 npm ci
-docker build -t atlas-backend -f backend/Dockerfile .
-docker compose up -d --wait
+docker compose up --build -d --wait
 npm run dev:web
 ```
 
 - Frontend: `http://localhost:8090`
 - Salud de la API: `http://localhost:3000/api/v1/salud`
-- PostgreSQL de este proyecto: `127.0.0.1:55432`; no usa otros contenedores del equipo.
 
-El backend aplica migraciones e importa el banco al arrancar. Repetir la importación no duplica registros ni elimina progreso. Los volúmenes de PostgreSQL y documentos sobreviven a reinicios.
+El backend aplica las migraciones e importa el banco al arrancar. Repetir la importación no duplica registros ni borra progreso.
 
-Para detener sin borrar datos: `docker compose down`. **No usar `down -v` salvo que se quiera eliminar expresamente los datos locales.** Las credenciales por defecto de Compose son solo para desarrollo local.
+Para detener sin borrar datos: `docker compose down`. **No usar `down -v`**, que elimina los datos locales.
 
-## Configuración de IA
+### Configurar la IA (Groq)
 
-Por defecto `AI_PROVIDER=disabled`: práctica, persistencia y extracción documental funcionan; los endpoints del tutor responden con un error explícito de configuración. No hay respuestas simuladas encubiertas.
+Sin configuración, `AI_PROVIDER=disabled`: la práctica funciona y el tutor responde con un error explícito, nunca con respuestas simuladas.
 
-1. Copiar `backend/.env.example` a `backend/.env`.
-2. Configurar `AI_PROVIDER=anthropic`, `AI_API_KEY` y un `AI_MODEL` disponible en la cuenta.
-3. Recrear el backend: `docker compose up -d --force-recreate backend`.
+1. Copia `backend/.env.example` a `backend/.env`.
+2. Configura `AI_PROVIDER=groq`, tu `AI_API_KEY` de Groq y un `AI_MODEL` disponible en tu cuenta.
+3. Recrea el backend: `docker compose up -d --force-recreate backend`.
 
-No introducir claves en el frontend. `AI_PROVIDER=fake` existe exclusivamente para pruebas y se identifica en pantalla; no se permite con `NODE_ENV=production`.
+Las claves van **solo** en el backend.
 
-Para una API separada, el frontend usa `frontend/.env` con `VITE_API_URL` y el backend admite un origen explícito mediante `FRONTEND_ORIGIN`. La preparación de Vercel/Azure y la configuración final de HTTPS/cookies no forman parte de esta entrega.
-
-## Comandos desde la raíz
+### Comandos útiles
 
 | Comando | Función |
 | --- | --- |
-| `npm run dev:web` | Frontend con proxy local a la API en el puerto 3000 |
-| `npm run dev:api` | Backend con recarga, usando `backend/.env` y una DB preparada |
+| `npm run dev:web` | Frontend con proxy a la API local |
+| `npm run dev:api` | Backend con recarga (requiere `backend/.env` y una base preparada) |
 | `npm run build` | Compilar motor, backend y frontend |
-| `npm run typecheck` | Comprobar tipos de ambos proyectos |
-| `npm run lint` | Revisar código |
-| `npm run verify` | Tipos, lint, pruebas, compilación, integración Docker y auditoría npm |
-| `npm test` | Pruebas de la demo y motor, sin IA de pago |
-| `npm run test:docker` | Integración HTTP con un PostgreSQL Docker temporal, aislado y eliminado al finalizar |
-| `npm run test:isolated` | Alternativa con binarios PostgreSQL locales o `TEST_DATABASE_URL` |
-| `npm run db:migrate` | Aplicar migraciones a la DB configurada en backend |
-| `npm run db:import -- --dry-run` | Comprobar el snapshot sin escribir |
+| `npm test` | Pruebas unitarias, sin llamadas a IA de pago |
+| `npm run test:docker` | Integración con un PostgreSQL temporal en Docker |
+| `npm run verify` | Lint, tipos, pruebas, build, integración y auditoría de dependencias |
 
-Para desarrollo del backend fuera de Docker: `docker compose up -d db`, configurar `backend/.env`, ejecutar migraciones/importación y después `npm run dev:api`. No ejecutar al mismo tiempo otro backend en el mismo puerto.
+### Estructura
 
-## Estado y límites
+```text
+frontend/          React + Vite
+backend/           API NestJS, migraciones, datos privados y Dockerfile
+packages/motor/    Reglas compartidas de armado, corrección y repasos
+scripts/           Herramientas del monorepo y pruebas aisladas
+compose.yaml       API + PostgreSQL para desarrollo local
+```
 
-Implementado: sesiones invitadas del servidor, banco persistido, prácticas/diagnóstico/simulacros, corrección y repasos, árbol con expansión/aclaración, comprobaciones numéricas y evidencias, importación privada PDF con texto/TXT/Markdown y prácticas generadas guardadas.
+---
 
-- Las claves y soluciones del banco están en `backend/data/`, **no** en los archivos públicos del frontend.
-- «Sin ayuda» significa sin ayudas de Atlas durante la comprobación, no una evaluación vigilada ni una prueba de comprensión profunda. La justificación se conserva sin calificación automática.
-- Material generado por IA no equivale a contenido revisado académicamente. Sus prácticas formativas no suman evidencia de transferencia verificada.
-- OCR, fuentes web externas, recuperación de cuentas y sincronización entre dispositivos siguen pendientes.
-- La sesión invitada dura 30 días. Todavía no hay recuperación de su credencial si se borran las cookies; definir retención operativa y copias de seguridad antes de uso público.
-- Falta probar la calidad del proveedor con credenciales reales y validar con postulantes/docentes. No se garantiza ingreso ni eficacia pedagógica.
+## 🧪 Calidad
 
-Detalles de contratos y seguridad: [backend/README.md](backend/README.md). Alcance y estado de ejecución: [PLAN_IMPLEMENTACION_ATLAS.md](PLAN_IMPLEMENTACION_ATLAS.md), sección 16.
+- **410 pruebas** en el frontend y el motor compartido, y **247 pruebas** del backend, incluidas pruebas de integración con PostgreSQL real.
+- Cada artefacto del tutor tiene tres niveles de prueba: validador (acepta lo válido, descarta lo inválido con su motivo), integración con la API y render en la interfaz.
+- Las pruebas automáticas nunca llaman a la IA real: el adaptador de Groq se prueba con respuestas simuladas, incluidos errores, límites de uso (HTTP 429) y timeouts.
+
+---
+
+## Limitaciones actuales
+
+- **Sin demo pública:** el despliegue en Vercel y Azure está pendiente.
+- **Sin validación con usuarios reales todavía:** no hay evidencia de eficacia pedagógica; no se promete ingreso ni mejora de puntaje.
+- **«Sin ayuda» significa sin ayudas de CALIBRA** durante la comprobación. No es una evaluación vigilada: no se detecta ayuda externa.
+- **Cobertura del tutor:** las ideas clave, el mapa de errores y las plantillas cubren solo Aritmética (porcentajes, proporciones y fracciones). Los enunciados de las plantillas no tienen revisión docente; sus cuentas sí están verificadas.
+- **Calidad de la IA:** se probó con casos reales en Groq, pero los modelos abiertos pueden usar herramientas con menos consistencia; las validaciones descartan o degradan lo que falle. El plan gratuito de Groq tiene límites por minuto.
+- **Material generado por IA** no equivale a contenido revisado académicamente y no cuenta como evidencia.
+- **Mis cursos:** sin OCR para PDF escaneados ni búsqueda en fuentes externas.
+- **Cuentas:** la sesión invitada dura 30 días y no se recupera si se borran las cookies.
+- **Dependencias:** `npm audit` reporta 14 avisos moderados en herramientas de desarrollo (ESLint) y en TypeORM, pendientes de actualizar.

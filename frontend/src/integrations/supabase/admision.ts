@@ -23,7 +23,7 @@ export type InformeDeIntento = {
 export type IntentoDeAdmision = {
   id: string; user_id: string; modo: "real" | "simulacro" | "repaso" | "diagnostico"; tipo: "cronometrado" | "practica"; area: AreaDeAdmision;
   examen_id: string | null; filtro: { curso: string; tema?: string } | null; preguntas: string[]; ver_soluciones: boolean;
-  started_at: string; duration_minutes: number | null; estado: "en_curso" | "entregado"; entregado_at: string | null;
+  started_at: string; duration_minutes: number | null; estado: "en_curso" | "entregado" | "abandonado"; entregado_at: string | null;
   puntaje: number | null; informe: InformeDeIntento | null; created_at: string;
 };
 

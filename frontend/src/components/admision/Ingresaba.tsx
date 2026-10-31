@@ -43,7 +43,7 @@ export function IngresabaVista({ puntaje, aviso, carreraId, datos }: { puntaje: 
           {v.sinDatos || !reciente ? (
             <>
               <h2 className="text-lg font-extrabold text-foreground">¿Ingresabas a {carrera.nombre}?</h2>
-              <p className="text-sm text-muted-foreground">Todavía no tenemos resultados oficiales de esta escuela. Compara con otra de tu área mientras tanto.</p>
+              <p className="text-sm text-muted-foreground">Todavía no tenemos resultados oficiales de esta carrera. Compara con otra de tu área mientras tanto.</p>
             </>
           ) : reciente.ingresaba ? (
             <>
@@ -151,7 +151,7 @@ export function Ingresaba({ userId, puntaje, aviso, area }: { userId: string | n
   const perfil = usePerfilDeAdmision(userId);
   if (!userId || datos.isError || perfil.isError || !datos.data || perfil.isLoading) return null;
   if (perfil.data?.universidad && perfil.data.universidad !== "unmsm") return null;
-  if (!perfil.data?.carrera_id) return <TuCarrera userId={userId} titulo="¿Ingresabas? Dinos tu escuela" />;
+  if (!perfil.data?.carrera_id) return <TuCarrera userId={userId} titulo="¿Ingresabas? Dinos tu carrera" />;
   const carrera = datos.data.carreras.find((c) => c.id === perfil.data?.carrera_id);
   if (carrera && !intentoValidoParaIngresaba({ area }, areaDelExamen(carrera))) {
     return <p className="rounded-2xl border border-border bg-card p-5 text-sm font-semibold text-foreground">{pasoParaSuArea(areaDelExamen(carrera), carrera.nombre)}</p>;

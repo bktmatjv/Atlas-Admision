@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fondo redondeado Carmesí oficial CALIBRA -->
+  <rect width="100" height="100" rx="22" fill="#941F3D" />
+  <!-- Isotipo en tono Crema / Blanco de alto contraste -->
+  <g transform="translate(8, 8) scale(0.84)">
+    <!-- Pliegue superior -->
+    <path
+      d="M 80.64 24.29 A 40 40 0 0 0 10.61 56.95 L 26.75 40.81 A 25 25 0 0 1 69.15 33.93 Z"
+      fill="#F7F1E8"
+      opacity="0.82"
+    />
+    <!-- Cuerpo inferior -->
+    <path
+      d="M 26.75 40.81 L 10.61 56.95 A 40 40 0 0 0 80.64 75.71 L 69.15 66.07 A 25 25 0 0 1 26.75 40.81 Z"
+      fill="#F7F1E8"
+    />
+    <!-- Hub central y aguja indicadora -->
+    <circle cx="50" cy="50" r="9.5" fill="#F7F1E8" />
+    <line x1="50" y1="50" x2="74.5" y2="29.5" stroke="#F7F1E8" stroke-width="4.5" stroke-linecap="round" />
+  </g>
+</svg>
+

@@ -23,7 +23,7 @@ export async function createApp() {
   app.enableCors({
     origin: cfg.FRONTEND_ORIGIN,
     credentials: true,
-    allowedHeaders: ["Content-Type", "X-Atlas-Request", "Idempotency-Key"],
+    allowedHeaders: ["Content-Type", "X-Calibra-Request", "Idempotency-Key"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   });
   await app.init();

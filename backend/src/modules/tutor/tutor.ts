@@ -9,6 +9,7 @@ import {
   Post,
   Req,
   Headers,
+  BadRequestException,
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
@@ -19,8 +20,15 @@ import { Database } from "../../database/database.js";
 import { validate } from "../../http.js";
 import { digest, type ActorRequest } from "../identidad/identidad.js";
 import { PracticaModule, PracticaService } from "../practica/practica.js";
-import { conceptoDe } from "../seguimiento/actividades.js";
+import {
+  clavesDe,
+  conceptoDe,
+  esClaveDe,
+  ideaPorClave,
+} from "../seguimiento/actividades.js";
+import { caminoHasta, construirRastro } from "../seguimiento/rastros.js";
 import { TutorAI, PROMPT_VERSION } from "./ai.js";
+import { Proveedores } from "./proveedor.js";
 const createSchema = z
   .object({
     intento_id: z.string().uuid().optional(),
@@ -56,6 +64,7 @@ type Node = {
   contenido: string;
   tipo: string;
   citas: unknown[];
+  idea_clave: string | null;
 };
 @Injectable()
 export class TutorService {
@@ -74,12 +83,31 @@ export class TutorService {
   }
   async get(actor: string, id: string) {
     const t = await this.own(actor, id);
+    const nodos = await this.db.query<Node>(
+      "SELECT id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,citas,idea_clave FROM nodos WHERE arbol_id=$1 ORDER BY profundidad,orden",
+      [id],
+    );
+    const [ultimo] = await this.db.query<{
+      actividad_id: string;
+      respuesta: string;
+      idea_clave: string | null;
+      nodo_retorno_id: string | null;
+      nivel_ayuda: "pista" | "ejemplo" | "explicacion_completa";
+      corregido: boolean;
+    }>(
+      "SELECT c.actividad_id,r.respuesta,r.idea_clave,r.nodo_retorno_id,r.nivel_ayuda,EXISTS(SELECT 1 FROM evidencias e WHERE e.arbol_id=r.arbol_id AND e.tipo='corrigio_tras_error' AND e.created_at>=r.created_at) AS corregido FROM rastros_error r JOIN comprobaciones c ON c.id=r.comprobacion_id WHERE r.arbol_id=$1 AND r.actor_id=$2 ORDER BY r.created_at DESC LIMIT 1",
+      [id, actor],
+    );
     return {
       ...t,
-      nodos: await this.db.query<Node>(
-        "SELECT id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,citas FROM nodos WHERE arbol_id=$1 ORDER BY profundidad,orden",
-        [id],
-      ),
+      nodos,
+      ultimo_rastro: ultimo
+        ? {
+            ...construirRastro(ultimo),
+            corregido: ultimo.corregido,
+            camino: caminoHasta(nodos, ultimo.nodo_retorno_id),
+          }
+        : null,
     };
   }
   async material(actor: string, t: Partial<Tree>) {
@@ -233,7 +261,10 @@ export class TutorService {
         solicitud: b.solicitud,
         material: source.texto,
         titulo: source.titulo,
+        claves_permitidas: clavesDe(source.concepto),
       });
+      const etiqueta = (clave?: string) =>
+        esClaveDe(source.concepto, clave) ? clave! : null;
       const id = randomUUID(),
         root = randomUUID();
       await this.db.transaction(async (m) => {
@@ -251,7 +282,7 @@ export class TutorService {
           ],
         );
         await m.query(
-          "INSERT INTO nodos VALUES($1,$2,NULL,0,0,'raiz',$3,$4,$5,$6,$7)",
+          "INSERT INTO nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,citas,idea_clave) VALUES($1,$2,NULL,0,0,'raiz',$3,$4,$5,$6,$7,$8)",
           [
             root,
             id,
@@ -260,11 +291,12 @@ export class TutorService {
             "Generado por IA; no revisado",
             PROMPT_VERSION,
             JSON.stringify(source.citas),
+            etiqueta(output.idea_clave),
           ],
         );
         for (const [n, h] of output.hijos_propuestos.entries())
           await m.query(
-            "INSERT INTO nodos VALUES($1,$2,$3,1,$4,$5,$6,$7,$8,$9,$10)",
+            "INSERT INTO nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,citas,idea_clave) VALUES($1,$2,$3,1,$4,$5,$6,$7,$8,$9,$10,$11)",
             [
               randomUUID(),
               id,
@@ -276,6 +308,7 @@ export class TutorService {
               "Generado por IA; no revisado",
               PROMPT_VERSION,
               JSON.stringify(source.citas),
+              etiqueta(h.idea_clave),
             ],
           );
         await m.query(
@@ -299,8 +332,13 @@ export class TutorService {
     solicitud: string,
     key: string,
     clarify = false,
+    ideaClave?: string,
   ) {
     const tree = await this.own(actor, id);
+    if (ideaClave && !esClaveDe(tree.concepto, ideaClave))
+      throw new BadRequestException(
+        "Esa idea clave no pertenece al concepto de esta exploración.",
+      );
     const [node] = await this.db.query<Node>(
       "SELECT * FROM nodos WHERE arbol_id=$1 AND id=$2",
       [id, nid],
@@ -313,7 +351,13 @@ export class TutorService {
     const reserved = await this.reserve(
       actor,
       key,
-      { op: clarify ? "aclarar" : "expandir", id, nid, solicitud },
+      {
+        op: clarify ? "aclarar" : "expandir",
+        id,
+        nid,
+        solicitud,
+        ...(ideaClave ? { ideaClave } : {}),
+      },
       id,
     );
     if (reserved.cached) return reserved.cached;
@@ -332,11 +376,18 @@ export class TutorService {
       const path = ancestors
         .map((n) => n.titulo + ": " + n.contenido.slice(0, 1200))
         .join("\n");
+      const idea = ideaPorClave(ideaClave);
       const out = await this.ai.explain({
-        solicitud,
+        solicitud: idea
+          ? `${solicitud}\nCentra el contenido en la idea clave «${idea.clave}»: ${idea.descripcion}`
+          : solicitud,
         material: source.texto + "\nContexto de la rama: " + path,
         titulo: node.titulo,
+        claves_permitidas: clavesDe(tree.concepto),
+        ...(idea ? { idea_foco: idea.clave } : {}),
       });
+      const etiqueta = (clave?: string) =>
+        esClaveDe(tree.concepto, clave) ? clave! : null;
       const result = await this.db.transaction(async (m) => {
         await m.query("SELECT id FROM arboles WHERE id=$1 FOR UPDATE", [id]);
         if (clarify) {
@@ -364,6 +415,7 @@ export class TutorService {
             tipo: "aclaracion",
             titulo: out.titulo,
             contenido: out.explicacion,
+            idea_clave: idea?.clave ?? out.idea_clave,
           },
           ...out.hijos_propuestos,
         ].slice(0, 3);
@@ -377,7 +429,7 @@ export class TutorService {
         );
         for (const [n, h] of children.entries())
           await m.query(
-            "INSERT INTO nodos VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
+            "INSERT INTO nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,citas,idea_clave) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
             [
               randomUUID(),
               id,
@@ -390,6 +442,7 @@ export class TutorService {
               "Generado por IA; no revisado",
               PROMPT_VERSION,
               JSON.stringify(source.citas),
+              etiqueta(h.idea_clave),
             ],
           );
         const result = { id };
@@ -460,7 +513,12 @@ export class TutorController {
     @Headers("idempotency-key") key: string,
   ) {
     const input = validate(
-      z.object({ solicitud: z.string().min(1).max(2000) }).strict(),
+      z
+        .object({
+          solicitud: z.string().min(1).max(2000),
+          idea_clave: z.string().max(60).optional(),
+        })
+        .strict(),
       b,
     );
     return this.s.expand(
@@ -469,13 +527,15 @@ export class TutorController {
       validate(z.string().uuid(), nid),
       input.solicitud,
       key,
+      false,
+      input.idea_clave,
     );
   }
 }
 @Module({
   imports: [PracticaModule],
-  providers: [TutorAI, TutorService],
+  providers: [Proveedores, TutorAI, TutorService],
   controllers: [TutorController],
-  exports: [TutorAI, TutorService],
+  exports: [Proveedores, TutorAI, TutorService],
 })
 export class TutorModule {}

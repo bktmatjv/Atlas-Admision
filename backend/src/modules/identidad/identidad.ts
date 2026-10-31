@@ -31,7 +31,7 @@ export class SessionGuard implements CanActivate {
       const origin = req.headers.origin;
       const allowed = settings().FRONTEND_ORIGIN;
       if (
-        req.headers["x-atlas-request"] !== "1" ||
+        req.headers["x-calibra-request"] !== "1" ||
         (origin &&
           origin !== allowed &&
           origin !== `${req.protocol}://${req.get("host")}`)

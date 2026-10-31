@@ -593,22 +593,61 @@ Un solo lockfile npm en la raíz. Los demás motores de renderizado/cálculo de 
 | --- | --- | --- |
 | Persistencia | PostgreSQL/TypeORM, migraciones, snapshot importado de forma repetible, sesiones y autorización por actor | Sesión invitada; sin recuperación entre dispositivos |
 | Práctica | Crear, responder con versión, revelar cuando corresponde, entregar y corregir; diagnóstico/simulacros y repasos | Los exámenes históricos son selecciones disponibles; no cuadernillos íntegros |
-| Tutor | Adaptador Anthropic, salida estructurada validada, idempotencia, árbol, expansión y aclaración con revisión anterior | Sin credenciales, error explícito; la prueba controlada no valida IA real |
+| Tutor | Interfaz de proveedor propia con adaptadores Groq (principal, `fetch` nativo), Anthropic y `fake`; salida estructurada validada, idempotencia, árbol, expansión y aclaración con revisión anterior | Sin credenciales, error explícito; la prueba controlada no valida IA real |
 | Comprobación | Actividades propias de tres conceptos, resultado numérico y justificación persistida, bloqueo de ayudas durante el intento | La justificación no se califica automáticamente; no certifica comprensión profunda |
 | Mis cursos | Cursos personales, importación privada PDF con texto/TXT/Markdown, worker, trabajos recuperables, fragmentos y citas; propuestas de práctica guardadas | Organización IA sobre muestra acotada; revisión manual; prácticas generadas no revisadas |
 | Ejecución | Dockerfile backend, Compose con DB y volúmenes; frontend separado y cliente HTTP configurable | Arranque local, no despliegue cloud ni configuración final de producción |
 
-El prompt versionado actual está en `backend/src/modules/tutor/ai.ts` (`tutor-v1`), no en una carpeta de prompts separada. El modelo real se proporciona por configuración; no se garantiza disponibilidad de los nombres exploratorios propuestos en la sección 15. Los trabajos de documentos tienen concurrencia uno en este alcance. La búsqueda full-text está indexada, pero no se presenta como un buscador completo del curso; el tutor utiliza el fragmento seleccionado.
+El prompt versionado actual está en `backend/src/modules/tutor/ai.ts` (`tutor-v2`), no en una carpeta de prompts separada. El modelo real se proporciona por configuración; no se garantiza disponibilidad de los nombres exploratorios propuestos en la sección 15. Los trabajos de documentos tienen concurrencia uno en este alcance. La búsqueda full-text está indexada, pero no se presenta como un buscador completo del curso; el tutor utiliza el fragmento seleccionado.
 
 ### Verificaciones realizadas
 
-- `npm run verify`: lint, tipos frontend/backend, **384 pruebas en 38 archivos**, compilación de los workspaces, **22 pruebas HTTP con PostgreSQL Docker real** y auditoría npm sin vulnerabilidades reportadas.
+- `npm run verify`: lint, tipos frontend/backend, **384 pruebas en 38 archivos**, compilación de los workspaces, **38 pruebas de backend en 2 archivos (HTTP con PostgreSQL Docker real y unitarias del catálogo)** y auditoría npm sin vulnerabilidades reportadas.
 - Imagen backend construida y ejecutada con Node 22 y PostgreSQL 16. Ambos servicios saludables; se comprobó práctica/corrección, PDF en worker, conservación de sesión/datos tras reinicio y borrado del original/derivados.
 - Banco con claves fuera de los assets públicos. Los recursos existentes se trasladan, no se eliminan ni se regeneran desde la extracción privada.
 - Comprobación básica en navegador: inicio, navegación a Admisión, 26 exámenes cargados desde la API, sin alertas de error ni desbordamiento horizontal al ancho observado. No sustituye un recorrido visual completo móvil/escritorio con IA real.
 - Las pruebas habituales no llaman modelos de pago. El arranque local conserva `AI_PROVIDER=disabled` salvo configuración explícita.
 
 Comando único antes de entregar cambios: `npm run verify`. Consultar `README.md` y `backend/README.md` para arranque y contratos. No dar una fase por terminada por la existencia de un archivo: contrastar siempre con estas comprobaciones y con los límites de cada flujo.
+
+### Harness de comprensión: retropropagación del error (30/10/2026)
+
+**Implementado y conectado de extremo a extremo** (detalle de contratos en `backend/README.md`; diseño en `idea_tutor_harness_comprension.md`):
+
+- Catálogo fijo de 6 ideas clave y mapa de errores típicos por actividad para los tres conceptos con comprobación (`porcentajes-1/2/3`, `proporciones-1`, `fracciones-1/2`).
+- Al fallar una comprobación, el servidor ubica la idea clave de forma determinista (sin IA), elige el nodo de retorno, escala la ayuda (pista → ejemplo → explicación completa) y guarda un rastro idempotente. Una respuesta fuera del mapa se declara «sin evidencia suficiente».
+- `GET /arboles/:id` expone `ultimo_rastro` con el camino raíz → nodo de retorno. Los nodos se etiquetan con `idea_clave` solo si pertenece al catálogo del concepto; `expandir` acepta `idea_clave` para crear el nodo que falta.
+- Un acierto posterior sin ayuda registra la evidencia `corrigio_tras_error`, una sola vez por fallo no corregido.
+- Interfaz en `Aprender.tsx`: camino resaltado y etiqueta «Volver aquí», devolución citando la respuesta, ejemplo resuelto, explicación completa y «Explicar esta idea». Sin porcentajes de comprensión.
+
+**Verificado:** pruebas HTTP con PostgreSQL real y proveedor de pruebas para los siete escenarios de la especificación, pruebas unitarias del catálogo y del mapa, y regresión de las pruebas existentes. `npm run verify` pasó completo al cerrar esta tarea: 384 pruebas de frontend, 38 de backend con PostgreSQL Docker y auditoría npm sin vulnerabilidades.
+
+**Límites:**
+
+- Los mapas de error cubren solo las respuestas incorrectas típicas curadas; la causa de cualquier otra respuesta no se infiere. Pendiente revisión pedagógica del catálogo y del mapa.
+- La IA real no se probó: el etiquetado con `idea_clave` y el hijo centrado en una idea dependen de la calidad del modelo; el servidor solo garantiza que la clave pertenezca al catálogo.
+- «Mis cursos» y otros cursos no tienen catálogo ni mapa de errores. La justificación escrita no se califica ni se usa para decidir la idea clave.
+- El resaltado del camino, «Volver aquí» y la devolución se reconstruyen desde `ultimo_rastro` al recargar, mientras ese fallo no se haya corregido. La interfaz muestra el nivel de ayuda sugerido (pista → ejemplo resuelto → explicación completa) y destaca la acción correspondiente. No se hizo un recorrido visual en navegador con IA real.
+- El nodo de retorno es el nodo más reciente con esa idea; no se genera un nodo automáticamente: el estudiante lo pide con «Explicar esta idea».
+- No se validó con estudiantes ni se mide aprendizaje. `corrigio_tras_error` es una evidencia observable, no una certificación de comprensión.
+
+### Tutor agente: sistema + consciencia (30/10/2026)
+
+**Implementado y conectado de extremo a extremo** (contratos en `backend/README.md`; diseño en `diseno_tutor_agente.md`; plan en `odd/tasks/tutor-agente.md`):
+
+- Proveedor Groq detrás de una interfaz propia, con Anthropic y un proveedor de pruebas como alternativas; el resto de operaciones de IA de la app usa la misma interfaz. Errores 429, timeout y respuestas inválidas se muestran como error explícito.
+- Conversación con un ciclo agente (hasta 4 herramientas por turno, reparación única y turno degradado), con bloques tipados y operaciones sobre el grafo validados por cinco capas (forma, referencias, matemática, atribución y filtración de la clave activa).
+- `GET /grafo`: el estado de cada nodo se calcula desde rastros y evidencias; el modelo no puede escribirlo. Las lecturas provisionales del texto libre dejan como mucho una `senal` visual.
+- Plantillas paramétricas con distractores ligados a ideas clave: sirven para práctica en la charla (corrección determinista, sin evidencia) y, al agotarse las actividades curadas, como comprobaciones con enunciado fijo del sistema y evidencia con `origen`.
+- Interfaz `/tutor`: chat, diez tipos de bloque y mapa con `react-force-graph-2d`; en móvil, lista jerárquica con estados en texto.
+
+**Verificado:** `npm run lint`, `npm run typecheck`, `npm test` (390 pruebas de frontend en 39 archivos), `npm run build` y `npm run test:docker` (146 pruebas de backend en 6 archivos, con PostgreSQL Docker real y proveedor de pruebas) pasan. Recorrido manual en navegador (escritorio y móvil) con el proveedor de pruebas. El paso `npm audit` de `npm run verify` falla por 14 avisos moderados nuevos en herramientas existentes (eslint/typescript-eslint, `minimatch`, `glob` vía `typeorm`), sin relación con `react-force-graph-2d`; `minimatch` no tiene parche disponible.
+
+**Límites:**
+
+- No se probó con Groq real ni con estudiantes: la calidad pedagógica del agente, el uso de herramientas por modelos abiertos y los límites del plan gratuito siguen sin validar. El adaptador solo se probó con un `fetch` simulado.
+- Las plantillas cubren solo porcentajes, proporciones y fracciones; sus enunciados no tienen revisión docente. «Mis cursos» solo tiene lectura provisional y citas.
+- Sin streaming, imágenes generadas ni calificación automática de justificaciones. Practicar en la charla no mueve ningún estado.
 
 ### Pendiente, sin presentarlo como terminado
 

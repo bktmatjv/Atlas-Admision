@@ -18,28 +18,49 @@
    un concepto va en Remotion (`src/remotion/`), y nunca al revés. */
 
 :root {
-  --arc-azul: 224 90% 52%;
-  --arc-azul-hondo: 226 82% 38%;
-  --arc-azul-claro: 220 100% 96%;
-  /* El azul como TEXTO. En claro es el mismo tono un paso más oscuro (5,9:1 sobre blanco);
-     en oscuro sube, porque el azul de relleno no se lee sobre la superficie oscura. */
-  --arc-azul-texto: 224 82% 45%;
+  /* =========================================================================
+     Nueva gama cromática Atlas (Modo Claro)
+     Primary #941F3D, Primary Hover #79182F, Background #F7F0E6, Surface #FFFCF7,
+     Surface Secondary #F0E5DD, Text Primary #30252A, Text Secondary #706168,
+     Border #E5D7D1, Accent #D89AA6
+     ========================================================================= */
+  --arc-primary: 345 65% 35%;
+  --arc-primary-hover: 346 67% 28%;
+  --arc-background: 35 52% 94%;
+  --arc-surface: 38 100% 98%;
+  --arc-surface-secondary: 25 39% 90%;
+  --arc-text-primary: 333 13% 17%;
+  --arc-text-secondary: 332 7% 41%;
+  --arc-border: 18 28% 86%;
+  --arc-accent: 348 44% 73%;
+
+  /* Variables del sistema arcade mapeadas a la nueva gama */
+  --arc-azul: 345 65% 35%;
+  --arc-azul-hondo: 346 67% 28%;
+  --arc-azul-claro: 345 45% 94%;
+  --arc-azul-texto: 345 65% 35%;
+  --arc-marino: 333 13% 17%;
+  --arc-crema: 25 39% 90%;
+
+  --arc-superficie: 38 100% 98%;
+  --arc-lienzo: 35 52% 94%;
+  --arc-texto: 333 13% 17%;
+  --arc-texto-suave: 332 7% 41%;
+
+  --arc-leccion-cuerpo: 333 13% 17%;
+  --arc-leccion-fuerte: 333 13% 17%;
+  --arc-leccion-titulo: 345 65% 35%;
+
+  --arc-borde: 345 35% 82%;
+  --arc-borde-suave: 18 28% 86%;
+
+  /* Colores de estado semánticos (conservados) */
   --arc-cian: 190 88% 46%;
-  /* El cian con letra: blanco sobre él o él sobre blanco, 5,2:1 (el de trazo da 2,3:1). En
-     oscuro el relleno se queda así; el texto vuelve al cian vivo, que sobre la superficie
-     oscura da 6:1. */
   --arc-cian-hondo: 192 90% 30%;
   --arc-cian-texto: 192 90% 30%;
-  /* Los rellenos con letra blanca de las etapas de una explicación (pastilla y cadena), por
-     lo mismo que el cian: el tono de trazo no aguanta texto encima. Blanco sobre el coral de
-     trazo da 3,5:1; sobre el amarillo hondo, 2,6:1; sobre la menta, 4,2:1 en claro y 1,9:1
-     en oscuro, donde la menta sube. Estos dan 5,1–5,2:1 y NO cambian en oscuro: la letra
-     sigue siendo blanca y el relleno es el que la tiene que aguantar. El amarillo pasa a
-     tostado porque un amarillo que aguante blanco ya no es amarillo. */
   --arc-coral-hondo: 6 76% 46%;
   --arc-amarillo-tostado: 36 88% 32%;
   --arc-menta-hondo: 160 62% 30%;
-  --arc-marino: 226 58% 17%;
   --arc-amarillo: 44 97% 62%;
   --arc-amarillo-hondo: 38 86% 46%;
   --arc-amarillo-claro: 46 100% 93%;
@@ -48,43 +69,58 @@
   --arc-coral-claro: 6 100% 96%;
   --arc-menta: 160 62% 34%;
   --arc-menta-claro: 152 58% 92%;
-  /* La letra de una pastilla sobre `-claro`, como `--arc-azul-texto` y `--arc-coral-texto`. En
-     claro coinciden con el tostado y la menta honda; en oscuro suben, porque esos dos no
-     cambian (son relleno bajo letra blanca) y sobre el `-claro` oscuro no se leían. */
   --arc-amarillo-texto: 36 88% 32%;
   --arc-menta-texto: 160 62% 30%;
-  --arc-crema: 42 70% 98%;
-
-  --arc-superficie: 0 0% 100%;
-  --arc-lienzo: 218 70% 97%;
-  --arc-texto: 226 58% 17%;
-  --arc-texto-suave: 224 20% 36%;
-  /* La tinta de la Explicación: el texto que se lee en petróleo, y los títulos en azul hondo.
-     Con color pero sin bajar del suelo de la auditoría: el cuerpo da 7,4:1 sobre blanco y
-     6,6:1 sobre los fondos teñidos de las tarjetas; la negrita, 9,4:1; el título, 9,6:1. */
-  --arc-leccion-cuerpo: 196 72% 27%;
-  --arc-leccion-fuerte: 196 75% 22%;
-  --arc-leccion-titulo: 226 82% 38%;
-  /* El canto de las piezas en relieve y su contorno. */
-  --arc-borde: 226 48% 24%;
-  --arc-borde-suave: 220 38% 86%;
 
   --arc-radio-s: 10px;
   --arc-radio: 16px;
   --arc-radio-l: 24px;
 
-  --arc-relieve: 0 3px 0 hsl(var(--arc-borde) / 0.9);
-  --arc-sombra: 0 14px 30px -18px hsl(226 60% 25% / 0.45);
+  --arc-relieve: 0 3px 0 hsl(var(--arc-azul-hondo) / 0.85);
+  --arc-sombra: 0 14px 30px -18px hsl(333 13% 17% / 0.12);
 
   --arc-rapida: 140ms;
   --arc-media: 220ms;
 }
 
 .dark {
-  --arc-azul: 224 88% 56%;
-  --arc-azul-hondo: 226 80% 34%;
-  --arc-azul-claro: 224 36% 22%;
-  --arc-azul-texto: 218 95% 74%;
+  /* =========================================================================
+     Nueva gama cromática Atlas (Modo Oscuro)
+     Primary #F07B91, Primary Hover #F58DA0, Background #191519, Surface #29222A,
+     Surface Secondary #32232B, Text Primary #F7F0E6, Text Secondary #C8B9BE,
+     Border #46343D, Accent #D89AA6
+     ========================================================================= */
+  --arc-primary: 349 80% 71%;
+  --arc-primary-hover: 349 84% 76%;
+  --arc-background: 300 9% 9%;
+  --arc-surface: 293 11% 15%;
+  --arc-surface-secondary: 328 18% 17%;
+  --arc-text-primary: 35 52% 94%;
+  --arc-text-secondary: 340 12% 75%;
+  --arc-border: 330 15% 24%;
+  --arc-accent: 348 44% 73%;
+
+  /* Variables del sistema arcade mapeadas a la nueva gama en oscuro */
+  --arc-azul: 349 80% 71%;
+  --arc-azul-hondo: 349 84% 76%;
+  --arc-azul-claro: 328 20% 19%;
+  --arc-azul-texto: 349 80% 71%;
+  --arc-marino: 35 52% 94%;
+  --arc-crema: 328 18% 17%;
+
+  --arc-superficie: 293 11% 15%;
+  --arc-lienzo: 300 9% 9%;
+  --arc-texto: 35 52% 94%;
+  --arc-texto-suave: 340 12% 75%;
+
+  --arc-leccion-cuerpo: 35 52% 94%;
+  --arc-leccion-fuerte: 38 100% 98%;
+  --arc-leccion-titulo: 349 80% 71%;
+
+  --arc-borde: 330 18% 30%;
+  --arc-borde-suave: 330 15% 24%;
+
+  /* Colores de estado semánticos en oscuro (conservados) */
   --arc-amarillo-claro: 40 40% 20%;
   --arc-coral-texto: 6 90% 74%;
   --arc-cian-texto: 190 88% 46%;
@@ -93,18 +129,6 @@
   --arc-menta-claro: 158 28% 20%;
   --arc-amarillo-texto: 44 92% 66%;
   --arc-menta-texto: 156 60% 62%;
-  --arc-crema: 224 20% 20%;
-
-  --arc-superficie: 224 22% 19%;
-  --arc-lienzo: 224 24% 12%;
-  --arc-texto: 210 40% 97%;
-  --arc-texto-suave: 215 22% 76%;
-  /* En oscuro, 8,3:1 el cuerpo y 8,6:1 el título sobre la superficie. */
-  --arc-leccion-cuerpo: 190 55% 72%;
-  --arc-leccion-fuerte: 190 60% 86%;
-  --arc-leccion-titulo: 218 90% 84%;
-  --arc-borde: 224 36% 7%;
-  --arc-borde-suave: 224 18% 32%;
 
   --arc-relieve: 0 3px 0 hsl(var(--arc-borde));
   --arc-sombra: 0 14px 30px -18px hsl(0 0% 0% / 0.7);
@@ -206,10 +230,16 @@
 .arc-boton-primario:active:not(:disabled) {
   box-shadow: 0 1px 0 hsl(var(--arc-azul-hondo));
 }
+@media (hover: hover) {
+  .arc-boton-primario:hover:not(:disabled) {
+    background: hsl(var(--arc-primary-hover));
+    border-color: hsl(var(--arc-primary-hover));
+  }
+}
 .arc-boton-acento {
   background: hsl(var(--arc-amarillo));
   border-color: hsl(var(--arc-amarillo-hondo));
-  color: hsl(226 58% 17%);
+  color: hsl(var(--arc-texto));
   box-shadow: 0 4px 0 hsl(var(--arc-amarillo-hondo));
 }
 .arc-boton-acento:active:not(:disabled) {
@@ -274,7 +304,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   background: hsl(var(--arc-amarillo));
-  color: hsl(226 58% 17%);
+  color: hsl(var(--arc-texto));
 }
 
 /* ---------- Cabecera ilustrada ----------
@@ -286,7 +316,7 @@
   color: #fff;
   background:
     linear-gradient(115deg, transparent 58%, hsl(0 0% 100% / 0.1) 58% 70%, transparent 70%),
-    radial-gradient(120% 140% at 0% 0%, hsl(222 100% 62%) 0%, hsl(var(--arc-azul)) 42%, hsl(var(--arc-azul-hondo)) 100%);
+    radial-gradient(120% 140% at 0% 0%, hsl(var(--arc-accent)) 0%, hsl(var(--arc-azul)) 42%, hsl(var(--arc-azul-hondo)) 100%);
   box-shadow: 0 5px 0 hsl(var(--arc-azul-hondo)), var(--arc-sombra);
 }
 .arc-cabecera :where(h1, h2, h3, p) {
@@ -558,49 +588,49 @@
    flotando es lo único que hay. Por eso aquí los colores van fijos y no por `.dark`. */
 
 .arc-sala {
-  --arc-sala-fondo: 225 62% 11%;
+  --arc-sala-fondo: 300 12% 6%;
   background-color: hsl(var(--arc-sala-fondo));
   background-image:
-    radial-gradient(90% 60% at 50% -10%, hsl(224 80% 28% / 0.55), transparent 70%),
-    radial-gradient(circle at -4% 72%, hsl(224 70% 40% / 0.16) 0 190px, transparent 191px),
-    radial-gradient(circle at 104% 20%, hsl(224 70% 40% / 0.14) 0 150px, transparent 151px);
-  color: hsl(210 40% 97%);
+    radial-gradient(90% 60% at 50% -10%, hsl(var(--arc-azul) / 0.25), transparent 70%),
+    radial-gradient(circle at -4% 72%, hsl(var(--arc-azul) / 0.08) 0 190px, transparent 191px),
+    radial-gradient(circle at 104% 20%, hsl(var(--arc-azul) / 0.07) 0 150px, transparent 151px);
+  color: hsl(35 52% 94%);
 }
 /* El texto secundario de la sala: 6,5:1 sobre el fondo. */
 .arc-sala-suave {
-  color: hsl(215 28% 74%);
+  color: hsl(340 12% 75%);
 }
 
-/* La tarjeta. Clara en los dos temas, con el marino del recorrido para el texto. */
+/* La tarjeta. Clara en los dos temas, con el texto de la nueva paleta. */
 .arc-flashcard {
-  --arc-texto: 226 58% 17%;
-  --arc-texto-suave: 224 20% 36%;
-  --arc-azul-texto: 224 82% 45%;
-  --arc-borde-suave: 220 38% 86%;
-  --arc-superficie: 0 0% 100%;
+  --arc-texto: 333 13% 17%;
+  --arc-texto-suave: 332 7% 41%;
+  --arc-azul-texto: 345 65% 35%;
+  --arc-borde-suave: 18 28% 86%;
+  --arc-superficie: 38 100% 98%;
   /* Y los de la app que usan las piezas de la lección que viven dentro (la tabla del
      material): sus valores claros, porque en oscuro se invertirían sobre fondo blanco. */
-  --foreground: 222 47% 11%;
-  --muted: 213 24% 93%;
-  --muted-foreground: 215 16% 38%;
-  --border: 214 32% 91%;
-  --border-row: 214 32% 95%;
-  --tabla-cabecera: 201 55% 93%;
-  --tabla-contorno: 201 45% 80%;
-  --ring: 224 82% 45%;
-  background: hsl(0 0% 100%);
+  --foreground: 333 13% 17%;
+  --muted: 25 39% 90%;
+  --muted-foreground: 332 7% 41%;
+  --border: 18 28% 86%;
+  --border-row: 25 35% 91%;
+  --tabla-cabecera: 345 45% 93%;
+  --tabla-contorno: 345 35% 82%;
+  --ring: 345 65% 35%;
+  background: hsl(38 100% 98%);
   border-radius: 28px;
   box-shadow:
     0 1px 0 hsl(0 0% 100% / 0.9) inset,
-    0 6px 0 hsl(220 40% 82%),
-    0 28px 60px -24px hsl(226 90% 4% / 0.8);
+    0 6px 0 hsl(18 28% 80%),
+    0 28px 60px -24px hsl(333 13% 17% / 0.25);
   color: hsl(var(--arc-texto));
 }
 /* Las tarjetas que quedan detrás: el mazo. */
 .arc-flashcard-fantasma {
   border-radius: 28px;
-  background: hsl(220 40% 88%);
-  box-shadow: 0 6px 0 hsl(222 30% 70%);
+  background: hsl(25 39% 90%);
+  box-shadow: 0 6px 0 hsl(18 28% 80%);
 }
 
 /* Una tecla pequeña: el atajo dicho al lado del botón o dentro de él. */
@@ -671,17 +701,17 @@
 .arc-valoracion-amarillo {
   --relleno: hsl(var(--arc-amarillo));
   --canto: hsl(var(--arc-amarillo-hondo));
-  --tinta: hsl(226 58% 17%);
+  --tinta: hsl(var(--arc-texto));
 }
 .arc-valoracion-azul {
-  --relleno: hsl(224 90% 52%);
-  --canto: hsl(226 82% 34%);
+  --relleno: hsl(var(--arc-azul));
+  --canto: hsl(var(--arc-azul-hondo));
   --tinta: #fff;
 }
 .arc-valoracion-menta {
   --relleno: hsl(var(--arc-menta-vivo));
   --canto: hsl(162 64% 28%);
-  --tinta: hsl(226 58% 17%);
+  --tinta: hsl(var(--arc-texto));
 }
 :root {
   /* La menta de relleno: la de `--arc-menta` es de texto y no se lee como botón. */
@@ -698,7 +728,7 @@
   border-radius: 16px;
   background: hsl(46 100% 93%);
   border: 1px solid hsl(44 90% 78%);
-  color: hsl(226 58% 17%);
+  color: hsl(var(--arc-texto));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -714,8 +744,8 @@
 
 /* Los tonos: relleno, canto, tinta sobre el relleno, y el claro con su texto para fondos. */
 .arc-tono-azul {
-  --relleno: hsl(224 90% 52%);
-  --canto: hsl(226 82% 34%);
+  --relleno: hsl(var(--arc-azul));
+  --canto: hsl(var(--arc-azul-hondo));
   --tinta: #fff;
   --claro: hsl(var(--arc-azul-claro));
   --texto: hsl(var(--arc-azul-texto));
@@ -730,21 +760,21 @@
 .arc-tono-amarillo {
   --relleno: hsl(var(--arc-amarillo));
   --canto: hsl(var(--arc-amarillo-hondo));
-  --tinta: hsl(226 58% 17%);
+  --tinta: hsl(var(--arc-texto));
   --claro: hsl(var(--arc-amarillo-claro));
   --texto: hsl(var(--arc-amarillo-texto));
 }
 .arc-tono-menta {
   --relleno: hsl(var(--arc-menta-vivo));
   --canto: hsl(162 64% 28%);
-  --tinta: hsl(226 58% 17%);
+  --tinta: hsl(var(--arc-texto));
   --claro: hsl(var(--arc-menta-claro));
   --texto: hsl(var(--arc-menta-texto));
 }
 .arc-tono-cian {
   --relleno: hsl(var(--arc-cian));
   --canto: hsl(var(--arc-cian-hondo));
-  --tinta: hsl(226 58% 17%);
+  --tinta: hsl(var(--arc-texto));
   --claro: hsl(190 80% 94%);
   --texto: hsl(var(--arc-cian-texto));
 }

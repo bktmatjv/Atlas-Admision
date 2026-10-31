@@ -101,7 +101,7 @@ export function PageHeader({
             {title}
           </h1>
           {typeof count === "number" && (
-            <span className="shrink-0 self-center rounded-full bg-[hsl(var(--arc-azul-claro))] px-3 py-1 text-sm font-bold tabular-nums text-[hsl(var(--arc-azul-texto))]">
+            <span className="shrink-0 self-center rounded-full bg-secondary px-3 py-1 text-sm font-bold tabular-nums text-primary">
               {count.toLocaleString("es")}
             </span>
           )}

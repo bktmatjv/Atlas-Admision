@@ -24,7 +24,7 @@ export function SessionGate({ children }: { children: ReactNode }) {
     return (
       <main className="grid min-h-screen place-items-center bg-background p-6 text-foreground">
         <section className="max-w-lg space-y-4 rounded-2xl border bg-card p-8">
-          <h1 className="text-2xl font-bold">No pudimos conectar con Atlas</h1>
+          <h1 className="text-2xl font-bold">No pudimos conectar con CALIBRA</h1>
           <p role="alert">{session.error.message}</p>
           <p className="text-sm text-muted-foreground">
             El progreso del servidor no se sustituirá por una demo local.

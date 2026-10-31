@@ -4,6 +4,10 @@ import { DataSource, EntityManager } from "typeorm";
 import { settings } from "../config.js";
 import { Initial1770000000000 } from "./initial.js";
 import { Learning1770000001000 } from "./learning.js";
+import { Harness1770000002000 } from "./harness.js";
+import { Agente1770000003000 } from "./agente.js";
+import { Plantillas1770000004000 } from "./plantillas.js";
+import { Revisiones1770000005000 } from "./revisiones.js";
 export const createDataSource = (url: string) => {
   const schema = process.env.DB_SCHEMA ?? "public";
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(schema))
@@ -14,7 +18,14 @@ export const createDataSource = (url: string) => {
     schema,
     synchronize: false,
     migrationsRun: false,
-    migrations: [Initial1770000000000, Learning1770000001000],
+    migrations: [
+      Initial1770000000000,
+      Learning1770000001000,
+      Harness1770000002000,
+      Agente1770000003000,
+      Plantillas1770000004000,
+      Revisiones1770000005000,
+    ],
     logging: false,
     extra: { max: 10, options: `-c search_path=${schema}` },
   });

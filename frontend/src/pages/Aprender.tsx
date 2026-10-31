@@ -37,19 +37,48 @@ type Node = {
     pagina?: number;
     pregunta_id?: string;
   }[];
+  idea_clave?: string | null;
+};
+const NIVELES_DE_AYUDA = {
+  pista: "pista breve",
+  ejemplo: "ejemplo resuelto",
+  explicacion_completa: "explicación completa",
+} as const;
+type Rastro = {
+  respuesta: string;
+  idea_clave: string | null;
+  descripcion: string | null;
+  explicacion: string;
+  pista: string;
+  nodo_retorno_id: string | null;
+  nivel_ayuda: "pista" | "ejemplo" | "explicacion_completa";
+  motivo: "sin_evidencia" | null;
 };
 type Tree = {
   id: string;
   titulo: string;
   concepto: string | null;
   nodos: Node[];
+  ultimo_rastro?: (Rastro & { camino: string[]; corregido?: boolean }) | null;
 };
-type Check = { id: string; enunciado: string; arbol_id?: string };
+type Ayuda = {
+  texto: string;
+  nodoId?: string;
+  modo?: "aclarar" | "expandir";
+  idea?: string;
+};
+type Check = {
+  id: string;
+  enunciado: string;
+  arbol_id?: string;
+  origen?: "curada" | "plantilla";
+};
 type Result = {
   correcta: boolean;
   solucion: string;
   nota: string;
   ayuda: boolean;
+  rastro?: Rastro | null;
 };
 type Evidence = {
   id: string;
@@ -58,7 +87,9 @@ type Evidence = {
   detalle: { nota?: string; concepto?: string; correcta?: boolean };
 };
 const labels: Record<string, string> = {
-  resolvio_sin_ayuda: "Resultado correcto sin ayudas de Atlas",
+  resolvio_sin_ayuda: "Resultado correcto sin ayudas de CALIBRA",
+  corrigio_tras_error:
+    "Corregiste tras un error: resolviste una variante nueva sin ayuda",
   resolvio_con_ayuda: "Resolución con apoyo",
   aplicacion_por_reforzar: "Aplicación por reforzar",
   intento_entregado: "Práctica entregada",
@@ -81,7 +112,7 @@ export default function Aprender() {
   const stableKey = useRef<{ payload: string; key: string } | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    document.title = "Aprender con Atlas";
+    document.title = "Aprender | CALIBRA";
     setSelected(null);
     setResult(null);
   }, [id]);
@@ -144,13 +175,14 @@ export default function Aprender() {
   const node =
     tree.data?.nodos.find((n) => n.id === selected) ?? tree.data?.nodos[0];
   const expand = useMutation({
-    mutationFn: (text: string) =>
+    mutationFn: (a: Ayuda) =>
       send(
-        `/arboles/${id}/nodos/${node!.id}/${text === "Explícalo más sencillo" ? "aclarar" : "expandir"}`,
-        { solicitud: text },
+        `/arboles/${id}/nodos/${a.nodoId ?? node!.id}/${(a.modo ?? (a.texto === "Explícalo más sencillo" ? "aclarar" : "expandir")) === "aclarar" ? "aclarar" : "expandir"}`,
+        { solicitud: a.texto, ...(a.idea ? { idea_clave: a.idea } : {}) },
       ),
-    onSuccess: () => {
+    onSuccess: (_r, a) => {
       setDuda("");
+      if (a.nodoId) setSelected(a.nodoId);
       void tree.refetch();
     },
   });
@@ -171,8 +203,10 @@ export default function Aprender() {
       }),
     onSuccess: (r) => {
       setResult(r);
+      if (r.rastro?.nodo_retorno_id) setSelected(r.rastro.nodo_retorno_id);
       void active.refetch();
       void evidence.refetch();
+      void tree.refetch();
     },
   });
   const cancel = useMutation({
@@ -190,6 +224,109 @@ export default function Aprender() {
     tree.error ??
     list.error;
   const busy = create.isPending || expand.isPending;
+  // Tras una entrega manda su resultado; si no, el último fallo aún no corregido que guarda el servidor.
+  const persistido = tree.data?.ultimo_rastro;
+  const panel = result
+    ? result.rastro
+    : persistido && !persistido.corregido
+      ? persistido
+      : null;
+  // El camino solo se resalta con evidencia suficiente.
+  const rastro = panel && !panel.motivo ? panel : null;
+  const camino = new Set(rastro ? (persistido?.camino ?? []) : []);
+  const volverA = rastro?.nodo_retorno_id ?? null;
+  const raiz = tree.data?.nodos[0];
+  const nivel = panel?.nivel_ayuda;
+  const panelDeRastro = panel && (
+    <div
+      className="mt-4 space-y-3 rounded-xl bg-primary/5 p-4"
+      role="group"
+      aria-labelledby="rastro-title"
+    >
+      <h3 id="rastro-title" className="font-bold">
+        {panel.motivo
+          ? `Tu respuesta ${panel.respuesta}`
+          : `Tu respuesta ${panel.respuesta} apunta a una idea para revisar`}
+      </h3>
+      {panel.descripcion && (
+        <p className="text-sm font-semibold">Idea: {panel.descripcion}</p>
+      )}
+      <p>{panel.explicacion}</p>
+      <p className="text-sm">
+        <span className="font-semibold">Pista: </span>
+        {panel.pista}
+      </p>
+      {!panel.motivo && nivel && (
+        <p className="text-sm text-muted-foreground">
+          Ayuda sugerida: <strong>{NIVELES_DE_AYUDA[nivel]}</strong>. Sube si
+          vuelves a fallar en esta idea; puedes pedir más cuando quieras.
+        </p>
+      )}
+      {!panel.motivo && panel.idea_clave && (
+        <div className="flex flex-wrap gap-2">
+          {volverA ? (
+            <>
+              <button
+                className={secondary}
+                disabled={busy}
+                onClick={() => setSelected(volverA)}
+              >
+                Volver al nodo
+              </button>
+              <button
+                className={nivel === "ejemplo" ? button : secondary}
+                disabled={busy}
+                onClick={() =>
+                  expand.mutate({
+                    texto:
+                      "Muéstrame un ejemplo resuelto, con otros números, de esta idea",
+                    nodoId: volverA,
+                    modo: "expandir",
+                    idea: panel.idea_clave ?? undefined,
+                  })
+                }
+              >
+                Ver ejemplo resuelto
+              </button>
+              <button
+                className={
+                  nivel === "explicacion_completa" ? button : secondary
+                }
+                disabled={busy}
+                onClick={() =>
+                  expand.mutate({
+                    texto:
+                      "Dame la explicación completa de esta idea, paso a paso",
+                    nodoId: volverA,
+                    modo: "aclarar",
+                  })
+                }
+              >
+                Explicación completa
+              </button>
+            </>
+          ) : (
+            raiz && (
+              <button
+                className={button}
+                disabled={busy}
+                onClick={() =>
+                  expand.mutate({
+                    texto: "Explícame esta idea clave con un ejemplo distinto",
+                    nodoId: raiz.id,
+                    modo: "expandir",
+                    idea: panel.idea_clave ?? undefined,
+                  })
+                }
+              >
+                Explicar esta idea
+              </button>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
   return (
     <ResponsiveLayout>
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-7 sm:px-6 sm:py-10">
@@ -199,7 +336,7 @@ export default function Aprender() {
               to="/aprender"
               className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
             >
-              Atlas · espacio para pensar
+              CALIBRA · espacio para pensar
             </Link>
             <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
               {tree.data?.titulo ?? "No solo entiendas la respuesta."}
@@ -209,6 +346,12 @@ export default function Aprender() {
                 ? "Explora una idea a la vez. Después, descubre qué puedes aplicar por tu cuenta."
                 : "Descubre qué puedes hacer con lo que aprendes. Parte de una duda, conecta ideas y ponlas a prueba."}
             </p>
+            <Link
+              to="/tutor"
+              className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline"
+            >
+              Conversar con el tutor y ver tu mapa de comprensión
+            </Link>
           </div>
           <ThemeToggle />
         </header>
@@ -226,7 +369,7 @@ export default function Aprender() {
             className="flex items-center gap-2 text-sm text-muted-foreground"
           >
             <Sparkles className="h-4 w-4 animate-pulse" />
-            Atlas está preparando la explicación. Tu exploración queda guardada.
+            CALIBRA está preparando la explicación. Tu exploración queda guardada.
           </p>
         )}
         {active.data && (
@@ -241,8 +384,13 @@ export default function Aprender() {
               Una situación diferente
             </h2>
             <p className="mt-3">{active.data.enunciado}</p>
+            {active.data.origen === "plantilla" && (
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                Problema generado y verificado por CALIBRA
+              </p>
+            )}
             <p className="mt-3 text-xs text-muted-foreground">
-              Sin ayudas de Atlas hasta entregar. No detectamos herramientas
+              Sin ayudas de CALIBRA hasta entregar. No detectamos herramientas
               externas; la justificación queda guardada sin calificación
               automática.
             </p>
@@ -297,7 +445,16 @@ export default function Aprender() {
                 : "Hay una idea que podemos reforzar."}
             </h2>
             <p className="mt-3">{result.solucion}</p>
+            {panelDeRastro}
             <p className="mt-3 text-sm text-muted-foreground">{result.nota}</p>
+          </section>
+        )}
+        {!result && panelDeRastro && (
+          <section className={card}>
+            <h2 className="text-xl font-bold">
+              Hay una idea que podemos reforzar.
+            </h2>
+            {panelDeRastro}
           </section>
         )}
         {!id && (
@@ -424,7 +581,7 @@ export default function Aprender() {
                       expand.reset();
                     }}
                     aria-current={node.id === n.id ? "true" : undefined}
-                    className={`flex min-h-11 w-full items-start gap-2 rounded-lg py-3 pr-2 text-left text-sm ${node.id === n.id ? "bg-primary/10 font-bold text-primary" : "hover:bg-muted"}`}
+                    className={`flex min-h-11 w-full items-start gap-2 rounded-lg py-3 pr-2 text-left text-sm ${node.id === n.id ? "bg-primary/10 font-bold text-primary" : "hover:bg-muted"} ${camino.has(n.id) ? "border-l-4 border-primary" : ""}`}
                     style={{ paddingLeft: 8 + Math.min(n.profundidad, 4) * 12 }}
                   >
                     {n.padre_id ? (
@@ -432,7 +589,20 @@ export default function Aprender() {
                     ) : (
                       <Compass className="mt-0.5 h-4 w-4 shrink-0" />
                     )}
-                    <span>{n.titulo}</span>
+                    <span>
+                      {n.titulo}
+                      {camino.has(n.id) && (
+                        <span className="sr-only">
+                          {" "}
+                          (en el camino de la idea)
+                        </span>
+                      )}
+                    </span>
+                    {n.id === volverA && (
+                      <span className="ml-auto shrink-0 rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                        Volver aquí
+                      </span>
+                    )}
                   </button>
                 ))}
               </nav>
@@ -460,8 +630,8 @@ export default function Aprender() {
                     {c.tipo === "documento"
                       ? `${c.nombre} · página ${c.pagina} · fragmento de tu material`
                       : c.tipo === "banco"
-                        ? `Pregunta ${c.pregunta_id} · banco de Atlas`
-                        : "Concepto de Atlas · contenido generado"}
+                        ? `Pregunta ${c.pregunta_id} · banco de CALIBRA`
+                        : "Concepto de CALIBRA · contenido generado"}
                   </li>
                 ))}
               </ul>
@@ -474,7 +644,7 @@ export default function Aprender() {
                   <button
                     key={t}
                     disabled={busy || !!active.data}
-                    onClick={() => expand.mutate(t)}
+                    onClick={() => expand.mutate({ texto: t })}
                     className={secondary}
                   >
                     {t}
@@ -484,7 +654,7 @@ export default function Aprender() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  expand.mutate(duda);
+                  expand.mutate({ texto: duda });
                 }}
                 className="space-y-3"
               >

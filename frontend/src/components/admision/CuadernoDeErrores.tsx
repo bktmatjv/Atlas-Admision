@@ -48,7 +48,7 @@ export function CuadernoDeErrores({ userId, area }: { userId: string | null; are
             type="button"
             disabled={armando !== null}
             onClick={() => void practicar("repaso", { modo: "repaso", n: Math.min(r.hoy, 20) })}
-            className="min-h-11 basis-full rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-60 sm:basis-auto"
+            className="min-h-11 basis-full rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60 sm:basis-auto"
           >
             {armando === "repaso" ? "Preparando…" : `Repasar ahora (${Math.min(r.hoy, 20)})`}
           </button>

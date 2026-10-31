@@ -12,8 +12,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Todo el producto habla el mismo idioma de botones (`src/arcade.css`): el primario
-        // es el azul con canto, el contorno es la pieza neutra con su canto claro.
-        default: "arc-boton arc-boton-primario",
+        // es el carmesí con canto, el contorno es la pieza neutra con su canto claro.
+        default: "arc-boton arc-boton-primario bg-primary text-primary-foreground hover:bg-primary-hover",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "arc-boton arc-boton-suave",
         secondary: "arc-boton arc-boton-secundario",

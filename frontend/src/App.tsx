@@ -11,6 +11,7 @@ const AdmisionTemas = lazyWithRetry(() => import("./pages/AdmisionTemas"));
 
 const Aprender = lazyWithRetry(() => import('./pages/Aprender'));
 const Cursos = lazyWithRetry(() => import('./pages/Cursos'));
+const Tutor = lazyWithRetry(() => import("./pages/Tutor"));
 
 // Sin reintentos de escrituras implícitos: la API gestiona idempotencia y errores.
 const queryClient = new QueryClient({
@@ -35,6 +36,8 @@ export default function App() {
               <Route path="/" element={<Navigate to="/aprender" replace />} />
               <Route path="/aprender" element={<Aprender />} />
               <Route path="/aprender/:id" element={<Aprender />} />
+              <Route path="/tutor" element={<Tutor />} />
+              <Route path="/tutor/:id" element={<Tutor />} />
               <Route path="/cursos" element={<Cursos />} />
               <Route path="/cursos/:cursoId" element={<Cursos />} />
               <Route path="/cursos/:cursoId/materiales/:documentoId" element={<Cursos />} />

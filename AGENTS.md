@@ -10,7 +10,7 @@ Las instrucciones explícitas del usuario tienen prioridad sobre este documento.
 
 ## 2. Contexto del producto
 
-El proyecto se ha trabajado como **Atlas Admisión**, una plataforma de apoyo a postulantes a San Marcos. Confirmar el nombre, alcance y terminología vigentes en el repositorio antes de introducir cambios globales.
+El producto se llama **CALIBRA** (decisión del equipo, 30/10/2026; antes «Atlas Admisión»), una plataforma de apoyo a postulantes a San Marcos. Los textos visibles, los prompts y la documentación usan CALIBRA. Se conservan a propósito identificadores técnicos con el nombre anterior, porque renombrarlos rompería datos o sesiones existentes: la cookie `atlas_sid`, la base y el usuario `atlas` de PostgreSQL, el proyecto y los volúmenes de Compose (`atlas`, `atlas-db`, `atlas-uploads`), los paquetes `@atlas/*`, la variable `ATLAS_LIMITE_IA`, las clases CSS `atlas-*` y el nombre del repositorio. No renombrarlos sin una migración planificada.
 
 La propuesta incluye diagnóstico, práctica por curso y tema, simulacros, revisión de errores, recomendaciones y seguimiento del progreso. Estas capacidades describen la intención del producto; no asumir que todas están implementadas o que sus reglas ya están definidas.
 
@@ -33,7 +33,7 @@ El problema educativo que orienta el diseño es «Aprender sin pensar»: complet
 ### Pendiente de confirmar mediante inspección o definición del producto
 
 - Recuperación de cuentas entre dispositivos y roles adicionales a la sesión invitada.
-- Modelo de IA disponible en la cuenta, presupuesto y calidad pedagógica con el proveedor real.
+- Modelo concreto de Groq a usar, límites reales de su plan y calidad pedagógica con el proveedor real. El proveedor elegido es Groq (ver sección 14).
 - Dominios, HTTPS y configuración final de despliegue. El usuario prevé frontend en Vercel y backend Docker en VM Azure, sin implementarlo todavía.
 - Contratos definitivos de la API y módulos de negocio.
 - Prioridad y criterios de aceptación de las funcionalidades incompletas.
@@ -234,9 +234,10 @@ Mantenerlo coherente con el repositorio. No convertir propuestas exploratorias e
 - `frontend/src/integrations/api/` centraliza HTTP. Los módulos antiguos llamados Supabase/local se conservan para tipos y pruebas de regresión; no son un backend alternativo ni un fallback silencioso de la aplicación.
 - Sesiones invitadas con cookie HttpOnly y hash del token en servidor; autorización por actor. No hay recuperación de cuentas. La sesión dura 30 días y su pérdida no debe presentarse como recuperación de usuario automática.
 - Backend por módulos de identidad, contenido/documentos, práctica, tutor y seguimiento. El acceso SQL se concentra en `Database`, que normaliza la forma de los resultados del driver. No tratar un array vacío devuelto por UPDATE como registro encontrado.
-- Adaptador Anthropic detrás de `TutorAI`; `AI_MODEL` y claves solo en backend. `disabled` devuelve error explícito, `fake` es exclusivo de pruebas y se prohíbe en producción. No reutilizar credenciales del harness para activar el tutor.
+- Proveedor de IA (decisión del usuario, 30/10/2026): **Groq** como proveedor principal, mediante su API compatible con OpenAI (`AI_PROVIDER=groq`). El tutor y su ciclo agente son independientes del proveedor: las reglas, herramientas y validaciones viven en el backend y cada proveedor es un adaptador detrás de una interfaz propia. Se conserva el adaptador Anthropic como alternativa (`AI_PROVIDER=anthropic`). `AI_MODEL` y `AI_API_KEY` solo en backend; no fijar un nombre de modelo en el código. `disabled` devuelve error explícito, `fake` es exclusivo de pruebas y se prohíbe en producción. No reutilizar credenciales del harness (Codex, Claude Code u otras herramientas de desarrollo) para activar el tutor.
+- Tutor agente: diseño en `diseno_tutor_agente.md`, plan en `odd/tasks/tutor-agente.md`. El LLM conversa, interpreta y propone; el sistema valida, corrige lo calculable y decide qué queda demostrado. El estado de los nodos del grafo se deriva de la evidencia, nunca de lo que escriba el modelo.
 - Documentos: originales privados, extracción en worker con memoria/tiempo limitados, trabajos persistidos con lease y referencias a fragmentos. PDF con texto/TXT/Markdown; OCR y fuentes web externas siguen pendientes. Un visto bueno del alumno a la extracción no equivale a revisión académica.
 - `compose.yaml` es para desarrollo local: API en `127.0.0.1:3000`, PostgreSQL en `127.0.0.1:55432`; no intervenir en contenedores de otros proyectos. No ejecutar `down -v` sobre datos que deban conservarse.
 - Arranque: `npm ci`, `docker compose up --build -d --wait`, `npm run dev:web`. Backend y frontend se despliegan separados; la API no sirve la SPA.
-- Antes de cerrar cambios: `npm run verify`. Incluye lint, tipos, 384 pruebas de regresión, build, integración con PostgreSQL Docker temporal y auditoría npm. Los conteos pueden crecer; confirmar siempre el resultado real del comando.
+- Antes de cerrar cambios: `npm run verify`. Incluye lint, tipos, 390 pruebas de regresión, build, integración con PostgreSQL Docker temporal y auditoría npm. Los conteos pueden crecer; confirmar siempre el resultado real del comando.
 - Consultar `README.md`, `backend/README.md` y la sección 16 de `PLAN_IMPLEMENTACION_ATLAS.md` para límites y estado verificado. Tener tests verdes no equivale a validación con estudiantes ni a despliegue público.
