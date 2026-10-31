@@ -1,3 +1,4 @@
+import { EntradaGate } from "@/components/entrada/EntradaGate";
 import { Suspense, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -41,7 +42,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
         {showWelcome ? <WelcomeScreen onComplete={() => setShowWelcome(false)} /> : <BrowserRouter>
-          <SessionGate><Suspense fallback={<Cargando />}>
+          <SessionGate><EntradaGate><Suspense fallback={<Cargando />}>
             <Routes>
               <Route path="/" element={<Navigate to="/aprender" replace />} />
               <Route path="/aprender" element={<Aprender />} />
@@ -56,7 +57,7 @@ export default function App() {
               <Route path="/admision/temas" element={<AdmisionTemas />} />
               <Route path="*" element={<Navigate to="/admision" replace />} />
             </Routes>
-          </Suspense></SessionGate>
+          </Suspense></EntradaGate></SessionGate>
         </BrowserRouter>}
       </ThemeProvider>
     </QueryClientProvider>
