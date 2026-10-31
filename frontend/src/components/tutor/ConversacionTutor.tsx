@@ -23,6 +23,7 @@ import {
 import { BloqueView } from "./Bloques";
 import { ComposerTutor } from "./ComposerTutor";
 import { ElegirTema } from "./ElegirTema";
+import { NotaDescartes } from "./NotaDescartes";
 import type { TemaId } from "@/lib/tutor/inicio";
 import { TutorAvatar } from "./TutorAvatar";
 type Props = {
@@ -223,6 +224,7 @@ export function ConversacionTutor(p: Props) {
                   ni cambios en el mapa.
                 </p>
               )}
+              {m.rol === "tutor" && <NotaDescartes descartes={m.descartes} />}
               {m.rol === "tutor" &&
                 m.bloques.map((b, i) => (
                   <div
