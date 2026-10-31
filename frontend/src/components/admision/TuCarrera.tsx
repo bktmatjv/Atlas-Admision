@@ -11,7 +11,7 @@ const AREA: Record<string, string> = {
 /**
  * La escuela de San Marcos a la que postula el alumno: con ella, «¿Ingresaba?» sabe contra quién
  * compararlo y la portada elige el área del simulacro. Se pide aquí y no en un onboarding nuevo; si ya
- * la dijo en el onboarding de Atlas, viene rellena (20261015120000).
+ * la dijo en el onboarding de Calibra, viene rellena (20261015120000).
  *
  * Si las tablas aún no existen (migración sin aplicar), no sale.
  */

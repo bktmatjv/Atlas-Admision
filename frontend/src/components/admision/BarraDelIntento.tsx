@@ -48,7 +48,7 @@ export function BarraDelIntento({ titulo, restante, resumen, pendientes, entrega
 }) {
   const apurado = restante !== null && restante < 5 * 60_000;
   return (
-    // `top-14`: en móvil, debajo de la cabecera «Atlas» (h-14), que también se pega arriba.
+    // `top-14`: en móvil, debajo de la cabecera «Calibra» (h-14), que también se pega arriba.
     <div className="sticky top-14 z-20 -mx-4 flex flex-wrap items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6 lg:top-0">
       {/* En móvil, su propia fila (con el reloj y el botón al lado, un `truncate` dejaba «Simul…»); desde sm, al lado. */}
       <p className="line-clamp-2 min-w-0 basis-full font-bold text-foreground sm:basis-0 sm:flex-1">{titulo}</p>

@@ -1,5 +1,5 @@
 /**
- * Cómo se escriben las fórmulas en TODO lo que genera o contesta Atlas.
+ * Cómo se escriben las fórmulas en TODO lo que genera o contesta Calibra.
  *
  * El cliente pinta `$…$` y `$$…$$` con KaTeX (`src/lib/markdown/formulas.ts`, que también
  * convierte `\(…\)` por si acaso). Si un prompt no lo pide, el modelo escribe «x^2/3» o

@@ -24,7 +24,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     });
   } catch {
     throw new ApiError(
-      "No se pudo conectar con Atlas. Comprueba que el backend esté iniciado y reintenta.",
+      "No se pudo conectar con Calibra. Comprueba que el backend esté iniciado y reintenta.",
       0,
     );
   }
@@ -38,9 +38,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 export function ensureSession() {
   session ??= request<{ actorId: string }>("/sesion", { method: "POST" }).catch(
-    (_e) => {
-      // BYPASS TEMPORAL: provee un mock básico temporal para desarrollo y previsualización UI offline
-      return { actorId: "demo-local" };
+    (e) => {
+      session = null;
+      throw e;
     },
   );
   return session;

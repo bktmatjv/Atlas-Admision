@@ -10,7 +10,7 @@ Las instrucciones explícitas del usuario tienen prioridad sobre este documento.
 
 ## 2. Contexto del producto
 
-El proyecto se ha trabajado como **Atlas Admisión**, una plataforma de apoyo a postulantes a San Marcos. Confirmar el nombre, alcance y terminología vigentes en el repositorio antes de introducir cambios globales.
+El proyecto se denomina oficialmente **CALIBRA** (identidad consolidada; anteriormente conocido como Atlas Admisión), una plataforma de apoyo a postulantes a San Marcos con el lema y enfoque «Aprende a pensar».
 
 La propuesta incluye diagnóstico, práctica por curso y tema, simulacros, revisión de errores, recomendaciones y seguimiento del progreso. Estas capacidades describen la intención del producto; no asumir que todas están implementadas o que sus reglas ya están definidas.
 

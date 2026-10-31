@@ -1342,7 +1342,7 @@
 }
 
 /* =====================================
-   ATLAS — el movimiento del asistente
+   CALIBRA — el movimiento del asistente
    ===================================== */
 :root {
   --atlas-salida: cubic-bezier(0.23, 1, 0.32, 1);
@@ -1423,7 +1423,7 @@
 }
 
 /* =====================================
-   ATLAS — practicar: preguntas y respuestas
+   CALIBRA — practicar: preguntas y respuestas
    ===================================== */
 @keyframes atlas-pregunta {
   from { opacity: 0; transform: translateX(14px); }
@@ -1454,7 +1454,7 @@
 }
 
 /* =====================================
-   ATLAS — ventanas del sendero
+   CALIBRA — ventanas del sendero
    ===================================== */
 @keyframes atlas-velo { from { opacity: 0; } }
 .atlas-velo { animation: atlas-velo 200ms var(--atlas-salida) backwards; }

@@ -97,7 +97,7 @@ afterAll(async () => {
   }
   if (folder) await rm(folder, { recursive: true, force: true });
 }, 60000);
-describe("Atlas integrado con PostgreSQL real", () => {
+describe("CALIBRA integrado con PostgreSQL real", () => {
   it("importa sin duplicar y no sirve el banco con claves", async () => {
     const c = await db.query(
       `SELECT count(*)::int AS n FROM ${schema}.preguntas`,

@@ -56,7 +56,7 @@ export default {
         // veces. Respaldo con métrica parecida: ancha y de remates generosos.
         lectura: ['"Zilla Slab"', '"Zilla Slab Fallback"', 'Georgia', "'Times New Roman'", 'serif'],
         // Los titulares de la lección —definición, bloques, partes—: redondeada, como pide la
-        // dirección de Atlas. Solo titulares: el cuerpo que explica va en Inter.
+        // dirección de Calibra. Solo titulares: el cuerpo que explica va en Inter.
         redonda: ['Nunito', '"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {

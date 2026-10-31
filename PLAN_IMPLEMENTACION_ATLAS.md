@@ -1,4 +1,4 @@
-# Atlas: de recibir respuestas a poder resolver por tu cuenta
+# CALIBRA: de recibir respuestas a poder resolver por tu cuenta
 
 > Plan inicial · Actualizado el 30 de octubre de 2026 con «Mis cursos» e importación de material propio · Estado: propuesta de implementación, no funcionalidades terminadas.
 > Revisión técnica inicial: sección 15. Estado de la implementación y cambios posteriores solicitados por el usuario: sección 16. Para estructura, comandos y estado real prevalece la sección 16; el resto conserva el diseño y su evolución.
@@ -6,9 +6,9 @@
 
 ## 1. Decisión de producto
 
-**El concepto es pertinente para «Aprender sin pensar», pero un árbol de explicaciones no demuestra aprendizaje.** El diferencial propuesto es unir la exploración libre del árbol con oportunidades de aplicación y un registro que distinga lo consultado, lo resuelto con apoyo y lo resuelto después sin ayuda dentro de Atlas.
+**El concepto es pertinente para «Aprender sin pensar», pero un árbol de explicaciones no demuestra aprendizaje.** El diferencial propuesto es unir la exploración libre del árbol con oportunidades de aplicación y un registro que distinga lo consultado, lo resuelto con apoyo y lo resuelto después sin ayuda dentro de CALIBRA.
 
-**Propuesta en una frase:** Atlas convierte una duda o un error en una exploración conectada y ayuda al estudiante a comprobar qué puede explicar y aplicar por su cuenta.
+**Propuesta en una frase:** CALIBRA convierte una duda o un error en una exploración conectada y ayuda al estudiante a comprobar qué puede explicar y aplicar por su cuenta.
 
 - Público inicial: postulantes a San Marcos; validar con personas de este público, no extrapolar directamente cifras de universitarios.
 - Comportamiento a investigar: leer una solución convincente y creer que ya se sabe resolver otra pregunta del mismo principio.
@@ -18,11 +18,11 @@
 
 El árbol sigue siendo una funcionalidad del tutor, no un calendario, una secuencia obligatoria ni toda la plataforma. La práctica, los simulacros y el cuaderno de errores se conservan.
 
-**Ampliación solicitada por el usuario: autonomía con material propio.** Atlas tendrá un apartado «Mis cursos» para importar documentos y adaptar la experiencia a lo que estudia cada persona, sin depender exclusivamente del banco de admisión. La IA transformará ese material en una propuesta de temas, conceptos, explicaciones y actividades que alimente el mismo tutor, árbol, práctica y seguimiento. Podrá complementar con fuentes externas identificadas y autorizadas, sin mezclar silenciosamente sus afirmaciones con las del documento. El banco actual es una base inicial y una referencia de organización, no el límite del conocimiento ni una taxonomía obligatoria para todo material.
+**Ampliación solicitada por el usuario: autonomía con material propio.** CALIBRA tendrá un apartado «Mis cursos» para importar documentos y adaptar la experiencia a lo que estudia cada persona, sin depender exclusivamente del banco de admisión. La IA transformará ese material en una propuesta de temas, conceptos, explicaciones y actividades que alimente el mismo tutor, árbol, práctica y seguimiento. Podrá complementar con fuentes externas identificadas y autorizadas, sin mezclar silenciosamente sus afirmaciones con las del documento. El banco actual es una base inicial y una referencia de organización, no el límite del conocimiento ni una taxonomía obligatoria para todo material.
 
 ### Qué lo diferencia de un chatbot con otro nombre
 
-| Respuesta genérica | Propuesta Atlas |
+| Respuesta genérica | Propuesta CALIBRA |
 | --- | --- |
 | Conversación desconectada de lo que se estudia | Tutor ligado a una pregunta, su concepto, el intento y las ayudas previas |
 | Explicaciones que se pierden en un historial lineal | Ramas navegables, persistidas y con contexto de origen |
@@ -93,11 +93,11 @@ Línea base verificada en esta revisión: **384 pruebas aprobadas en 38 archivos
 ### Recorrido principal de demostración
 
 1. El estudiante responde una pregunta y puede expresar brevemente cómo la pensó; también puede elegir «No sé por dónde empezar».
-2. Pulsa «Entender este paso». Atlas abre el tutor con el ejercicio y el intento, no un chat vacío.
+2. Pulsa «Entender este paso». CALIBRA abre el tutor con el ejercicio y el intento, no un chat vacío.
 3. Una raíz breve sitúa la duda; aparecen hasta tres ramas iniciales pertinentes.
 4. El estudiante elige «más sencillo», «un ejemplo», «por qué» o una nueva duda. El tutor ajusta un nodo o añade un hijo cuando realmente aporta otra idea.
 5. Puede pedir la explicación completa sin superar barreras artificiales.
-6. Cuando quiera comprobarlo, intenta una actividad distinta. Las ayudas se apartan durante ese intento dentro de Atlas, sin presentarlo como examen vigilado.
+6. Cuando quiera comprobarlo, intenta una actividad distinta. Las ayudas se apartan durante ese intento dentro de CALIBRA, sin presentarlo como examen vigilado.
 7. La devolución indica lo observado: acierto, justificación, ayuda recibida y qué merece revisar. Si necesita apoyo, puede regresar a una rama y volver a practicar.
 8. El cuaderno conserva la dificultad, la exploración y la evidencia; un repaso posterior usa otra actividad disponible.
 
@@ -113,7 +113,7 @@ Este caso es contenido educativo propuesto; no afirmar que pertenece a un examen
 
 ### Lenguaje de evidencias
 
-Usar observaciones con actividad y fecha: «Consultaste una explicación», «Resolviste con una pista», «Respondiste una variante sin ayuda en Atlas», «Aplicaste el principio en un repaso posterior».
+Usar observaciones con actividad y fecha: «Consultaste una explicación», «Resolviste con una pista», «Respondiste una variante sin ayuda en CALIBRA», «Aplicaste el principio en un repaso posterior».
 
 No son una escalera obligatoria ni estados universales de dominio. Un estudiante puede resolver sin ayuda antes de explorar, volver a necesitar apoyo después o fallar un caso distinto. Mantener el historial, no sobreescribirlo con una etiqueta favorable.
 
@@ -121,7 +121,7 @@ No usar porcentajes de comprensión, puntuaciones de dependencia, diagnósticos 
 
 ## 5. Diseño: un espacio para pensar, no otra ventana de chat
 
-- Identidad Atlas: cartografía del conocimiento, conexiones y foco; no copiar el slide oscuro de advertencias ni añadir un grafo decorativo.
+- Identidad CALIBRA: cartografía del conocimiento, conexiones y foco; no copiar el slide oscuro de advertencias ni añadir un grafo decorativo.
 - Inicio: una acción principal «Continuar aprendiendo», último punto de dificultad y accesos secundarios a práctica/simulacros. Reducir la competencia de tarjetas actual.
 - Escritorio: mapa compacto de la rama activa + panel de explicación/ejercicio. La pregunta original permanece accesible sin duplicar bloques largos.
 - Móvil: árbol como lista jerárquica y migas de navegación; detalle en una vista enfocada. No depender de arrastrar o hacer zoom en un lienzo para usar el tutor.
@@ -150,7 +150,7 @@ Criterios de interfaz: operación por teclado, foco visible, nombres accesibles,
 - Rediseño del recorrido que se demuestra, no de todas las pantallas antes de integrar.
 - Validación con al menos una persona del público objetivo y despliegue accesible.
 
-### P1: completar la evolución de Atlas
+### P1: completar la evolución de CALIBRA
 
 - Conectar diagnóstico, simulacros, informes, perfil, estadísticas y datos UNMSM a la API.
 - Extender árboles y contenido revisado a otros cursos.
@@ -167,7 +167,7 @@ Microservicios, agentes múltiples, base vectorial separada sin necesidad medida
 
 Si falta tiempo: recortar cantidad de conceptos, sofisticación del mapa, streaming y reportes secundarios. **No recortar** persistencia, actividad nueva, veracidad de las evidencias, validación con usuario ni despliegue para sustituirlos por pantallas simuladas.
 
-### Mis cursos: importar material y adaptarlo a Atlas
+### Mis cursos: importar material y adaptarlo a CALIBRA
 
 **Capacidad de producto confirmada; alcance técnico inicial propuesto.** El estudiante podrá usar un curso del catálogo como referencia o crear uno personal si su material no encaja. La IA sugiere la relación, pero el estudiante puede corregirla; nunca modifica por su cuenta el temario global de admisión.
 
@@ -176,7 +176,7 @@ Si falta tiempo: recortar cantidad de conceptos, sofisticación del mapa, stream
 1. **Crear o elegir curso.** Indicar objetivo, nivel y, opcionalmente, temas de interés. Seleccionar si se permite complementar con fuentes externas; no es obligatorio para estudiar el documento.
 2. **Adjuntar material.** Inicio propuesto: PDF con texto, TXT y Markdown; límites configurables iniciales de 10 MB por archivo y 50 páginas por PDF, más límites de texto/tokens y cuota por sesión. Explicar tipos admitidos y costes/límites antes de procesar.
 3. **Extraer y diagnosticar calidad.** Conservar original privado, versión/hash, páginas o secciones, párrafos y recursos extraídos. Señalar páginas vacías, OCR necesario, fórmulas o tablas dudosas; no aceptar una extracción parcial como documento completo.
-4. **Traducir al modelo educativo de Atlas.** Proponer temas, conceptos, objetivos y explicaciones breves, con referencias a fragmentos. «Traducir» significa estructurar pedagógicamente, no traducir de idioma ni copiar el PDF entero dentro de un prompt.
+4. **Traducir al modelo educativo de CALIBRA.** Proponer temas, conceptos, objetivos y explicaciones breves, con referencias a fragmentos. «Traducir» significa estructurar pedagógicamente, no traducir de idioma ni copiar el PDF entero dentro de un prompt.
 5. **Revisar la propuesta.** El estudiante puede renombrar, corregir, excluir partes y confirmar su pertinencia. Esa confirmación no equivale a revisión académica de la veracidad del material o de lo generado.
 6. **Aprender y practicar.** Desde el curso, explorar el árbol, solicitar ayudas y generar propuestas de actividades con respuesta esperada, criterio y sustento. Reutilizar las reglas de práctica y evidencias, no otro tutor aislado para archivos.
 7. **Complementar cuando se solicite.** Recuperar fuentes externas pertinentes, mostrar procedencia y límites, y preguntar o avisar ante contradicciones. No reemplazar silenciosamente el enfoque del estudiante ni dar por correcto todo lo que suba.
@@ -309,7 +309,7 @@ Para cursos personales, delimitar también conceptos, preguntas y actividades po
 7. Mover los JSON fuente fuera de `public/` cuando el flujo servidor sustituya el local. Servir gráficos como recursos estáticos y preguntas mediante DTO permitidos; comprobar que `dist/` no publique el banco con claves ni rúbricas.
 8. Conservar material fuente y atribución; revisar permisos antes de ampliar su publicación. No reescribir el historial Git ni borrar originales del usuario como parte de esta migración.
 
-Los JSON ya publicados no pueden volverse secretos retroactivamente. Ocultarlos en el despliegue evita filtraciones triviales del flujo, pero Atlas no es un examen antifraude.
+Los JSON ya publicados no pueden volverse secretos retroactivamente. Ocultarlos en el despliegue evita filtraciones triviales del flujo, pero CALIBRA no es un examen antifraude.
 
 Para progreso local: exportación previa y migración voluntaria por sesión; tratar contenido e identificadores como no confiables. No considerar ese historial como evidencia validada por el nuevo servidor.
 
@@ -356,7 +356,7 @@ Contratos propuestos bajo `/api/v1`; no son endpoints existentes.
 - Estados de solicitud pendientes/completadas/fallidas para evitar que reintentar cree nodos o cargos duplicados. Un proveedor puede haber cobrado aun si la respuesta se perdió; no prometer exactamente una llamada sin soporte real del proveedor.
 - Datos y mensajes no pueden sustituir instrucciones del sistema. Probar prompt injection y solicitudes de claves de actividades activas.
 - En una comprobación sin ayuda, todos los accesos al tutor deben respetar ese modo desde el backend. Si el estudiante necesita ayuda, permitir pasar a práctica asistida y registrar el cambio; no seguir etiquetándolo como independiente.
-- No se puede detectar ayuda externa. «Sin ayuda» significa sin ayudas de Atlas durante ese intento y sin exposición previa conocida al mismo caso, no una certificación de independencia absoluta.
+- No se puede detectar ayuda externa. «Sin ayuda» significa sin ayudas de CALIBRA durante ese intento y sin exposición previa conocida al mismo caso, no una certificación de independencia absoluta.
 - Para P0, las actividades puntuables de transferencia y sus respuestas se preparan/revisan antes; no calificar con claves improvisadas por el modelo. Las actividades creadas al importar material se identifican como propuestas generadas hasta validar su sustento, respuesta y criterio. Pueden servir para práctica formativa con devolución provisional, pero no acreditan transferencia verificada automáticamente.
 - Evaluar exactitud objetiva con reglas apropiadas; justificaciones abiertas con rúbrica versionada y devolución revisable. «No hay evidencia suficiente» es un resultado válido.
 - Distinguir explicación generada de contenido revisado. Citar el material usado sin inventar fuentes ni atribuir inferencias al examen oficial.
@@ -407,7 +407,7 @@ Antes de cada fase: releer `AGENTS.md` y esta sección; revisar cambios ajenos; 
 
 1. Mostrar el problema con una respuesta y razonamiento reales o con un caso de demostración explícitamente identificado.
 2. Explorar dos ramas útiles y volver a la duda original.
-3. Resolver la aplicación nueva sin ayudas de Atlas.
+3. Resolver la aplicación nueva sin ayudas de CALIBRA.
 4. Mostrar evidencia concreta y posibilidad de refuerzo, también si el estudiante falla.
 5. Mostrar «Mis cursos»: importar un material propio distinto del banco, revisar un tema propuesto y abrir su explicación/árbol con referencia al original. Enseñar una actividad generada como propuesta y, si está conectado, un complemento externo con cita verificable. No presentarlo como revisión académica automática.
 6. Refrescar para comprobar persistencia; cerrar con lo observado en la prueba real y lo que falta validar.

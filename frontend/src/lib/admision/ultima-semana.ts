@@ -1,6 +1,6 @@
 /**
  * La última semana (tramo 6 de Audix): el día de SU examen (Medicina Humana tiene jornada propia), la
- * cuenta atrás y el plan de los últimos días. Traído de Audix (src/ultima-semana), con los enlaces de Atlas.
+ * cuenta atrás y el plan de los últimos días. Traído de Audix (src/ultima-semana), con los enlaces de CALIBRA.
  */
 import type { AreaUnmsm, ProcesoUnmsm } from "./datos-unmsm";
 import { sumarDias } from "@/lib/admision/motor/admision-leitner";

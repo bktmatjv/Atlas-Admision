@@ -83,7 +83,7 @@ export class SeguimientoController {
       return {
         id,
         enunciado: task.enunciado,
-        nota: "Sin ayudas de Atlas durante este intento. No detectamos ayuda externa; tu justificación no se calificará automáticamente.",
+        nota: "Sin ayudas de Calibra durante este intento. No detectamos ayuda externa; tu justificación no se calificará automáticamente.",
       };
     });
   }

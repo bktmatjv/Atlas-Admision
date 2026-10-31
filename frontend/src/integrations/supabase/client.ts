@@ -3,7 +3,7 @@ import { armar, entregar, FalloDeFuncion, preguntasDelIntento, revelar, temasFre
 import { urlDeGrafico } from "@/integrations/local/datos";
 
 /**
- * En Atlas, el cliente de Supabase. Aquí no hay servidor: el mismo nombre y la misma forma
+ * En CALIBRA, el cliente de Supabase. Aquí no hay servidor: el mismo nombre y la misma forma
  * (`from`, `rpc`, `functions.invoke`, `storage`) sobre los datos locales, para que las pantallas
  * copiadas del módulo de admisión no cambien.
  */

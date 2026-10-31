@@ -1,5 +1,5 @@
 // Casos propios con clave comprobada aritméticamente. Pendiente revisión pedagógica externa.
-// Se muestran como actividades de Atlas, nunca como preguntas oficiales UNMSM.
+// Se muestran como actividades de Calibra, nunca como preguntas oficiales UNMSM.
 export const ACTIVIDADES = [
   {
     id: "porcentajes-1",

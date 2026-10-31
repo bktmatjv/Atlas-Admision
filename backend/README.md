@@ -1,4 +1,4 @@
-# Backend Atlas
+# Backend CALIBRA
 
 API NestJS independiente del frontend. Monolito modular con PostgreSQL/TypeORM y migraciones explícitas (`synchronize: false`). Ver [arranque local](../README.md) antes de ejecutar comandos.
 

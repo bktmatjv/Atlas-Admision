@@ -36,7 +36,7 @@ interface Props {
 /**
  * Una pregunta del examen. Antes de entregar, todas las opciones se ven igual (como en la práctica):
  * nada adelanta cuál es la buena. Corregida, la buena en menta y la tuya, si fallaste, en coral, con
- * palabras además del color; y debajo, la solución de Atlas.
+ * palabras además del color; y debajo, la solución de CALIBRA.
  */
 export function PreguntaDeAdmision({
   intentoId, pregunta, indice, total, respuesta, urls, corregida, revelado, puedeRevelar, onResponder, onMarcar, onRevelar, onConfiar, pie,
@@ -214,13 +214,13 @@ export function PreguntaDeAdmision({
                 {elegida === null ? "La dejaste en blanco." : elegida === clave ? "¡Bien! Acertaste." : `La correcta es la ${clave}.`}
               </p>
               {solucion && <div className="text-[0.97rem] leading-relaxed"><MathMarkdown content={solucion} /></div>}
-              {/* La solución de arriba se lee; esto la hace él, con Atlas guiando cada paso. */}
+              {/* La solución de arriba se lee; esto la hace él, con Calibra guiando cada paso. */}
               {intentoId && (
                 <Link
                   to={`/aprender?intento=${encodeURIComponent(intentoId)}&pregunta=${encodeURIComponent(pregunta.pregunta_id)}`}
                   className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-primary hover:bg-muted"
                 >
-                  <ListOrdered className="h-4 w-4" aria-hidden /> Entender esta pregunta con Atlas
+                  <ListOrdered className="h-4 w-4" aria-hidden /> Entender esta pregunta con Calibra
                 </Link>
               )}
             </section>

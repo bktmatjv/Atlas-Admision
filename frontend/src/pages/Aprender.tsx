@@ -58,7 +58,7 @@ type Evidence = {
   detalle: { nota?: string; concepto?: string; correcta?: boolean };
 };
 const labels: Record<string, string> = {
-  resolvio_sin_ayuda: "Resultado correcto sin ayudas de Atlas",
+  resolvio_sin_ayuda: "Resultado correcto sin ayudas de Calibra",
   resolvio_con_ayuda: "Resolución con apoyo",
   aplicacion_por_reforzar: "Aplicación por reforzar",
   intento_entregado: "Práctica entregada",
@@ -81,7 +81,7 @@ export default function Aprender() {
   const stableKey = useRef<{ payload: string; key: string } | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    document.title = "Aprender con Atlas";
+    document.title = "Aprender con Calibra";
     setSelected(null);
     setResult(null);
   }, [id]);
@@ -199,7 +199,7 @@ export default function Aprender() {
               to="/aprender"
               className="text-xs font-bold uppercase tracking-[0.2em] text-primary"
             >
-              Atlas · espacio para pensar
+              Calibra · espacio para pensar
             </Link>
             <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
               {tree.data?.titulo ?? "No solo entiendas la respuesta."}
@@ -226,7 +226,7 @@ export default function Aprender() {
             className="flex items-center gap-2 text-sm text-muted-foreground"
           >
             <Sparkles className="h-4 w-4 animate-pulse" />
-            Atlas está preparando la explicación. Tu exploración queda guardada.
+            Calibra está preparando la explicación. Tu exploración queda guardada.
           </p>
         )}
         {active.data && (
@@ -242,7 +242,7 @@ export default function Aprender() {
             </h2>
             <p className="mt-3">{active.data.enunciado}</p>
             <p className="mt-3 text-xs text-muted-foreground">
-              Sin ayudas de Atlas hasta entregar. No detectamos herramientas
+              Sin ayudas de Calibra hasta entregar. No detectamos herramientas
               externas; la justificación queda guardada sin calificación
               automática.
             </p>
@@ -460,8 +460,8 @@ export default function Aprender() {
                     {c.tipo === "documento"
                       ? `${c.nombre} · página ${c.pagina} · fragmento de tu material`
                       : c.tipo === "banco"
-                        ? `Pregunta ${c.pregunta_id} · banco de Atlas`
-                        : "Concepto de Atlas · contenido generado"}
+                        ? `Pregunta ${c.pregunta_id} · banco de Calibra`
+                        : "Concepto de Calibra · contenido generado"}
                   </li>
                 ))}
               </ul>

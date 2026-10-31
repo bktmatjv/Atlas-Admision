@@ -16,13 +16,6 @@ export function SessionGate({ children }: { children: ReactNode }) {
     staleTime: 30000,
   });
 
-  // =========================================================================
-  // BYPASS TEMPORAL DE SESIÓN:
-  // Permite la previsualización del rediseño UX/UI sin requerir el backend
-  // activo en el puerto 3000. Para restaurar el bloqueo estricto de producción,
-  // descomentar los bloques if (session.isPending) e if (session.isError).
-  // =========================================================================
-  /*
   if (session.isPending)
     return (
       <main className="grid min-h-screen place-items-center bg-background text-foreground">
@@ -47,7 +40,6 @@ export function SessionGate({ children }: { children: ReactNode }) {
         </section>
       </main>
     );
-  */
 
   return (
     <>
