@@ -3,7 +3,7 @@ import { escribirTabla, leerTabla, TABLAS_DEL_ALUMNO, type TablaDelAlumno } from
 
 /**
  * Lo poco de supabase-js que usa el módulo de admisión (`from().select().eq().order()…`, `upsert`,
- * `insert`, `update`), sobre los datos locales. Así las pantallas copiadas de Atlas no cambian.
+ * `insert`, `update`), sobre los datos locales. Así las pantallas copiadas de CALIBRA no cambian.
  *
  * Las columnas de `select` no recortan la fila: quien pide menos columnas recibe la fila entera.
  */

@@ -1,6 +1,6 @@
 /**
  * «¿Ingresaba?»: un puntaje frente al último ingresante de una escuela, proceso por proceso. Traído de
- * Audix Admisión (src/ingresaba) y adaptado a las tablas de Atlas (`admision_resultados`, …).
+ * Audix Admisión (src/ingresaba) y adaptado a las tablas de CALIBRA (`admision_resultados`, …).
  */
 import type { AreaUnmsm, CarreraUnmsm, ProcesoUnmsm, ResultadoUnmsm } from "./datos-unmsm";
 import { FORMULA_UNMSM, cumpleRequisitoGeneral, preguntasParaSubir, redondear3 } from "./formula";

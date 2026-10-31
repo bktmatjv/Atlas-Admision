@@ -2,7 +2,7 @@
  * «Foto del problema → resolver», del lado de la app: leer lo que devuelve `resolver-problema`
  * y llevar el recorrido guiado.
  *
- * El recorrido es la regla del proyecto: el alumno trabaja y Atlas guía. Primero la pista y una
+ * El recorrido es la regla del proyecto: el alumno trabaja y Calibra guía. Primero la pista y una
  * pregunta para que dé él el primer paso (si escribe una cuenta, se comprueba aquí, sin red y
  * sin decirle la respuesta); después los pasos de uno en uno, y al final el resultado y los
  * parecidos. «Ver la solución completa» existe porque esconderla del todo solo empuja a

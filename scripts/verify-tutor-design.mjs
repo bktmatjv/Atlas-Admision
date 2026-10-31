@@ -138,7 +138,7 @@ const originalFetch=window.fetch.bind(window);window.fetch=async(input,init={})=
 const responder=(t)=>({id:'t'+conv.mensajes.length,rol:'tutor',orden:conv.mensajes.length+2,texto:t,bloques:[],degradado:false,pasos:['leer_grafo','leer_evidencias']});
 if(path.endsWith('/sesion'))data={actorId:'fixture'};else if(path.endsWith('/salud'))data={ok:true,ia:'fake',pruebas:true};else if(path.endsWith('/grafo'))data=graph;else if(path.endsWith('/comprobaciones/activa'))data=check;else if(path.endsWith('/evidencias'))data=evidencias;else if(path.endsWith('/intentos')||path.endsWith('/cursos'))data=[];else if(path.endsWith('/conversaciones/fixture'))data=conv;else if(path.endsWith('/conversaciones')&&method==='GET')data=lista;else if(path.endsWith('/conversaciones')&&method==='POST'){conv.mensajes.push({id:'u'+conv.mensajes.length,rol:'estudiante',orden:conv.mensajes.length+1,texto:body.mensaje_inicial,bloques:[],degradado:false},responder('Respuesta de prueba al primer mensaje.'));data={id:'fixture',arbol_id:'arbol-a',raiz_id:'base'};}else if(path.endsWith('/conversaciones/fixture/mensajes')&&method==='POST'){if(window.__failNext){window.__failNext=false;status=503;data={error:{mensaje:'Proveedor de prueba ocupado; reintenta.'}};}else{conv.mensajes.push({id:'u'+conv.mensajes.length,rol:'estudiante',orden:conv.mensajes.length+1,texto:body.texto,bloques:[],degradado:false},responder('Respuesta de prueba para verificar el envío y la persistencia visual.'));data={ok:true};}}else if(path.endsWith('/comprobaciones')&&method==='POST'){check={id:'check-'+evidencias.length,arbol_id:'arbol-a',enunciado:evidencias.length?'Un precio de 200 sube 20% y baja 25%. ¿Cuánto queda?':'Un precio de 100 sube 20% y baja 20%. ¿Cuánto queda?'};data=check;}else if(path.includes('/comprobaciones/')&&path.endsWith('/respuesta')&&method==='PUT'){const correcta=body.respuesta==='180';const rastro=correcta?null:{respuesta:body.respuesta,idea_clave:'cambio-de-base',descripcion:'Cambio de base',nodo_retorno_id:'inversa',motivo:'mapa_error'};data={correcta,ayuda:false,solucion:correcta?'200 × 1,2 × 0,75 = 180':'100 × 1,2 × 0,8 = 96',rastro,nota:'Fixture: resultado numérico verificado.'};graph.nodos.find(n=>n.id==='inversa').estado=correcta?'aplicado':'fallo';graph.nodos.find(n=>n.id==='inversa').titulo='Cambio de base';graph.foco='inversa';graph.version++;const base={arbol_id:'arbol-a',comprobacion_id:check.id,created_at:new Date().toISOString()};evidencias.unshift({...base,id:'e-'+evidencias.length,tipo:correcta?'resolvio_sin_ayuda':'aplicacion_por_reforzar',detalle:data});if(correcta)evidencias.unshift({...base,id:'correccion-'+evidencias.length,tipo:'corrigio_tras_error',detalle:{idea_clave:'cambio-de-base'}});check=null;}else if(path.includes('/comprobaciones/')&&path.endsWith('/cancelar')){check=null;data={cancelada:true};}else throw Error('Solicitud de fixture no prevista: '+method+' '+path);guardar();return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});};
 const client=new QueryClient({defaultOptions:{queries:{staleTime:Infinity,retry:false},mutations:{retry:false}}});client.setQueryData(['grafo'],graph);client.setQueryData(['salud'],{ok:true,ia:'fake',pruebas:true});client.setQueryData(['comprobacion-activa'],null);function Destination(){return React.createElement('p',{'data-destination':true},useLocation().pathname);}function TrackedTutor(){const l=useLocation();React.useEffect(()=>sessionStorage.setItem('fixture-route',l.pathname+l.search),[l.pathname,l.search]);return React.createElement(Tutor);}
-createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client},React.createElement(ThemeProvider,{attribute:'class',defaultTheme:'light'},React.createElement(MemoryRouter,{initialEntries:[sessionStorage.getItem('fixture-route')||'/tutor']},React.createElement(Routes,null,React.createElement(Route,{path:'/tutor',element:React.createElement(TrackedTutor)}),React.createElement(Route,{path:'/tutor/:id',element:React.createElement(TrackedTutor)}),React.createElement(Route,{path:'/aprender/:id',element:React.createElement(Destination)}))))));
+if(new URLSearchParams(location.search).has('integrada')){history.replaceState(null,'','/tutor/fixture?demo=1');const{default:App}=await import('/src/App.tsx');createRoot(document.getElementById('root')).render(React.createElement(App));}else createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client},React.createElement(ThemeProvider,{attribute:'class',defaultTheme:'light'},React.createElement(MemoryRouter,{initialEntries:[sessionStorage.getItem('fixture-route')||'/tutor']},React.createElement(Routes,null,React.createElement(Route,{path:'/tutor',element:React.createElement(TrackedTutor)}),React.createElement(Route,{path:'/tutor/:id',element:React.createElement(TrackedTutor)}),React.createElement(Route,{path:'/aprender/:id',element:React.createElement(Destination)}))))));
 </script></body></html>`;
 process.chdir(resolve(root, "frontend"));
 const server = await createServer({
@@ -638,9 +638,10 @@ try {
     ),
   );
   await capturar("momento-comprension", 1440);
+  await evalJS(`window.__antesRecarga=true`);
   await send("Page.reload");
   await until(
-    `document.querySelector('.tw-momento')&&document.querySelector('.tw-grafo-vivo canvas')`,
+    `!window.__antesRecarga&&document.querySelector('.tw-momento')&&document.querySelector('.tw-grafo-vivo canvas')`,
   );
   assert.equal(
     await evalJS(`document.querySelector('.tw-grafo-vivo').dataset.animando`),
@@ -648,6 +649,28 @@ try {
   );
   await metricas(375);
   await capturar("comprension-movil", 375);
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  // Rama de identidad completa: bienvenida y App reales, con el mismo transporte aislado.
+  await evalJS(`sessionStorage.removeItem('calibra_welcome_seen_v1')`);
+  await metricas(375);
+  await send("Page.navigate", { url: `http://127.0.0.1:${port}/__design.html?integrada=1` });
+  await until(`document.querySelector('[aria-label="Bienvenida a CALIBRA"]')`);
+  assert.equal(await evalJS(`document.activeElement?.getAttribute('aria-label')`), "Entrar a CALIBRA");
+  assert.equal(await evalJS(`document.querySelector('.tc-page')`), null, "La bienvenida no debe dejar controles del tutor detrás");
+  await tecla("Tab");
+  assert.equal(await evalJS(`document.activeElement?.getAttribute('aria-label')`), "Entrar a CALIBRA");
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  await capturar("bienvenida-integrada", 375);
+  await tecla("Enter");
+  await until(`document.querySelector('.tc-conv')&&!document.querySelector('[aria-label="Bienvenida a CALIBRA"]')`);
+  assert.equal(await evalJS(`location.pathname+location.search`), "/tutor/fixture?demo=1", "La bienvenida debe conservar el enlace del tutor");
+  assert.equal(await evalJS(`document.querySelector('[aria-label="Compañero Calibra Gecko"]')`), null, "La mascota no debe tapar los controles del tutor");
+  assert.equal(await evalJS(`sessionStorage.getItem('calibra_welcome_seen_v1')`), "true");
+  assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
+  await capturar("tutor-integrado", 375);
+  await metricas(1440);
+  await until(`document.querySelector('.tw-grafo-vivo canvas')`);
+  await capturar("tutor-integrado", 1440);
   assert(await evalJS(`document.documentElement.scrollWidth<=innerWidth`));
   assert.equal(exceptions.length, 0, exceptions.join("\n"));
   console.log(
@@ -669,6 +692,8 @@ try {
           "hoja móvil en tres alturas y sin desbordes a 375px",
           "movimiento reducido: estado final sin animación",
           "recarga: reconstruye evidencia sin repetir el recorrido",
+          "App integrada: bienvenida con teclado, foco y enlace preservado",
+          "marca del compañero sin mascota superpuesta al tutor en móvil",
         ],
         screenshots: [
           ".atl/inicio-1672.png",
@@ -680,6 +705,9 @@ try {
           ".atl/hoja-completa-375.png",
           ".atl/momento-comprension-1440.png",
           ".atl/comprension-movil-375.png",
+          ".atl/bienvenida-integrada-375.png",
+          ".atl/tutor-integrado-375.png",
+          ".atl/tutor-integrado-1440.png",
         ],
         excepciones: exceptions,
         transporte: "fixture aislado, sin IA de pago",

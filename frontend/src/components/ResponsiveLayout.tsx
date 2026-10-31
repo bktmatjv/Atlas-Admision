@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalibraBrand } from "@/components/brand/CalibraBrand";
+import { CalibraGeckoCompanion } from "@/components/companion/CalibraGeckoCompanion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +34,7 @@ const enlace = ({ isActive }: { isActive: boolean }) =>
   );
 
 /**
- * En Atlas, la barra lateral de toda la app. Aquí la app es solo Admisión: una cabecera con la marca
+ * En CALIBRA, la barra lateral de toda la app. Aquí la app es solo Admisión: una cabecera con la marca
  * y las dos secciones, y el pie que recuerda dónde se guarda el progreso.
  */
 export function ResponsiveLayout({
@@ -79,7 +80,7 @@ export function ResponsiveLayout({
     // `overflow-x-clip` y no `-hidden`: con `hidden` la barra del examen (sticky, con su reloj) no se pega.
     <div
       className={cn(
-        "flex min-h-screen w-full flex-col overflow-x-clip bg-background",
+        "flex min-h-screen w-full flex-col overflow-x-clip bg-background text-foreground",
         tutorMode && "tutor-layout",
       )}
     >
@@ -136,6 +137,9 @@ export function ResponsiveLayout({
         {children}
       </div>
 
+      {/* El tutor ya tiene avatar: la mascota flotante no debe tapar el chat ni la hoja móvil. */}
+      {!tutorMode && <CalibraGeckoCompanion />}
+
       <footer className="border-t border-border/40 bg-card/20">
         <div className="px-4 md:px-6 lg:px-8">
           <div className="mx-auto flex max-w-5xl flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
@@ -183,14 +187,15 @@ export function ResponsiveLayout({
               </AlertDialogContent>
             </AlertDialog>
 
-            {/* Identidad de marca CALIBRA con el mensaje APRENDE A PENSAR en tamaño más grande */}
+            {/* Identidad de marca CALIBRA destacando el logotipo oficial sobre la tipografía */}
             <div className="flex items-center gap-3 sm:justify-end">
               <CalibraBrand
-                size="lg"
+                size="xl"
                 tagline="APRENDE A PENSAR"
                 className="select-none"
-                textClassName="text-xl sm:text-2xl font-black tracking-wider"
-                taglineClassName="text-xs sm:text-sm font-extrabold uppercase tracking-[0.22em] text-primary"
+                isotypeClassName="h-14 w-14 sm:h-16 sm:w-16"
+                textClassName="text-sm sm:text-base font-bold tracking-[0.16em] text-foreground/90"
+                taglineClassName="text-[0.6rem] sm:text-[0.66rem] font-semibold tracking-[0.18em] text-primary"
               />
             </div>
           </div>

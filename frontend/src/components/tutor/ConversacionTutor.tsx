@@ -69,6 +69,7 @@ export function ConversacionTutor(p: Props) {
     );
     conocidos.current = siguientes;
   }, [mensajes, p.cargando]);
+  const ultimaEvidenciaId = p.evidencias?.[0]?.id;
   // La última respuesta queda visible: al llegar un mensaje o empezar a pensar, baja al final.
   useEffect(() => {
     const el = log.current;
@@ -80,7 +81,7 @@ export function ConversacionTutor(p: Props) {
       top: el.scrollHeight,
       behavior: reducido ? "auto" : "smooth",
     });
-  }, [mensajes.length, p.pensando, p.pendiente, p.evidencias?.[0]?.id]);
+  }, [mensajes.length, p.pensando, p.pendiente, ultimaEvidenciaId]);
   const libre = !p.ocupado && !p.activa;
   const acciones = [
     {

@@ -2,24 +2,26 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Identidad visual oficial de CALIBRA.
+ * Identidad visual oficial de CALIBRA — "Aprende a pensar".
  *
- * El isotipo se compone de:
- * 1. Letra C geométrica (CALIBRA).
- * 2. Círculo central (Enfoque / razonamiento).
- * 3. Indicador diagonal a 45° (Progreso / aprendizaje).
+ * Simbología oficial (Propuesta A):
+ * - Letra C dividida en 4 piezas de rompecabezas interconectadas (desafío, articulación conceptual).
+ * - Núcleo central con aguja y destello de 3 rayos (enfoque, razonamiento, insight cognitivo).
  *
- * Reconstruido en SVG vectorial plano, reactivo a `currentColor` y a la clase `.dark`
- * para garantizar contraste perfecto en modo claro y oscuro sin saltos ni recargas.
+ * Implementación:
+ * - Modo Claro: Activos oficiales con paleta carmesí (#941F3D / #B83A56) sobre fondo crema (#F7F1E8).
+ * - Modo Oscuro: Activos oficiales con paleta coral/carmesí luminoso (#E56B83 / #B83A56) sobre fondo oscuro (#211B20).
+ * - Cero parpadeos: Renderizado mediante pares de imágenes sincronizadas con la clase `.dark` de Tailwind / next-themes.
  */
 
 export type CalibraBrandSize = "xs" | "sm" | "md" | "lg" | "xl";
-export type CalibraBrandVariant = "full" | "symbol" | "mark";
+export type CalibraBrandVariant = "full" | "symbol" | "mark" | "lockup";
 
 export interface CalibraBrandProps {
   /**
-   * `full`: isotipo + texto CALIBRA.
-   * `symbol` o `mark`: solo el isotipo geométrico.
+   * `full`: isotipo + texto CALIBRA (layout horizontal o vertical).
+   * `symbol` o `mark`: solo el isotipo oficial.
+   * `lockup`: imagen completa del logo vertical oficial.
    */
   variant?: CalibraBrandVariant;
   size?: CalibraBrandSize;
@@ -35,21 +37,33 @@ export interface CalibraBrandProps {
 }
 
 const SYMBOL_SIZE: Record<CalibraBrandSize, string> = {
-  xs: "h-4 w-4",
-  sm: "h-7 w-7",
-  md: "h-9 w-9",
-  lg: "h-11 w-11",
-  xl: "h-14 w-14",
+  xs: "h-5 w-5",
+  sm: "h-8 w-8",
+  md: "h-10 w-10",
+  lg: "h-12 w-12",
+  xl: "h-16 w-16",
+};
+
+const LOCKUP_SIZE: Record<CalibraBrandSize, string> = {
+  xs: "h-12 w-auto",
+  sm: "h-16 w-auto",
+  md: "h-20 w-auto",
+  lg: "h-28 w-auto",
+  xl: "h-36 w-auto",
 };
 
 const TEXT_SIZE: Record<CalibraBrandSize, string> = {
   xs: "text-xs",
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
-  xl: "text-xl",
+  sm: "text-sm sm:text-base",
+  md: "text-base sm:text-lg",
+  lg: "text-lg sm:text-xl",
+  xl: "text-2xl sm:text-3xl",
 };
 
+/**
+ * Isotipo oficial CALIBRA (Letra C en rompecabezas + Destello cognitivo central).
+ * Utiliza los assets optimizados en /brand/calibra-symbol-light.png y /brand/calibra-symbol-dark.png.
+ */
 export function CalibraSymbol({
   size = "md",
   pensando = false,
@@ -62,45 +76,40 @@ export function CalibraSymbol({
   ariaHidden?: boolean;
 }) {
   return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
+    <div
       aria-hidden={ariaHidden ? "true" : undefined}
       role={ariaHidden ? undefined : "img"}
       className={cn(
         SYMBOL_SIZE[size],
-        "shrink-0 text-primary transition-colors",
+        "relative shrink-0 select-none",
         pensando && "animate-pulse",
         className
       )}
     >
-      {/* Pliegue superior: Carmesí secundario con opacidad armónica */}
-      <path
-        d="M 80.64 24.29 A 40 40 0 0 0 10.61 56.95 L 26.75 40.81 A 25 25 0 0 1 69.15 33.93 Z"
-        fill="currentColor"
-        opacity="0.75"
+      {/* Variante oficial Modo Claro: Carmesí sobre fondo claro */}
+      <img
+        src="/brand/calibra-symbol-light.png"
+        alt="Isotipo CALIBRA"
+        className="h-full w-full object-contain dark:hidden"
+        loading="eager"
+        decoding="async"
       />
-      {/* Cuerpo inferior: Carmesí principal */}
-      <path
-        d="M 26.75 40.81 L 10.61 56.95 A 40 40 0 0 0 80.64 75.71 L 69.15 66.07 A 25 25 0 0 1 26.75 40.81 Z"
-        fill="currentColor"
+      {/* Variante oficial Modo Oscuro: Carmesí luminoso sobre fondo oscuro */}
+      <img
+        src="/brand/calibra-symbol-dark.png"
+        alt="Isotipo CALIBRA"
+        className="hidden h-full w-full object-contain dark:block"
+        loading="eager"
+        decoding="async"
       />
-      {/* Centro: Enfoque / Razonamiento */}
-      <circle cx="50" cy="50" r="9.5" fill="currentColor" />
-      {/* Indicador diagonal a 45°: Progreso / Aprendizaje */}
-      <line
-        x1="50"
-        y1="50"
-        x2="74.5"
-        y2="29.5"
-        stroke="currentColor"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-      />
-    </svg>
+    </div>
   );
 }
 
+/**
+ * Componente principal de Marca CALIBRA.
+ * Soporta cabeceras, pies de página, pantallas de bienvenida y variantes horizontales/verticales.
+ */
 export function CalibraBrand({
   variant = "full",
   size = "md",
@@ -127,6 +136,30 @@ export function CalibraBrand({
     );
   }
 
+  // Lockup vertical completo con imagen oficial integrada
+  if (variant === "lockup") {
+    return (
+      <div
+        role="banner"
+        aria-label={ariaLabel || "CALIBRA · Aprende a pensar"}
+        className={cn("inline-flex flex-col items-center select-none", className)}
+      >
+        <img
+          src="/brand/calibra-logo-light.png"
+          alt="CALIBRA"
+          className={cn(LOCKUP_SIZE[size], "object-contain dark:hidden")}
+          loading="eager"
+        />
+        <img
+          src="/brand/calibra-logo-dark.png"
+          alt="CALIBRA"
+          className={cn(LOCKUP_SIZE[size], "hidden object-contain dark:block")}
+          loading="eager"
+        />
+      </div>
+    );
+  }
+
   const isVertical = layout === "vertical";
 
   return (
@@ -148,20 +181,20 @@ export function CalibraBrand({
       <div className={cn("flex flex-col", isVertical ? "items-center" : "items-start")}>
         <span
           className={cn(
-            "font-extrabold tracking-wider leading-none select-none text-foreground",
+            "font-black tracking-[0.14em] leading-none select-none text-foreground",
             TEXT_SIZE[size],
             textClassName
           )}
         >
           CALIBRA
           {subtitle && (
-            <span className="ml-1.5 font-semibold text-primary">{subtitle}</span>
+            <span className="ml-1.5 font-semibold tracking-normal text-primary">{subtitle}</span>
           )}
         </span>
         {tagline && (
           <span
             className={cn(
-              "mt-1 text-[0.65em] font-medium tracking-normal text-muted-foreground select-none",
+              "mt-1 text-[0.62em] font-extrabold uppercase tracking-[0.2em] text-primary/90 select-none",
               taglineClassName
             )}
           >
@@ -172,4 +205,3 @@ export function CalibraBrand({
     </div>
   );
 }
-

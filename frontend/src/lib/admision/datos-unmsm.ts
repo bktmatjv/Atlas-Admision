@@ -1,5 +1,5 @@
 /**
- * Los datos oficiales de San Marcos, con la forma de las tablas de Atlas (`admision_carreras`,
+ * Los datos oficiales de San Marcos, con la forma de las tablas de CALIBRA (`admision_carreras`,
  * `admision_procesos`, `admision_resultados`). Los JSON vienen de Audix Admisión
  * (`scripts/admision/unmsm/`, ver su FUENTES.md); aquí solo se traducen los nombres de campo.
  * Sin dependencias: lo importa también `scripts/admision/sql-de-datos-unmsm.mjs`.

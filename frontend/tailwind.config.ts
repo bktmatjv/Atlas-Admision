@@ -56,7 +56,7 @@ export default {
         // veces. Respaldo con métrica parecida: ancha y de remates generosos.
         lectura: ['"Zilla Slab"', '"Zilla Slab Fallback"', 'Georgia', "'Times New Roman'", 'serif'],
         // Los titulares de la lección —definición, bloques, partes—: redondeada, como pide la
-        // dirección de Atlas. Solo titulares: el cuerpo que explica va en Inter.
+        // dirección de Calibra. Solo titulares: el cuerpo que explica va en Inter.
         redonda: ['Nunito', '"Inter Tight"', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
@@ -127,6 +127,13 @@ export default {
         '5xl': ['3rem', { lineHeight: '1.15', letterSpacing: '-0.025em' }],
       },
       colors: {
+        // Colores semánticos de identidad CALIBRA
+        "carmesi-principal": "hsl(var(--carmesi-principal))",
+        "carmesi-secundario": "hsl(var(--carmesi-secundario))",
+        fondo: "hsl(var(--fondo))",
+        superficie: "hsl(var(--superficie))",
+        surface: "hsl(var(--superficie))",
+        texto: "hsl(var(--texto))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

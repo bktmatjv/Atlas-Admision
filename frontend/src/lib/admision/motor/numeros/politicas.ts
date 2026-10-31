@@ -1,5 +1,5 @@
 /**
- * Las dos políticas de corrección numérica de Atlas, cada una EXACTAMENTE como se corregía antes de
+ * Las dos políticas de corrección numérica de CALIBRA, cada una EXACTAMENTE como se corregía antes de
  * sacarlas aquí (17-10-2026). Cuál vale para qué es una decisión de producto pendiente (🔑 Axel,
  * docs/calidad/MOTOR-NUMERICO.md, sección 4); hasta entonces nada cambia de veredicto, y
  * `numeros/caracterizacion.test.ts` lo vigila sobre ~580 respuestas.

@@ -60,7 +60,7 @@ type Tablas = {
   admision_distribuciones: DistribucionUnmsm;
 };
 
-/** El cliente con las tablas tipadas, como `SupabaseClient<AdmisionDatabase>` en Atlas, sobre los datos locales. */
+/** El cliente con las tablas tipadas, como `SupabaseClient<AdmisionDatabase>` en CALIBRA, sobre los datos locales. */
 export const admisionDb = {
   from: <K extends keyof Tablas>(tabla: K) => supabase.from<Tablas[K]>(tabla) as Consulta<Tablas[K]>,
   rpc: supabase.rpc,

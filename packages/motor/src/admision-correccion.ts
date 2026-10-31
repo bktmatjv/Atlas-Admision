@@ -2,7 +2,7 @@
  * El puntaje de San Marcos (spec §3): +20 por acierto, −1,125 por error, 0 en blanco; la sección
  * actitudinal no descuenta. Esto último lo trajo Audix Admisión (15-10-2026): la prensa y una copia del
  * Reglamento 2026-I coinciden; el reglamento oficial solo se descarga pagando, así que sigue por
- * verificar (scripts/admision/unmsm/FUENTES.md). Antes Atlas cobraba −1,125 también en la actitudinal.
+ * verificar (scripts/admision/unmsm/FUENTES.md). Antes CALIBRA cobraba −1,125 también en la actitudinal.
  *
  * `src/lib/admision/formula.ts` es la copia del navegador: `formula.test.ts` exige que den lo mismo.
  */
