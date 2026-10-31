@@ -17,6 +17,7 @@ import {
 import { borrarTodo } from "@/integrations/local/almacen";
 import { api } from "@/integrations/api/client";
 import { cn } from "@/lib/utils";
+import { MenuCuenta } from "@/components/entrada/MenuCuenta";
 
 interface ResponsiveLayoutProps {
   children: ReactNode;
@@ -126,6 +127,7 @@ export function ResponsiveLayout({
                 Temas
               </NavLink>
             </nav>
+            <MenuCuenta />
             {headerTools && (
               <div className="tutor-header-tools">{headerTools}</div>
             )}

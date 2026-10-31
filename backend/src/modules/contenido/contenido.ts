@@ -11,8 +11,7 @@ import {
 } from "@nestjs/common";
 import type { ActorRequest } from "../identidad/identidad.js";
 import { Database } from "../../database/database.js";
-import { z } from "zod";
-import { validate } from "../../http.js";
+import { guardarPerfil } from "./perfil.js";
 import { CURSOS } from "@atlas/motor/temario";
 export interface Question {
   id: string;
@@ -114,43 +113,7 @@ export class ContenidoController {
     );
   }
   @Put("perfil") async save(@Req() req: ActorRequest, @Body() input: unknown) {
-    const p = validate(
-      z
-        .object({
-          universidad: z.string().max(100).optional(),
-          carrera_id: z.string().max(100).nullable().optional(),
-          horas_semana: z.number().int().min(1).max(80).nullable().optional(),
-        })
-        .strict(),
-      input,
-    );
-    if (
-      p.carrera_id &&
-      !(
-        await this.db.query("SELECT id FROM carreras WHERE id=$1", [
-          p.carrera_id,
-        ])
-      ).length
-    )
-      throw new NotFoundException("Carrera no encontrada.");
-    const base = {
-      user_id: req.actorId,
-      universidad: "unmsm",
-      carrera_id: null,
-      horas_semana: null,
-      origen: "alumno",
-      updated_at: new Date().toISOString(),
-      ...p,
-    };
-    const [result] = await this.db.query<{ data: unknown }>(
-      `INSERT INTO perfiles(actor_id,data) VALUES($1,$2) ON CONFLICT(actor_id) DO UPDATE SET data=perfiles.data || $3::jsonb RETURNING data`,
-      [
-        req.actorId,
-        base,
-        JSON.stringify({ ...p, updated_at: base.updated_at }),
-      ],
-    );
-    return result.data;
+    return guardarPerfil(this.db, req.actorId, input);
   }
 }
 @Module({

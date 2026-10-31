@@ -14,6 +14,11 @@ import { SeguimientoModule } from "./modules/seguimiento/seguimiento.js";
 import { DocumentosModule } from "./modules/contenido/documentos.js";
 import { settings } from "./config.js";
 import { Proveedores } from "./modules/tutor/proveedor.js";
+import { hashToken } from "./modules/identidad/credenciales.js";
+const noEsAcceso = (ctx: import("@nestjs/common").ExecutionContext) => {
+  const req = ctx.switchToHttp().getRequest();
+  return req.method !== "POST" || !/\/cuenta\/(registro|ingreso|recuperar)$/.test(req.path);
+};
 @Controller()
 class Health {
   constructor(
@@ -34,7 +39,12 @@ class Health {
 @Module({
   imports: [
     DatabaseModule,
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
+    ThrottlerModule.forRoot([
+      { name: "default", ttl: 60000, limit: 120 },
+      { name: "cuenta-ip", ttl: 60000, limit: 15, skipIf: noEsAcceso },
+      { name: "cuenta-usuario", ttl: 60000, limit: 8, skipIf: noEsAcceso,
+        getTracker: (req) => hashToken(typeof req.body?.usuario === "string" ? req.body.usuario.trim().toLowerCase().slice(0, 128) : "") },
+    ]),
     IdentidadModule,
     ContenidoModule,
     PracticaModule,

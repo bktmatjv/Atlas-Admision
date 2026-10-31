@@ -27,7 +27,12 @@ La sesión usa cookie HttpOnly `atlas_sid`; la DB guarda solo el hash del token.
 | `GET /sesion` | Identidad actual |
 | `DELETE /sesion` | Elimina datos de la sesión; exige retirar antes sus documentos originales |
 | `GET /catalogo`, `/examenes`, `/unmsm` | Catálogo y metadatos; no publica el banco con claves |
-| `GET /perfil`, `PUT /perfil` | Universidad, carrera y horas semanales |
+| `GET /perfil`, `PUT /perfil` | Perfil validado con zod: `etapa`, `universidad`, `area`, `carrera_id`, `proceso`, `objetivos[]`, `cursos_dificiles[]`, `carrera_texto`, `horas_semana`, `onboarding_completo` y `onboarding_omitido`. Los valores del catálogo se validan contra la base; otra universidad no conserva el catálogo UNMSM |
+| `GET /cuenta` | Usuario de la cuenta vinculada al actor, o `null` si es invitado |
+| `POST /cuenta/registro` | `{ usuario, contrasena }`: vincula el actor invitado actual, rota la sesión y devuelve `codigo_recuperacion` (se muestra una sola vez) |
+| `POST /cuenta/ingreso` | `{ usuario, contrasena }`: emite una sesión nueva para el actor de la cuenta; error genérico igual para usuario inexistente y contraseña incorrecta |
+| `POST /cuenta/recuperar` | `{ usuario, contrasena, codigo }`: cambia la contraseña, consume el código, devuelve uno nuevo y revoca las demás sesiones |
+| `POST /cuenta/salida` | Cierra solo la sesión actual |
 | `POST /intentos` | `modo`, `area`, curso/tema o examen; devuelve `intento_id` y cantidad real |
 | `GET /intentos`, `/intentos/:id` | Historial propio y estado |
 | `GET /intentos/:id/preguntas` | Snapshots ordenados; clave/solución solo entregado o reveladas legítimamente |
@@ -62,6 +67,17 @@ La sesión usa cookie HttpOnly `atlas_sid`; la DB guarda solo el hash del token.
 Las operaciones de IA de árboles y generación formativa requieren `Idempotency-Key` (8–120 caracteres). Repetir la misma clave con el mismo contenido recupera el resultado; otra operación con esa clave recibe 409. Si está pendiente, devuelve 409; si falló, iniciar un intento nuevo con otra clave. Una interrupción de red no garantiza que el proveedor no haya cobrado.
 
 Errores: `{ "error": { "codigo": "HTTP_400", "mensaje": "..." } }`. Entrada inválida: 400; sesión ausente: 401; origen no permitido: 403; recurso ajeno/inexistente: 404; conflicto de estado: 409; tamaño excedido: 413; límite de peticiones: 429; IA ausente/fallida: 503. No se devuelven SQL, prompts completos, claves ni rutas privadas en errores.
+
+## Cuentas y perfil
+
+- Usuario de 3 a 30 caracteres `[a-z0-9_.]` y contraseña de 8 a 128. No se pide nombre, fecha de nacimiento, DNI, colegio ni correo.
+- La contraseña se guarda con `scrypt` (`node:crypto`), sal por usuario y comparación en tiempo constante; un usuario inexistente paga el mismo coste. El código de recuperación solo se guarda como hash SHA-256 y se rota al usarse.
+- Registrarse vincula el actor invitado actual en una transacción: intentos, árboles, conversaciones y evidencias siguen siendo del mismo actor. Ingresar desde otro dispositivo crea una sesión nueva para ese actor sin cerrar las demás; registrarse, ingresar y recuperar reemplazan la sesión desde la que se llamó.
+- `POST /cuenta/registro|ingreso|recuperar` tienen límite por IP (15/min) y por usuario (8/min), además del límite general. Nunca se registran contraseñas, hashes ni códigos.
+- `DELETE /sesion` elimina la cuenta junto con el resto de los datos del actor (`ON DELETE CASCADE`) y permite reutilizar el alias.
+- La interfaz actual solo cubre ingreso, registro, recuperación y salida; el onboarding que llena el perfil ampliado está pendiente.
+- El agente del tutor recibe un resumen con lista blanca (`etapa`, `universidad`, `area`, `carrera`, `objetivos`, `cursos_dificiles`); nunca alias, hashes, códigos ni campos arbitrarios del perfil. Prompt `tutor-agente-v4`.
+- Migración aditiva `Cuentas1770000008000` (tabla `cuentas`; sin reversión automática).
 
 ## Persistencia y plazos
 

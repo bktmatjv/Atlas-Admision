@@ -10,6 +10,7 @@ import { Plantillas1770000004000 } from "./plantillas.js";
 import { Revisiones1770000005000 } from "./revisiones.js";
 import { DestinoIa1770000006000 } from "./destino-ia.js";
 import { PasosAgente1770000007000 } from "./pasos-agente.js";
+import { Cuentas1770000008000 } from "./cuentas.js";
 export const createDataSource = (url: string) => {
   const schema = process.env.DB_SCHEMA ?? "public";
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(schema))
@@ -29,6 +30,7 @@ export const createDataSource = (url: string) => {
       Revisiones1770000005000,
       DestinoIa1770000006000,
       PasosAgente1770000007000,
+      Cuentas1770000008000,
     ],
     logging: false,
     extra: { max: 10, options: `-c search_path=${schema}` },

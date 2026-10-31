@@ -110,6 +110,12 @@ La retropropagación solo usa aristas y rastros existentes: sin idea o camino ve
 
 Las capturas de `npm run test:tutor-ui` se guardan en `.atl/` (ignoradas por Git). Las pruebas de interfaz usan transporte simulado identificado; no prueban la calidad del modelo real ni el despliegue público.
 
+## Cuenta y perfil
+
+Puedes seguir como invitado o crear una cuenta con usuario y contraseña, sin correo. Al registrarte conservas todo lo que hiciste como invitado, y recibes un **código de recuperación de un solo uso** que se muestra una vez: guárdalo. En la cabecera aparecen «Ingresar» y «Crear cuenta»; con cuenta, un menú con tu usuario y «Salir». El perfil ampliado (etapa, universidad, carrera, objetivos y cursos difíciles) ya existe en la API y el tutor lo usa para ajustar ejemplos y nivel, pero **la pantalla de onboarding y el inicio adaptado por perfil están pendientes** (los hace el equipo de interfaz).
+
+Solo se guardan esos datos: no se piden nombre completo, fecha de nacimiento, DNI, colegio ni correo. «Borrar mis datos» elimina también la cuenta.
+
 ## 🔗 Demo desplegada
 
 **Pendiente.** Todavía no hay una URL pública. El despliegue previsto es el frontend en Vercel y el backend en Docker sobre una VM de Azure.
@@ -195,5 +201,5 @@ compose.yaml       API + PostgreSQL para desarrollo local
 - **Calidad de la IA:** se probó con casos reales en Groq, pero los modelos abiertos pueden usar herramientas con menos consistencia; las validaciones descartan o degradan lo que falle. El plan gratuito de Groq tiene límites por minuto y por día; el router de modelos reparte la carga entre varios modelos, pero no está probado con las APIs reales ni se verificó qué modelos de Cloudflare con herramientas están disponibles en su plan gratuito.
 - **Material generado por IA** no equivale a contenido revisado académicamente y no cuenta como evidencia.
 - **Mis cursos:** sin OCR para PDF escaneados ni búsqueda en fuentes externas.
-- **Cuentas:** la sesión invitada dura 30 días y no se recupera si se borran las cookies.
+- **Cuentas:** sin cuenta, la sesión invitada dura 30 días y no se recupera si se borran las cookies. Con cuenta (usuario y contraseña) sí se retoma desde otro dispositivo; no hay correo, así que perder la contraseña y el código de recuperación significa perder la cuenta. No hay login con Google ni verificación de identidad.
 - **Dependencias:** `npm audit` reporta 14 avisos moderados en herramientas de desarrollo (ESLint) y en TypeORM, pendientes de actualizar.

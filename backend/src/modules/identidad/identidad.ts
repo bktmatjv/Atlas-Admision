@@ -18,7 +18,8 @@ import { randomBytes, randomUUID, createHash } from "node:crypto";
 import type { Request, Response } from "express";
 import { Database } from "../../database/database.js";
 import { settings } from "../../config.js";
-export type ActorRequest = Request & { actorId: string };
+import { CuentaController } from "./cuenta.js";
+export type ActorRequest = Request & { actorId: string; sessionHash?: string };
 export const digest = (s: string) =>
   createHash("sha256").update(s).digest("hex");
 @Injectable()
@@ -46,6 +47,7 @@ export class SessionGuard implements CanActivate {
       );
       if (session) {
         req.actorId = session.actor_id;
+        req.sessionHash = digest(token);
         const ayuda =
           /\/arboles\/[0-9a-f-]+/.test(req.path) ||
           (/\/documentos\/[0-9a-f-]+$/.test(req.path) &&
@@ -69,7 +71,7 @@ export class SessionGuard implements CanActivate {
         return true;
       }
     }
-    if (req.method === "POST" && req.path.endsWith("/sesion")) return true;
+    if (req.method === "POST" && (req.path.endsWith("/sesion") || /\/cuenta\/(ingreso|recuperar)$/.test(req.path))) return true;
     throw new UnauthorizedException("Inicia una sesión para continuar.");
   }
 }
@@ -128,7 +130,7 @@ export class SessionController {
   }
 }
 @Module({
-  controllers: [SessionController],
+  controllers: [SessionController, CuentaController],
   providers: [SessionGuard],
   exports: [SessionGuard],
 })

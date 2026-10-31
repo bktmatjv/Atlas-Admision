@@ -36,6 +36,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     );
   return data as T;
 }
+// Al cambiar de cuenta no conservar la identidad anterior ni cachés asociadas.
+export function resetSession(actorId?: string) {
+  session = actorId ? Promise.resolve({ actorId }) : null;
+}
 export function ensureSession() {
   session ??= request<{ actorId: string }>("/sesion", { method: "POST" }).catch(
     (e) => {
