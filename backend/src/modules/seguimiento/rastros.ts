@@ -1,5 +1,6 @@
 import { ACTIVIDADES, buscarError, ideaPorClave } from "./actividades.js";
-import { normalizarNumero } from "./numeros.js";
+import { igualesNumeros, normalizarNumero } from "./numeros.js";
+import { instanciaDesdeClave } from "./plantillas.js";
 export type NivelAyuda = "pista" | "ejemplo" | "explicacion_completa";
 export type RastroFila = {
   actividad_id: string;
@@ -10,12 +11,27 @@ export type RastroFila = {
 };
 export const nivelPorFallos = (previos: number): NivelAyuda =>
   previos <= 0 ? "pista" : previos === 1 ? "ejemplo" : "explicacion_completa";
+// En una instancia de plantilla cada distractor ya trae su idea clave; el texto es fijo del sistema.
+function errorDePlantilla(actividadId: string, num: number) {
+  const i = instanciaDesdeClave(actividadId);
+  const d = i?.distractores.find((x) => igualesNumeros(x.valor, num));
+  const idea = d && ideaPorClave(d.idea_clave);
+  return d && idea
+    ? {
+        idea_clave: d.idea_clave,
+        explicacion: `Esa respuesta coincide con un error frecuente en este tipo de problema, ligado a esta idea: ${idea.descripcion}`,
+        pista: `Revisa tu cálculo pensando en esta idea: ${idea.descripcion}`,
+      }
+    : undefined;
+}
 // Devolución determinista: sale del mapa curado de la actividad, nunca de la IA.
 export function construirRastro(f: RastroFila) {
   const actividad = ACTIVIDADES.find((a) => a.id === f.actividad_id);
   const leido = normalizarNumero(f.respuesta);
   const num = leido.legible ? leido.valor : Number.NaN;
-  const tipico = actividad ? buscarError(actividad, num) : undefined;
+  const tipico = actividad
+    ? buscarError(actividad, num)
+    : errorDePlantilla(f.actividad_id, num);
   const base = {
     respuesta: f.respuesta,
     nodo_retorno_id: f.nodo_retorno_id,

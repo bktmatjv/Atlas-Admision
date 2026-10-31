@@ -309,6 +309,25 @@ export class ProveedorFake implements ProveedorIA {
         argumentos: {},
       })),
     });
+    // Lectura provisional: cita lo que el estudiante escribió; los marcadores fuerzan casos.
+    if (e.forzar === "lectura") {
+      const { respuesta } = JSON.parse(original) as { respuesta: string };
+      const cancela = respuesta.includes("se cancelan");
+      const lectura = {
+        ideas_detectadas: cancela ? ["cambio-de-base"] : [],
+        posible_confusion: cancela ? "cambio-de-base" : null,
+        cita_del_estudiante: respuesta.includes("[[cita-inventada]]")
+          ? "una frase que nunca escribió"
+          : cancela
+            ? "se cancelan"
+            : respuesta.slice(0, 300),
+        confianza: "media",
+      };
+      return {
+        texto: null,
+        llamadas: [{ id: "fake-1", nombre: "lectura", argumentos: lectura }],
+      };
+    }
     const tiene = (marca: string) => original.includes(`[[${marca}]]`);
     if (tiene("sin-forma")) return { texto: "esto no es json", llamadas: [] };
     if (tiene("reparable"))

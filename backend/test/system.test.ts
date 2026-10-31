@@ -8,6 +8,11 @@ import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import type { INestApplication } from "@nestjs/common";
 import { textPdf } from "./pdf-fixture";
+import {
+  generar,
+  instanciaDesdeClave,
+} from "../src/modules/seguimiento/plantillas";
+import { clavesExpuestas } from "../src/modules/seguimiento/expuestas";
 let app: INestApplication,
   db: Client,
   url: string,
@@ -1263,5 +1268,327 @@ describe("Tutor agente: ciclo con herramientas del sistema", () => {
       );
     const r = await decir("uno más", randomUUID(), c.id, b);
     expect(r.status).toBe(429);
+  });
+});
+
+describe("Respuestas a bloques de la charla: sin evidencia", () => {
+  let a: string, b: string, conv: string, arbol: string, raiz: string;
+  type Bloque = {
+    id: string;
+    tipo: string;
+    plantilla?: string;
+    semilla?: number;
+  };
+  type Nodo = { titulo: string; senal: string | null; estado: string };
+  const decir = async (texto: string, sid = a) =>
+    (
+      await http(
+        `/conversaciones/${conv}/mensajes`,
+        "POST",
+        { texto },
+        sid,
+        randomUUID(),
+      )
+    ).data.tutor.bloques as Bloque[];
+  const responder = (id: string, respuesta: string, sid = a) =>
+    http(`/bloques/${id}/respuesta`, "POST", { respuesta }, sid);
+  const grafo = async () => (await http("/grafo", "GET", undefined, a)).data;
+  const nodoIdea = async (idea: string) =>
+    (
+      await db.query(
+        `SELECT id FROM ${schema}.nodos WHERE arbol_id=$1 AND idea_clave=$2`,
+        [arbol, idea],
+      )
+    ).rows[0].id as string;
+  const evidencias = async () =>
+    (await http("/evidencias", "GET", undefined, a)).data.length as number;
+  beforeAll(async () => {
+    a = (await http("/sesion", "POST", {}, "")).cookie!;
+    b = (await http("/sesion", "POST", {}, "")).cookie!;
+    const c = (
+      await http("/conversaciones", "POST", { tema: "porcentajes" }, a)
+    ).data;
+    conv = c.id;
+    arbol = c.arbol_id;
+    raiz = c.raiz_id;
+    let orden = 0;
+    for (const idea of ["cambio-de-base", "base-del-porcentaje"])
+      await db.query(
+        `INSERT INTO ${schema}.nodos(id,arbol_id,padre_id,profundidad,orden,tipo,titulo,contenido,procedencia,prompt_version,idea_clave)
+         VALUES($1,$2,$3,1,$4,'idea',$5,'x','Generado por IA; no revisado','t',$6)`,
+        [randomUUID(), arbol, raiz, orden++, "Nodo " + idea, idea],
+      );
+  });
+  it("una práctica incorrecta devuelve la idea clave del distractor y deja una señal, no evidencia", async () => {
+    const [p] = await decir("[[practica]]");
+    const i = generar(p.plantilla!, p.semilla!);
+    const malo = i.distractores[0];
+    const antes = await evidencias();
+    const r = await responder(p.id, String(malo.valor));
+    expect(r.status).toBe(201);
+    expect(r.data).toMatchObject({
+      correcta: false,
+      idea_clave: malo.idea_clave,
+      senal: true,
+      solucion: null,
+    });
+    const g = await grafo();
+    const marcado = g.nodos.filter(
+      (x: Nodo) => x.senal === "posible_confusion",
+    );
+    expect(marcado).toHaveLength(1);
+    expect(marcado[0].estado).toBe("sin_explorar");
+    expect(await evidencias()).toBe(antes);
+    const filas = await db.query(
+      `SELECT resultado FROM ${schema}.respuestas_bloque WHERE actor_id=(SELECT actor_id FROM ${schema}.conversaciones WHERE id=$1)`,
+      [conv],
+    );
+    expect(filas.rows.at(-1).resultado).toMatchObject({ correcta: false });
+  });
+  it("una práctica correcta se corrige de forma determinista y tampoco crea evidencia", async () => {
+    const [p] = await decir("[[practica]]");
+    const i = generar(p.plantilla!, p.semilla!);
+    const antes = await evidencias();
+    const r = await responder(p.id, String(i.respuesta).replace(".", ","));
+    expect(r.data).toMatchObject({ correcta: true, idea_clave: null });
+    expect(r.data.solucion).toContain(String(i.respuesta));
+    expect(await evidencias()).toBe(antes);
+    const estados = (await grafo()).nodos.map((n: Nodo) => n.estado);
+    expect(
+      estados.every((e: string) => e !== "aplicado" && e !== "fallo"),
+    ).toBe(true);
+  });
+  it("una respuesta que no es número no se cuenta como fallo", async () => {
+    const [p] = await decir("[[practica]]");
+    expect((await responder(p.id, "no sé")).status).toBe(400);
+  });
+  it("el texto libre se acepta solo si la cita está literalmente en lo escrito", async () => {
+    const [e] = await decir("[[bloques]]");
+    expect(e.tipo).toBe("en_tus_palabras");
+    const antes = await evidencias();
+    const r = await responder(e.id, "Yo pensé que +20 y -20 se cancelan");
+    expect(r.data.guardada).toBe(true);
+    expect(r.data.lectura).toMatchObject({
+      posible_confusion: "cambio-de-base",
+      cita_del_estudiante: "se cancelan",
+    });
+    expect(r.data.mensaje).toMatch(/^Me parece que/);
+    const g = await grafo();
+    const id = await nodoIdea("cambio-de-base");
+    const n = g.nodos.find((x: { id: string }) => x.id === id);
+    expect(n).toMatchObject({
+      senal: "posible_confusion",
+      estado: "sin_explorar",
+    });
+    expect(await evidencias()).toBe(antes);
+  });
+  it("una cita inventada se descarta: la respuesta queda guardada sin lectura", async () => {
+    const [e] = await decir("[[bloques]]");
+    const r = await responder(
+      e.id,
+      "No sé por dónde empezar [[cita-inventada]]",
+    );
+    expect(r.data).toMatchObject({
+      guardada: true,
+      lectura: null,
+      mensaje: null,
+    });
+    const fila = await db.query(
+      `SELECT respuesta,lectura FROM ${schema}.respuestas_bloque ORDER BY created_at DESC LIMIT 1`,
+    );
+    expect(fila.rows[0].lectura).toBeNull();
+    expect(fila.rows[0].respuesta).toContain("No sé por dónde");
+  });
+  it("sin proveedor la respuesta igual se guarda", async () => {
+    const [e] = await decir("[[bloques]]");
+    process.env.AI_PROVIDER = "disabled";
+    try {
+      const r = await responder(e.id, "Mi respuesta sin lectura");
+      expect(r.status).toBe(201);
+      expect(r.data.lectura).toBeNull();
+    } finally {
+      process.env.AI_PROVIDER = "fake";
+    }
+  });
+  it("los bloques sin input y los de otra sesión se rechazan", async () => {
+    const [inv] = await decir("[[comprobar]]");
+    expect(inv.tipo).toBe("invitacion_comprobar");
+    expect((await responder(inv.id, "hola")).status).toBe(400);
+    const [e] = await decir("[[bloques]]");
+    expect((await responder(e.id, "hola", b)).status).toBe(404);
+    expect((await responder(randomUUID(), "hola")).status).toBe(404);
+  });
+  it("durante una comprobación activa no se corrige ni se lee nada", async () => {
+    const [e] = await decir("[[bloques]]");
+    const c = await http("/comprobaciones", "POST", { arbol_id: arbol }, a);
+    expect((await responder(e.id, "algo")).status).toBe(409);
+    await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, a);
+  });
+});
+
+describe("Comprobaciones desde plantillas (S13)", () => {
+  let t: string, arbol: string;
+  const iniciar = () => http("/comprobaciones", "POST", { arbol_id: arbol }, t);
+  const fila = async (id: string) =>
+    (
+      await db.query(
+        `SELECT actividad_id,version,concepto,enunciado FROM ${schema}.comprobaciones WHERE id=$1`,
+        [id],
+      )
+    ).rows[0];
+  beforeAll(async () => {
+    t = (await http("/sesion", "POST", {}, "")).cookie!;
+    arbol = (
+      await http(
+        "/arboles",
+        "POST",
+        { tema: "porcentajes", solicitud: "Quiero entender porcentajes" },
+        t,
+        randomUUID(),
+      )
+    ).data.id;
+  });
+  it("primero usa las actividades curadas y solo después una instancia de plantilla", async () => {
+    for (let n = 0; n < 3; n++) {
+      const c = await iniciar();
+      expect(c.status).toBe(201);
+      expect(c.data.origen).toBe("curada");
+      expect((await fila(c.data.id)).actividad_id).toMatch(/^porcentajes-\d$/);
+      await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, t);
+    }
+    const c = await iniciar();
+    expect(c.status).toBe(201);
+    expect(c.data.origen).toBe("plantilla");
+    const f = await fila(c.data.id);
+    const i = instanciaDesdeClave(f.actividad_id)!;
+    expect(i.concepto).toBe("porcentajes");
+    // El enunciado es texto fijo del sistema, no generado por IA.
+    expect(c.data.enunciado).toBe(i.enunciado_base);
+    expect(f.enunciado).toBe(i.enunciado_base);
+    expect(f.version).toBe("plantilla-v1");
+    const activa = await http("/comprobaciones/activa", "GET", undefined, t);
+    expect(activa.data.origen).toBe("plantilla");
+    await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, t);
+  });
+  it("nunca repite una combinación (plantilla, parámetros) ya expuesta", async () => {
+    const vistas = new Set<string>();
+    for (let n = 0; n < 8; n++) {
+      const c = await iniciar();
+      const f = await fila(c.data.id);
+      expect(vistas.has(f.actividad_id)).toBe(false);
+      vistas.add(f.actividad_id);
+      await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, t);
+    }
+    const expuestas = await clavesExpuestas(
+      app.get((await import("../src/database/database.js")).Database),
+      (
+        await db.query(`SELECT actor_id FROM ${schema}.arboles WHERE id=$1`, [
+          arbol,
+        ])
+      ).rows[0].actor_id,
+    );
+    for (const k of vistas) expect(expuestas.has(k)).toBe(true);
+  });
+  it("un distractor de la plantilla deja un rastro con su idea clave y origen plantilla", async () => {
+    const c = await iniciar();
+    const f = await fila(c.data.id);
+    const i = instanciaDesdeClave(f.actividad_id)!;
+    const d = i.distractores[0];
+    const r = await http(
+      `/comprobaciones/${c.data.id}/respuesta`,
+      "PUT",
+      { respuesta: String(d.valor), justificacion: "Mi razonamiento" },
+      t,
+    );
+    expect(r.status).toBe(200);
+    expect(r.data).toMatchObject({ correcta: false, origen: "plantilla" });
+    expect(r.data.rastro).toMatchObject({
+      idea_clave: d.idea_clave,
+      motivo: null,
+    });
+    const rastro = (
+      await db.query(
+        `SELECT origen,plantilla,parametros,idea_clave FROM ${schema}.rastros_error WHERE comprobacion_id=$1`,
+        [c.data.id],
+      )
+    ).rows[0];
+    expect(rastro).toMatchObject({
+      origen: "plantilla",
+      plantilla: i.plantilla,
+      parametros: i.parametros,
+      idea_clave: d.idea_clave,
+    });
+    const ev = (
+      await db.query(
+        `SELECT detalle FROM ${schema}.evidencias WHERE comprobacion_id=$1`,
+        [c.data.id],
+      )
+    ).rows;
+    expect(ev).toHaveLength(1);
+    expect(ev[0].detalle).toMatchObject({
+      origen: "plantilla",
+      plantilla: i.plantilla,
+      parametros: i.parametros,
+    });
+  });
+  it("una respuesta correcta registra resolvio_sin_ayuda y la corrección sigue siendo una por fallo", async () => {
+    const c = await iniciar();
+    const i = instanciaDesdeClave((await fila(c.data.id)).actividad_id)!;
+    expect(
+      (
+        await http(
+          `/comprobaciones/${c.data.id}/respuesta`,
+          "PUT",
+          { respuesta: "nada" },
+          t,
+        )
+      ).status,
+    ).toBe(400);
+    const r = await http(
+      `/comprobaciones/${c.data.id}/respuesta`,
+      "PUT",
+      { respuesta: String(i.respuesta).replace(".", ",") },
+      t,
+    );
+    expect(r.data).toMatchObject({ correcta: true, origen: "plantilla" });
+    const tipos = (
+      await db.query(
+        `SELECT tipo FROM ${schema}.evidencias WHERE comprobacion_id=$1 ORDER BY tipo`,
+        [c.data.id],
+      )
+    ).rows.map((x) => x.tipo);
+    expect(tipos).toEqual(["corrigio_tras_error", "resolvio_sin_ayuda"]);
+    const c2 = await iniciar();
+    const i2 = instanciaDesdeClave((await fila(c2.data.id)).actividad_id)!;
+    await http(
+      `/comprobaciones/${c2.data.id}/respuesta`,
+      "PUT",
+      { respuesta: String(i2.respuesta) },
+      t,
+    );
+    const otra = await db.query(
+      `SELECT tipo FROM ${schema}.evidencias WHERE comprobacion_id=$1`,
+      [c2.data.id],
+    );
+    expect(otra.rows.map((x) => x.tipo)).toEqual(["resolvio_sin_ayuda"]);
+  });
+  it("el bloqueo de ayudas sigue igual con una comprobación de plantilla", async () => {
+    const c = await iniciar();
+    const raiz = (
+      await db.query(
+        `SELECT id FROM ${schema}.nodos WHERE arbol_id=$1 AND padre_id IS NULL`,
+        [arbol],
+      )
+    ).rows[0].id;
+    const r = await http(
+      `/arboles/${arbol}/nodos/${raiz}/expandir`,
+      "POST",
+      { solicitud: "Explícame" },
+      t,
+      randomUUID(),
+    );
+    expect(r.status).toBe(409);
+    expect((await iniciar()).data.id).toBe(c.data.id);
+    await http(`/comprobaciones/${c.data.id}/cancelar`, "POST", {}, t);
   });
 });

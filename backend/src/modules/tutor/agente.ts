@@ -52,6 +52,8 @@ import {
   type RespuestaIA,
 } from "./proveedor.js";
 import { TutorModule, TutorService } from "./tutor.js";
+import { BloquesController, BloquesService } from "./bloques.js";
+import { clavesExpuestas } from "../seguimiento/expuestas.js";
 import { SeguimientoModule } from "../seguimiento/seguimiento.js";
 export const PROMPT_AGENTE = "tutor-agente-v1";
 export const MAX_HERRAMIENTAS = 4;
@@ -786,21 +788,8 @@ export class AgenteService {
     }
   }
   // (plantilla, parámetros) que el estudiante ya vio: comprobaciones y prácticas de la charla.
-  async expuestas(actor: string) {
-    const claves = new Set<string>();
-    for (const r of await this.db.query<{ actividad_id: string }>(
-      "SELECT actividad_id FROM comprobaciones WHERE actor_id=$1",
-      [actor],
-    ))
-      claves.add(r.actividad_id);
-    for (const r of await this.db.query<{ bloques: Bloque[] }>(
-      "SELECT m.bloques FROM mensajes m JOIN conversaciones c ON c.id=m.conversacion_id WHERE c.actor_id=$1 AND m.rol='tutor' AND m.bloques<>'[]'::jsonb",
-      [actor],
-    ))
-      for (const b of r.bloques)
-        if (b.tipo === "practica" || b.tipo === "prediccion")
-          claves.add(claveInstancia(generar(b.plantilla, b.semilla)));
-    return claves;
+  expuestas(actor: string) {
+    return clavesExpuestas(this.db, actor);
   }
 }
 @Throttle({ default: { limit: 40, ttl: 60000 } })
@@ -832,7 +821,7 @@ export class ConversacionesController {
 }
 @Module({
   imports: [TutorModule, SeguimientoModule],
-  providers: [AgenteService],
-  controllers: [ConversacionesController],
+  providers: [AgenteService, BloquesService],
+  controllers: [ConversacionesController, BloquesController],
 })
 export class AgenteModule {}

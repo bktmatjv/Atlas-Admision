@@ -20,7 +20,44 @@ import type { ActorRequest } from "../identidad/identidad.js";
 import { ACTIVIDADES, buscarError } from "./actividades.js";
 import { construirRastro, nivelPorFallos } from "./rastros.js";
 import { GrafoController, GrafoService } from "./grafo.js";
+import { clavesExpuestas } from "./expuestas.js";
+import {
+  claveInstancia,
+  generarNoExpuesta,
+  instanciaDesdeClave,
+} from "./plantillas.js";
 import { igualesNumeros, normalizarNumero } from "./numeros.js";
+const ORIGEN_SQL =
+  "CASE WHEN actividad_id LIKE '%:%' THEN 'plantilla' ELSE 'curada' END AS origen";
+// Actividad curada (por id) o instancia de plantilla (por clave), con la misma interfaz de corrección.
+function resolverActividad(actividadId: string) {
+  const curada = ACTIVIDADES.find((a) => a.id === actividadId);
+  if (curada)
+    return {
+      id: curada.id,
+      concepto: curada.concepto,
+      respuesta: curada.respuesta,
+      solucion: curada.solucion,
+      origen: "curada" as const,
+      plantilla: null,
+      parametros: null,
+      ideaDeError: (n: number) => buscarError(curada, n)?.idea_clave ?? null,
+    };
+  const i = instanciaDesdeClave(actividadId);
+  if (!i) return null;
+  return {
+    id: actividadId,
+    concepto: i.concepto,
+    respuesta: i.respuesta,
+    solucion: `La respuesta correcta es ${i.respuesta}.`,
+    origen: "plantilla" as const,
+    plantilla: i.plantilla,
+    parametros: i.parametros,
+    ideaDeError: (n: number) =>
+      i.distractores.find((d) => igualesNumeros(d.valor, n))?.idea_clave ??
+      null,
+  };
+}
 @Controller()
 export class SeguimientoController {
   constructor(
@@ -63,33 +100,45 @@ export class SeguimientoController {
           "Espera a que termine la ayuda solicitada antes de comprobar.",
         );
       const active = await m.query(
-        "SELECT id,enunciado FROM comprobaciones WHERE actor_id=$1 AND entregado_at IS NULL",
+        `SELECT id,enunciado,${ORIGEN_SQL} FROM comprobaciones WHERE actor_id=$1 AND entregado_at IS NULL`,
         [r.actorId],
       );
       if (active.length) return active[0];
-      const exposed = await m.query(
-        "SELECT actividad_id FROM comprobaciones WHERE actor_id=$1",
-        [r.actorId],
+      const exposed = await clavesExpuestas(this.db, r.actorId, m);
+      // Primero las actividades curadas; solo si se agotan, una instancia de plantilla.
+      const curada = ACTIVIDADES.find(
+        (a) => a.concepto === tree.concepto && !exposed.has(a.id),
       );
-      const task = ACTIVIDADES.find(
-        (a) =>
-          a.concepto === tree.concepto &&
-          !exposed.some(
-            (e: { actividad_id: string }) => e.actividad_id === a.id,
-          ),
-      );
-      if (!task)
+      const instancia = curada
+        ? null
+        : generarNoExpuesta(
+            tree.concepto ?? "",
+            Math.floor(Math.random() * 1_000_000),
+            (k) => exposed.has(k),
+          );
+      if (!curada && !instancia)
         throw new ConflictException(
           "No hay otra actividad revisada disponible para este concepto. Puedes seguir explorando y practicando.",
         );
       const id = randomUUID();
+      const actividadId = curada ? curada.id : claveInstancia(instancia!);
+      const enunciado = curada ? curada.enunciado : instancia!.enunciado_base;
       await m.query(
         "INSERT INTO comprobaciones(id,actor_id,arbol_id,actividad_id,version,concepto,enunciado) VALUES($1,$2,$3,$4,$5,$6,$7)",
-        [id, r.actorId, arbol_id, task.id, "v1", task.concepto, task.enunciado],
+        [
+          id,
+          r.actorId,
+          arbol_id,
+          actividadId,
+          curada ? "v1" : "plantilla-v1",
+          curada ? curada.concepto : instancia!.concepto,
+          enunciado,
+        ],
       );
       return {
         id,
-        enunciado: task.enunciado,
+        enunciado,
+        origen: curada ? "curada" : "plantilla",
         nota: "Sin ayudas de Atlas durante este intento. No detectamos ayuda externa; tu justificación no se calificará automáticamente.",
       };
     });
@@ -98,7 +147,7 @@ export class SeguimientoController {
     return (
       (
         await this.db.query(
-          "SELECT id,enunciado,arbol_id FROM comprobaciones WHERE actor_id=$1 AND entregado_at IS NULL",
+          `SELECT id,enunciado,arbol_id,${ORIGEN_SQL} FROM comprobaciones WHERE actor_id=$1 AND entregado_at IS NULL`,
           [r.actorId],
         )
       )[0] ?? null
@@ -129,7 +178,8 @@ export class SeguimientoController {
       );
       if (!row) throw new NotFoundException("Comprobación no encontrada.");
       if (row.resultado) return row.resultado;
-      const task = ACTIVIDADES.find((t) => t.id === row.actividad_id)!;
+      const task = resolverActividad(row.actividad_id);
+      if (!task) throw new NotFoundException("Actividad no encontrada.");
       const leido = normalizarNumero(b.respuesta);
       // Un valor no interpretable no es un fallo: la comprobación sigue abierta.
       if (!leido.legible)
@@ -147,8 +197,7 @@ export class SeguimientoController {
       let corrige = false;
       if (!correcta) {
         // Retropropagación determinista: la IA no decide la idea clave ni el nodo.
-        const tipico = buscarError(task, num);
-        const idea = tipico?.idea_clave ?? null;
+        const idea = task.ideaDeError(num);
         const [{ n }] = idea
           ? await m.query(
               "SELECT count(*)::int AS n FROM rastros_error WHERE arbol_id=$1 AND idea_clave=$2",
@@ -170,7 +219,7 @@ export class SeguimientoController {
         };
         rastro = construirRastro(fila);
         await m.query(
-          "INSERT INTO rastros_error(id,actor_id,arbol_id,comprobacion_id,respuesta,idea_clave,nodo_retorno_id,nivel_ayuda) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+          "INSERT INTO rastros_error(id,actor_id,arbol_id,comprobacion_id,respuesta,idea_clave,nodo_retorno_id,nivel_ayuda,origen,plantilla,parametros) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
           [
             randomUUID(),
             r.actorId,
@@ -180,6 +229,9 @@ export class SeguimientoController {
             idea,
             fila.nodo_retorno_id,
             fila.nivel_ayuda,
+            task.origen,
+            task.plantilla,
+            task.parametros,
           ],
         );
         if (idea)
@@ -201,6 +253,7 @@ export class SeguimientoController {
       const result = {
         correcta,
         solucion: task.solucion,
+        origen: task.origen,
         ayuda: ayuda.length > 0,
         justificacion: b.justificacion,
         rastro,
@@ -222,7 +275,14 @@ export class SeguimientoController {
             : "aplicacion_por_reforzar",
           row.arbol_id,
           id,
-          { actividad_id: task.id, concepto: task.concepto, ...result },
+          {
+            actividad_id: task.id,
+            concepto: task.concepto,
+            ...(task.plantilla
+              ? { plantilla: task.plantilla, parametros: task.parametros }
+              : {}),
+            ...result,
+          },
         ],
       );
       if (corrige)
@@ -237,6 +297,10 @@ export class SeguimientoController {
             {
               actividad_id: task.id,
               concepto: task.concepto,
+              origen: task.origen,
+              ...(task.plantilla
+                ? { plantilla: task.plantilla, parametros: task.parametros }
+                : {}),
               idea_clave: ideaDeCorreccion,
             },
           ],
