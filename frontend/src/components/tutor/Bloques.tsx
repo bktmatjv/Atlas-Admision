@@ -9,6 +9,7 @@ import {
   type RespuestaBloque,
 } from "@/lib/tutor/chat";
 import { VisualView } from "./Visual";
+import { MathMarkdown } from "@/components/shared/MathMarkdown";
 const caja = "rounded-xl border border-border bg-background p-4 space-y-3";
 const boton =
   "inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50";
@@ -252,7 +253,9 @@ export function BloqueView({
               <h4 className="text-sm font-bold">Lo que hiciste</h4>
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 {b.tuyo.map((t, i) => (
-                  <li key={i}>{t}</li>
+                  <li key={i}>
+                    <MathMarkdown content={t} />
+                  </li>
                 ))}
               </ul>
             </div>
@@ -260,7 +263,9 @@ export function BloqueView({
               <h4 className="text-sm font-bold">Lo correcto</h4>
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 {b.correcto.map((t, i) => (
-                  <li key={i}>{t}</li>
+                  <li key={i}>
+                    <MathMarkdown content={t} />
+                  </li>
                 ))}
               </ul>
             </div>

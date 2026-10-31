@@ -1,13 +1,15 @@
-import {
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentType,
-} from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { lazyWithRetry } from "@/lib/lazy-with-retry";
+import {
+  ArrowRight,
+  Check,
+  Circle,
+  Info,
+  List,
+  Network,
+  TriangleAlert,
+} from "lucide-react";
+import { MathMarkdown } from "@/components/shared/MathMarkdown";
 import {
   ESTADO_COLOR,
   ESTADO_GLIFO,
@@ -20,307 +22,460 @@ import {
   type Estado,
   type Grafo,
   type NodoArbol,
-  type NodoGrafo,
 } from "@/lib/tutor/grafo";
-// La librería de canvas es pesada: solo se descarga cuando se muestra el mapa en pantallas anchas.
-const ForceGraph2D = lazyWithRetry(
-  () => import("react-force-graph-2d"),
-) as unknown as ComponentType<Record<string, unknown>>;
+import { buscarNodos, disponerMapa } from "@/lib/tutor/presentacion";
+
 type Props = {
   grafo: Grafo;
   seleccionado: string | null;
   onSeleccionar: (id: string) => void;
+  busqueda?: string;
 };
-type NodoVis = NodoGrafo & { x?: number; y?: number };
-function useEsMovil() {
-  const consulta = "(max-width: 767px)";
-  const [movil, setMovil] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(consulta).matches,
-  );
-  useEffect(() => {
-    const m = window.matchMedia(consulta);
-    const cambio = () => setMovil(m.matches);
-    m.addEventListener("change", cambio);
-    return () => m.removeEventListener("change", cambio);
-  }, []);
-  return movil;
-}
-function Fila({
-  n,
-  elegido,
-  alElegir,
-  enCamino,
-}: {
-  n: NodoArbol;
-  elegido: string | null;
-  alElegir: (id: string) => void;
-  enCamino: Set<string>;
-}) {
-  const nodo = n.nodo;
+function Fila({ n, props }: { n: NodoArbol; props: Props }) {
   return (
     <li>
       <button
         type="button"
-        aria-pressed={elegido === nodo.id}
-        onClick={() => alElegir(nodo.id)}
-        style={{ marginLeft: `${n.profundidad * 16}px` }}
-        className={`flex min-h-11 w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${
-          elegido === nodo.id
-            ? "border-primary bg-primary/10"
-            : "border-border bg-background hover:bg-muted"
-        }`}
+        className="tutor-map-list-node"
+        aria-pressed={props.seleccionado === n.nodo.id}
+        onClick={() => props.onSeleccionar(n.nodo.id)}
+        style={{ paddingLeft: 12 + Math.min(n.profundidad, 5) * 14 }}
       >
         <span
-          aria-hidden
-          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-          style={{ background: ESTADO_COLOR[nodo.estado] }}
+          className="tutor-state-dot"
+          style={{ background: ESTADO_COLOR[n.nodo.estado] }}
+          aria-hidden="true"
         >
-          {ESTADO_GLIFO[nodo.estado]}
+          {ESTADO_GLIFO[n.nodo.estado]}
         </span>
-        <span className="flex-1">
-          <span className="font-semibold">{nodo.titulo}</span>
-          <span className="block text-xs text-muted-foreground">
-            {ESTADO_TEXTO[nodo.estado]}
-            {nodo.senal ? " · posible confusión (provisional)" : ""}
-            {enCamino.has(nodo.id) ? " · en el camino del error" : ""}
-          </span>
+        <span>
+          <strong>{n.nodo.titulo}</strong>
+          <small>
+            {ESTADO_TEXTO[n.nodo.estado]}
+            {n.nodo.senal ? " · posible confusión, provisional" : ""}
+          </small>
         </span>
       </button>
       {n.hijos.length > 0 && (
-        <ul className="mt-1 space-y-1">
+        <ul>
           {n.hijos.map((h) => (
-            <Fila
-              key={h.nodo.id}
-              n={h}
-              elegido={elegido}
-              alElegir={alElegir}
-              enCamino={enCamino}
-            />
+            <Fila key={h.nodo.id} n={h} props={props} />
           ))}
         </ul>
       )}
     </li>
   );
 }
-function ListaJerarquica({ grafo, seleccionado, onSeleccionar }: Props) {
-  const arbol = useMemo(() => jerarquia(grafo), [grafo]);
-  const enCamino = useMemo(() => new Set(grafo.camino_error), [grafo]);
-  return (
-    <ul className="space-y-1" aria-label="Nodos del mapa de comprensión">
-      {arbol.map((n) => (
-        <Fila
-          key={n.nodo.id}
-          n={n}
-          elegido={seleccionado}
-          alElegir={onSeleccionar}
-          enCamino={enCamino}
-        />
-      ))}
-    </ul>
+function Mapa({ grafo, seleccionado, onSeleccionar }: Props) {
+  const id = useId().replace(/:/g, "");
+  const layout = useMemo(
+    () => disponerMapa(grafo, seleccionado),
+    [grafo, seleccionado],
   );
-}
-function Detalle({ grafo, id }: { grafo: Grafo; id: string | null }) {
-  const n = grafo.nodos.find((x) => x.id === id);
-  if (!n)
-    return (
-      <p className="text-sm text-muted-foreground">
-        Elige un nodo para ver su resumen.
-      </p>
-    );
-  const relaciones = grafo.aristas
-    .filter(
-      (a) =>
-        a.id.startsWith("p-") === false &&
-        (a.origen === n.id || a.destino === n.id),
-    )
-    .map((a) => {
-      const otro = grafo.nodos.find(
-        (x) => x.id === (a.origen === n.id ? a.destino : a.origen),
-      );
-      return otro
-        ? `${a.origen === n.id ? "" : "← "}${TIPO_ARISTA_TEXTO[a.tipo] ?? a.tipo}: ${otro.titulo}`
-        : null;
-    })
-    .filter(Boolean);
+  const camino = aristasCamino(grafo.camino_error);
   return (
-    <article
-      className="space-y-2 rounded-xl border border-border bg-background p-4"
-      aria-live="polite"
-    >
-      <h3 className="font-bold">{n.titulo}</h3>
-      <p className="text-xs font-semibold">
-        {ESTADO_GLIFO[n.estado]} {ESTADO_TEXTO[n.estado]} · {n.evidencias}{" "}
-        {n.evidencias === 1 ? "evidencia" : "evidencias"}
-      </p>
-      {n.senal && (
-        <p className="text-xs">
-          Me parece que aquí podría haber una confusión. Es una lectura
-          provisional: no cambia tu estado.
+    <div className="tutor-map-drawing">
+      <svg
+        viewBox="0 0 480 480"
+        role="group"
+        aria-label="Mapa interactivo de ideas; también disponible como lista"
+      >
+        <defs>
+          <marker
+            id={`${id}-arrow`}
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#b9c8d8" />
+          </marker>
+        </defs>
+        {layout.aristas.map((a) => {
+          const source = layout.nodos.find((n) => n.id === a.origen)!,
+            target = layout.nodos.find((n) => n.id === a.destino)!;
+          const distance =
+            Math.hypot(target.x - source.x, target.y - source.y) || 1;
+          const margin = target.central ? 38 : 31;
+          const x2 = target.x - ((target.x - source.x) / distance) * margin,
+            y2 = target.y - ((target.y - source.y) / distance) * margin;
+          return (
+            <path
+              key={a.id}
+              d={`M ${source.x} ${source.y} Q ${(source.x + x2) / 2 + 12} ${(source.y + y2) / 2 - 8} ${x2} ${y2}`}
+              fill="none"
+              stroke={
+                camino.has(`${a.origen}>${a.destino}`) ? "#d74656" : "#bccddb"
+              }
+              strokeWidth="1.4"
+              markerEnd={`url(#${id}-arrow)`}
+            />
+          );
+        })}
+        {layout.nodos.map((n) => {
+          const r = (n.central ? 27 : 21) + (radioNodo(n.evidencias) - 6) * 0.8;
+          const color = ESTADO_COLOR[n.estado];
+          return (
+            <g
+              key={n.id}
+              role="button"
+              tabIndex={0}
+              aria-label={descripcionNodo(n)}
+              aria-pressed={seleccionado === n.id}
+              onClick={() => onSeleccionar(n.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSeleccionar(n.id);
+                }
+              }}
+              className="tutor-map-node"
+              style={{ "--node-color": color } as React.CSSProperties}
+            >
+              <title>{descripcionNodo(n)}</title>
+              <circle
+                className="tutor-node-halo"
+                cx={n.x}
+                cy={n.y}
+                r={r + 11}
+                fill={color}
+                opacity=".1"
+              />
+              <circle
+                className="tutor-node-focus"
+                cx={n.x}
+                cy={n.y}
+                r={r + 15}
+                fill="none"
+                stroke={color}
+                strokeWidth="1.5"
+                opacity=".25"
+              />
+              <circle
+                cx={n.x}
+                cy={n.y + 2}
+                r={r + 3}
+                fill={color}
+                opacity=".12"
+              />
+              <circle
+                cx={n.x}
+                cy={n.y}
+                r={r}
+                fill={color}
+                stroke="white"
+                strokeWidth="3"
+              />
+              <circle
+                cx={n.x}
+                cy={n.y}
+                r={r - 7}
+                fill="none"
+                stroke="white"
+                strokeOpacity=".18"
+              />
+              {n.senal && (
+                <circle
+                  cx={n.x}
+                  cy={n.y}
+                  r={r + 7}
+                  fill="none"
+                  stroke="#b07618"
+                  strokeWidth="2"
+                  strokeDasharray="3 3"
+                />
+              )}
+              <text
+                x={n.x}
+                y={n.y + 1}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="white"
+                fontSize={n.central ? 27 : 21}
+                fontWeight="600"
+                aria-hidden="true"
+              >
+                {ESTADO_GLIFO[n.estado]}
+              </text>
+              <foreignObject
+                x={n.x - 69}
+                y={n.y + r + 12}
+                width="138"
+                height="65"
+              >
+                <div
+                  className={`tutor-map-label${n.central ? " tutor-map-label--central" : ""}`}
+                >
+                  {n.titulo}
+                </div>
+              </foreignObject>
+            </g>
+          );
+        })}
+      </svg>
+      {layout.omitidos > 0 && (
+        <p className="tutor-map-scope">
+          Vista de relaciones cercanas · {layout.omitidos} ideas más disponibles
+          en la lista.
         </p>
       )}
-      <p className="text-sm">{n.resumen}</p>
-      {relaciones.length > 0 && (
-        <ul className="list-disc pl-5 text-xs text-muted-foreground">
-          {relaciones.map((r, i) => (
-            <li key={i}>{r}</li>
-          ))}
-        </ul>
-      )}
+    </div>
+  );
+}
+function Detalle({ grafo, seleccionado }: Props) {
+  const [tab, setTab] = useState("resumen");
+  const tabsId = useId();
+  const n =
+    grafo.nodos.find((n) => n.id === seleccionado) ??
+    grafo.nodos.find((n) => n.id === grafo.foco) ??
+    grafo.nodos[0];
+  useEffect(() => setTab("resumen"), [n?.id]);
+  if (!n) return null;
+  const relaciones = grafo.aristas
+    .filter((a) => a.origen === n.id || a.destino === n.id)
+    .map((a) => ({
+      tipo: TIPO_ARISTA_TEXTO[a.tipo] ?? a.tipo,
+      nodo: grafo.nodos.find(
+        (x) => x.id === (a.origen === n.id ? a.destino : a.origen),
+      ),
+    }))
+    .filter((a) => a.nodo);
+  const tabs = [
+    { id: "resumen", nombre: "Resumen" },
+    { id: "evidencia", nombre: "Evidencia" },
+    { id: "ejercicios", nombre: "Ejercicios" },
+  ];
+  return (
+    <article
+      className="tutor-node-detail"
+      aria-label="Detalle de la idea seleccionada"
+    >
+      <header>
+        <span
+          className="tutor-detail-orb"
+          style={
+            { "--node-color": ESTADO_COLOR[n.estado] } as React.CSSProperties
+          }
+          aria-hidden="true"
+        >
+          {ESTADO_GLIFO[n.estado]}
+        </span>
+        <h3>{n.titulo}</h3>
+      </header>
+      <div
+        className="tutor-detail-tabs"
+        role="tablist"
+        aria-label="Información de la idea"
+      >
+        {tabs.map((t, i) => (
+          <button
+            role="tab"
+            type="button"
+            id={`${tabsId}-${t.id}`}
+            aria-controls={`${tabsId}-panel`}
+            aria-selected={tab === t.id}
+            tabIndex={tab === t.id ? 0 : -1}
+            onClick={() => setTab(t.id)}
+            onKeyDown={(e) => {
+              if (["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) {
+                e.preventDefault();
+                const next =
+                  e.key === "Home"
+                    ? 0
+                    : e.key === "End"
+                      ? 2
+                      : (i + (e.key === "ArrowRight" ? 1 : 2)) % 3;
+                setTab(tabs[next].id);
+                document.getElementById(`${tabsId}-${tabs[next].id}`)?.focus();
+              }
+            }}
+            key={t.id}
+          >
+            {t.nombre}
+          </button>
+        ))}
+      </div>
+      <div
+        role="tabpanel"
+        id={`${tabsId}-panel`}
+        aria-labelledby={`${tabsId}-${tab}`}
+        tabIndex={0}
+        className="tutor-detail-content"
+      >
+        {tab === "resumen" && (
+          <>
+            <MathMarkdown content={n.resumen} />
+            <p className="tutor-detail-note">Procedencia: {n.origen}</p>
+            {n.senal && (
+              <p className="tutor-provisional">
+                <TriangleAlert size={15} />
+                Posible confusión: es una lectura provisional, no un
+                diagnóstico.
+              </p>
+            )}
+            {relaciones.length > 0 && (
+              <div className="tutor-related">
+                <h4>Se conecta con</h4>
+                <ul>
+                  {relaciones.slice(0, 3).map((r, i) => (
+                    <li key={i}>
+                      {r.tipo}: {r.nodo!.titulo}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+        {tab === "evidencia" && (
+          <>
+            <h4>¿Qué permite observar?</h4>
+            <p>
+              <strong>{n.evidencias}</strong>{" "}
+              {n.evidencias === 1
+                ? "registro vinculado"
+                : "registros vinculados"}{" "}
+              a esta idea.
+            </p>
+            <p>
+              El estado se calcula en el servidor a partir de tus actividades y
+              revisiones; no lo decide la IA.
+            </p>
+            <p className="tutor-detail-note">
+              Leer una explicación o abrir un nodo no demuestra que sepas
+              aplicarlo sin ayuda. Tampoco este estado certifica dominio.
+            </p>
+          </>
+        )}
+        {tab === "ejercicios" && (
+          <>
+            <h4>De entender a aplicar</h4>
+            <p>
+              Abre esta exploración para practicar o solicitar una comprobación
+              disponible del concepto.
+            </p>
+            <p className="tutor-detail-note">
+              Las comprobaciones sin ayuda son distintas de practicar acompañado
+              por el tutor.
+            </p>
+            <Link
+              className="tutor-button tutor-button--secondary"
+              to={`/aprender/${n.arbol_id}`}
+            >
+              Ver la exploración <ArrowRight size={16} />
+            </Link>
+          </>
+        )}
+      </div>
+      <div className="tutor-node-state">
+        <h4>Tu estado</h4>
+        <span className={`tutor-state-pill tutor-state-pill--${n.estado}`}>
+          {n.estado === "aplicado" ? <Check size={14} /> : <Circle size={12} />}{" "}
+          {ESTADO_TEXTO[n.estado]}
+        </span>
+        <small>
+          {n.evidencias}{" "}
+          {n.evidencias === 1 ? "registro asociado" : "registros asociados"} ·
+          sin porcentaje de comprensión
+        </small>
+      </div>
       <Link
-        className="text-sm font-semibold text-primary underline"
+        className="tutor-button tutor-explore-button"
         to={`/aprender/${n.arbol_id}`}
       >
-        Abrir esta exploración
+        Explorar este tema <ArrowRight size={17} />
       </Link>
     </article>
   );
 }
-function Leyenda() {
-  return (
-    <ul
-      className="flex flex-wrap gap-x-4 gap-y-1 text-xs"
-      aria-label="Leyenda de estados"
-    >
-      {(Object.keys(ESTADO_TEXTO) as Estado[]).map((e) => (
-        <li key={e} className="flex items-center gap-1">
-          <span
-            aria-hidden
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-white"
-            style={{ background: ESTADO_COLOR[e] }}
-          >
-            {ESTADO_GLIFO[e]}
-          </span>
-          {ESTADO_TEXTO[e]}
-        </li>
-      ))}
-      <li>Borde punteado: posible confusión (provisional)</li>
-      <li>Tamaño: evidencias</li>
-    </ul>
-  );
-}
-function MapaCanvas({ grafo, seleccionado, onSeleccionar }: Props) {
-  const caja = useRef<HTMLDivElement>(null);
-  const [ancho, setAncho] = useState(480);
-  useEffect(() => {
-    const el = caja.current;
-    if (!el) return;
-    const o = new ResizeObserver(([e]) => setAncho(e.contentRect.width));
-    o.observe(el);
-    return () => o.disconnect();
-  }, []);
-  const datos = useMemo(() => {
-    const ids = new Set(grafo.nodos.map((n) => n.id));
-    return {
-      nodes: grafo.nodos.map((n) => ({ ...n })),
-      links: grafo.aristas
-        .filter((a) => ids.has(a.origen) && ids.has(a.destino))
-        .map((a) => ({ source: a.origen, target: a.destino, tipo: a.tipo })),
-    };
-  }, [grafo]);
-  const camino = useMemo(() => aristasCamino(grafo.camino_error), [grafo]);
-  const nodosCamino = useMemo(() => new Set(grafo.camino_error), [grafo]);
-  const pintar = (
-    nodo: NodoVis,
-    ctx: CanvasRenderingContext2D,
-    escala: number,
-  ) => {
-    const r = radioNodo(nodo.evidencias);
-    const x = nodo.x ?? 0,
-      y = nodo.y ?? 0;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = ESTADO_COLOR[nodo.estado];
-    ctx.fill();
-    ctx.lineWidth =
-      nodo.id === seleccionado ? 3 : nodosCamino.has(nodo.id) ? 2.5 : 1.5;
-    ctx.strokeStyle = nodosCamino.has(nodo.id)
-      ? "#dc2626"
-      : nodo.id === seleccionado
-        ? "#111827"
-        : "#ffffff";
-    if (nodo.senal) {
-      ctx.setLineDash([3, 2]);
-      ctx.strokeStyle = "#f59e0b";
-      ctx.lineWidth = 2.5;
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `bold ${Math.max(8, r)}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(ESTADO_GLIFO[nodo.estado], x, y);
-    if (escala > 1.1 || nodo.id === seleccionado) {
-      ctx.fillStyle = "#111827";
-      ctx.font = `${11 / escala}px sans-serif`;
-      ctx.fillText(nodo.titulo.slice(0, 28), x, y + r + 8 / escala);
-    }
-  };
-  return (
-    <div
-      ref={caja}
-      role="img"
-      aria-label="Mapa visual de comprensión. Para recorrerlo con el teclado usa la lista de nodos."
-      className="overflow-hidden rounded-xl border border-border bg-card"
-    >
-      <Suspense fallback={<p className="p-4 text-sm">Preparando el mapa…</p>}>
-        <ForceGraph2D
-          graphData={datos}
-          width={ancho}
-          height={380}
-          cooldownTicks={80}
-          nodeLabel={(n: NodoVis) => descripcionNodo(n)}
-          nodeCanvasObject={pintar}
-          nodePointerAreaPaint={(
-            n: NodoVis,
-            color: string,
-            ctx: CanvasRenderingContext2D,
-          ) => {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(
-              n.x ?? 0,
-              n.y ?? 0,
-              radioNodo(n.evidencias) + 3,
-              0,
-              2 * Math.PI,
-            );
-            ctx.fill();
-          }}
-          linkColor={(l: { source: { id: string }; target: { id: string } }) =>
-            camino.has(`${l.source.id}>${l.target.id}`) ? "#dc2626" : "#cbd5e1"
-          }
-          linkWidth={(l: { source: { id: string }; target: { id: string } }) =>
-            camino.has(`${l.source.id}>${l.target.id}`) ? 3 : 1
-          }
-          linkDirectionalArrowLength={4}
-          linkDirectionalArrowRelPos={1}
-          onNodeClick={(n: NodoVis) => onSeleccionar(n.id)}
-        />
-      </Suspense>
-    </div>
-  );
-}
 export function GrafoComprension(props: Props) {
-  const movil = useEsMovil();
-  const { grafo, seleccionado } = props;
-  if (grafo.nodos.length === 0)
-    return (
-      <p className="text-sm text-muted-foreground">
-        Tu mapa aparecerá aquí a medida que conversemos y explores ideas.
-      </p>
-    );
+  const [lista, setLista] = useState(false);
+  const found = buscarNodos(props.grafo.nodos, props.busqueda ?? "");
+  const buscando = Boolean(props.busqueda?.trim());
   return (
-    <div className="space-y-3">
-      <Leyenda />
-      {!movil && <MapaCanvas {...props} />}
-      <Detalle grafo={grafo} id={seleccionado} />
-      <details open={movil}>
-        <summary className="min-h-11 cursor-pointer py-2 text-sm font-semibold">
-          {movil ? "Mapa en lista" : "Ver los nodos como lista (teclado)"}
+    <div className="tutor-map">
+      <div className="tutor-map-tools">
+        <ul className="tutor-map-legend" aria-label="Leyenda de estados">
+          {(Object.keys(ESTADO_TEXTO) as Estado[]).map((e) => (
+            <li key={e}>
+              <span style={{ background: ESTADO_COLOR[e] }} />
+              {ESTADO_TEXTO[e]}
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          className="tutor-button tutor-button--quiet"
+          aria-pressed={lista}
+          onClick={() => setLista(!lista)}
+        >
+          {lista ? <Network size={16} /> : <List size={16} />}{" "}
+          {lista ? "Ver como mapa" : "Ver como lista"}
+        </button>
+      </div>
+      <details className="tutor-map-help">
+        <summary>
+          <Info size={14} />
+          Tamaño: registros de evidencia
         </summary>
-        <ListaJerarquica {...props} />
+        <p>
+          Los nodos crecen con los registros asociados, no con un porcentaje de
+          aprendizaje. Un borde punteado señala una posible confusión, aún
+          provisional. La lista ofrece todas las ideas y funciona con teclado.
+        </p>
       </details>
+      {!props.grafo.nodos.length ? (
+        <div className="tutor-map-empty">
+          <Network size={46} strokeWidth={1} />
+          <h3>Una buena pregunta abre un camino.</h3>
+          <p>
+            Cuando explores una idea con el tutor, aparecerá aquí. Sus
+            conexiones se construyen con tu conversación; sus estados, con lo
+            que haces.
+          </p>
+        </div>
+      ) : (
+        <div
+          className={`tutor-map-workspace${lista || buscando ? " tutor-map-workspace--list" : ""}`}
+        >
+          <div className="tutor-map-surface">
+            {lista || buscando ? (
+              <div className="tutor-map-list" aria-label="Mapa en lista">
+                {buscando ? (
+                  <>
+                    <p className="tutor-search-count">
+                      {found.length}{" "}
+                      {found.length === 1
+                        ? "idea encontrada"
+                        : "ideas encontradas"}
+                    </p>
+                    <ul>
+                      {found.map((n) => (
+                        <Fila
+                          key={n.id}
+                          n={{ nodo: n, hijos: [], profundidad: 0 }}
+                          props={props}
+                        />
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <ul aria-label="Nodos del mapa de comprensión">
+                    {jerarquia(props.grafo).map((n) => (
+                      <Fila key={n.nodo.id} n={n} props={props} />
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <Mapa {...props} />
+            )}
+          </div>
+          <Detalle {...props} />
+        </div>
+      )}
     </div>
   );
 }

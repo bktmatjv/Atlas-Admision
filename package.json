@@ -25,6 +25,7 @@
     "test:api": "npm run build -w @atlas/motor && npm run test -w @atlas/backend",
     "test:isolated": "node scripts/test-api-isolated.mjs",
     "test:docker": "node scripts/test-api-docker.mjs",
+    "test:tutor-ui": "node scripts/verify-tutor-design.mjs",
     "lint": "eslint .",
     "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run test:docker && npm audit --audit-level=moderate",
     "typecheck": "npm run build -w @atlas/motor && npm run typecheck -w @atlas/frontend && npm run typecheck -w @atlas/backend",

@@ -10,6 +10,8 @@ export default tseslint.config(
       "dist",
       "**/dist/**",
       "backend/uploads/**",
+      // Capturas y caché de las pruebas visuales; no son código fuente.
+      ".atl/**",
       "remotion",
       // Lo genera Lovable y lo reescribe en cada sincronización: el arreglo de `f9d09ca7`
       // duró hasta el siguiente «Work in progress». Corregirlo aquí no sirve de nada.
