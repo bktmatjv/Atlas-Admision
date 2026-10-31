@@ -57,6 +57,7 @@ export function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
             <CalibraBrand size="sm" subtitle="Admisión" />
           </NavLink>
           <nav aria-label="Secciones" className="flex items-center gap-1">
+            <NavLink to="/tutor" className={enlace}>Tutor</NavLink>
             <NavLink to="/aprender" className={enlace}>Aprender</NavLink>
             <NavLink to="/cursos" className={enlace}>Mis cursos</NavLink>
             <NavLink to="/admision" className={enlace}>Admisión</NavLink>
