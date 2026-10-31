@@ -70,6 +70,33 @@ Commits previstos (Conventional Commits en español):
 
 Riesgo previsto: **item 5** (nueva dependencia `react-force-graph-2d` en el frontend) e **item 3** acotado (`AI_PROVIDER` acepta un valor nuevo; los valores existentes conservan su comportamiento). La migración es aditiva.
 
+## Matriz de pruebas por artefacto
+
+Validador: `backend/test/artefactos-matriz.test.ts` (caso válido aceptado y casos inválidos descartados con su motivo; más `artefactos.test.ts`). Integración: bloque `Matriz de artefactos…` de `backend/test/system.test.ts` (PostgreSQL real y proveedor `fake`, que emite cada artefacto con el marcador `[[b:…]]`). Render: `frontend/src/components/tutor/bloques.test.ts` (`renderToStaticMarkup`) y lógica de inputs en `frontend/src/lib/tutor/chat.test.ts`.
+
+| Artefacto | Validador (casos inválidos y motivo) | Integración | Render |
+| --- | --- | --- | --- |
+| `pregunta_socratica` | más de 4 respuestas rápidas y sin texto: forma | se persiste y se devuelve; respuesta con lectura provisional de cita literal, sin evidencia ni cambio de estados | texto, respuestas rápidas y campo |
+| `contraste` | cuenta que no cierra; atribución inventada; clave activa filtrada | se persiste; atribución inventada y clave activa se descartan; sin input (400) | dos columnas «Lo que hiciste» y «Lo correcto» |
+| `razonamiento_anotado` | cita que el estudiante no escribió; estado desconocido; sin pasos | se persiste; atribución inventada se descarta; sin input (400) | estado en palabras y cita literal |
+| `prediccion` | plantilla de otro concepto, inexistente o semilla negativa | se persiste con enunciado y opciones sin revelar la correcta; corrección determinista (acierta y falla) sin evidencia; retirada con comprobación activa | opciones con coma decimal, sin marcar la correcta |
+| `ejemplo_paso_a_paso` | cuenta falsa en un paso; más de 8 pasos | se persiste; intento como lectura provisional sin evidencia | primer paso visible, intento opcional |
+| `visual` / `cadena_porcentual` | cuenta falsa; paso sin operación porcentual | se persiste con su forma | valores y operaciones |
+| `visual` / `barra_de_partes` | más marcadas que partes; fracción incoherente | se persiste con su forma | partes marcadas y texto accesible |
+| `visual` / `tabla_proporcion` | productos o cocientes no constantes | se persiste con su forma | columnas, filas y relación |
+| `visual` / `recta_numerica` | punto fuera del rango; mínimo mayor que el máximo | se persiste con su forma | SVG con descripción accesible |
+| `practica` | plantilla de otro concepto; historia demasiado larga | se persiste; corrección determinista sin evidencia; retirada con comprobación activa | opciones, historia y rótulo «verificada por Atlas» |
+| `en_tus_palabras` | consigna vacía; clave activa filtrada | se persiste; lectura provisional con cita literal sin evidencia | consigna y campo |
+| `invitacion_comprobar` | sin texto; campo no admitido | se persiste; `POST /comprobaciones` crea una comprobación real y `/activa` la devuelve | botón o enlace según haya comprobación activa |
+| `cita` | fragmento ajeno; id que no es uuid | acepta un fragmento propio y descarta el ajeno | enlace al original |
+| `crear_nodo` | padre ajeno; límite de nodos; tipo desconocido; estado escrito por el LLM | se aplica y el nodo nace «sin explorar» | — |
+| `relacionar` | nodo ajeno; ciclo; duplicada; tipo desconocido | se aplica con `creada_por: ia` | — |
+| `editar_nodo` | nodo ajeno; sin título ni resumen | guarda la revisión anterior (`por: agente`, no cuenta como exploración) | — |
+| `fusionar` | nodo ajeno; destino fuera de la lista; un solo nodo | conserva aristas y borra el fusionado; se rechaza con evidencia propia | — |
+| `enfocar` | nodo ajeno; campo extra | cambia solo el foco | — |
+
+Regresiones de los ajustes con Groq: respuesta de texto libre que vuelve a la charla (`chat.test.ts`), lectura sin idea sin «Me parece que…» (integración), `idea_clave` obligatoria en nodos y prohibición de trabajar la comprobación activa (`agente-prompt.test.ts` y marcador `[[contexto]]`).
+
 ## Log
 
 - **L1 (30/10/2026, usuario):** «Separemos dos cosas, el sistema y la consciencia (el LLM EN SI asi lo llamaré), el sistema te da las herramientas y funcionalidades, te crea el arbol referencial, te da la posibilidad de corregir los errores, te da las funcionalidades que hemos implementado simulando el backward y que el usuario entienda. El usuario final tiene que ver eso de la interfaz de la IA, una muestra visual del arbol de COMPRENSION del usuario, para que vea que temas estan relacionados, en qué pudo haber fallado, qué puede haber quedado claro o no, masomenos como una visualización de Obsidian. […] No es tanto como lecciones, es algo más englobado, no se busca enseñar, se busca que el usuario comprenda el contexto detras de sus errores y asi APRENDA, y no realice el acto de aprender sin pensar»
@@ -79,3 +106,4 @@ Riesgo previsto: **item 5** (nueva dependencia `react-force-graph-2d` en el fron
 - **D1 (resuelta, 30/10/2026, usuario):** «Sí, también evidencia». Las plantillas pueden usarse como comprobación (nivel A) cuando se agotan las actividades curadas. Para que la evidencia no dependa de texto generado, el enunciado de comprobación es fijo por plantilla; la IA solo redacta las prácticas formativas. Ver S13. Límite que se mantiene: los enunciados de plantilla no tienen revisión docente.
 - **L5 (30/10/2026, usuario):** «Si normal, cambiamos a Groq mejor, cambia el AGENTS md o las especificaciones para que cumpla con GROQ, dicho eso manda subagentes a que realicen la implementacion, mejor a uno solo subagente». Se descartó Codex como motor del tutor (AGENTS.md prohíbe reutilizar credenciales del harness y su uso desde una aplicación no está cubierto por el plan de ChatGPT). Se agrega S0 y se actualiza AGENTS.md §3 y §14.
 - **L6 (30/10/2026, ejecución):** T0–T7 implementadas por una sesión aparte, en la rama `feat/tutor-agente`, un commit por tarea y sin atribución. Desviaciones: (a) T0 y T2 se escribieron implementación primero y pruebas después; T1 sí observó el rojo primero. (b) `.env.example` no se pudo leer ni editar (permiso denegado en la sesión): S0 queda sin esa línea y hay que agregar `AI_PROVIDER=groq` con `AI_API_KEY=` vacío a mano. (c) Se agregó una segunda migración aditiva `Plantillas1770000004000` (`rastros_error.origen`, `plantilla`, `parametros`) para S13 en vez de tocar la migración ya commiteada. (d) `AgenteModule` vive en `agente.ts` para evitar una importación circular con `tutor.ts`. (e) Un valor ilegible en una comprobación curada ahora responde 400 sin cerrar la comprobación (S2). (f) `npm run verify`: todo pasa salvo `npm audit` (14 avisos moderados en eslint/typescript-eslint/minimatch/glob vía typeorm, ajenos a `react-force-graph-2d`).
+- **L7 (31/10/2026, ejecución):** el usuario pidió dejar el agente funcional y todos los artefactos con sus pruebas, listo para pushear (el diseño visual lo mejora él después). Tras probar con Groq real se corrigieron cuatro problemas (respuestas a bloques que no seguían en la charla, lectura vacía, `idea_clave` ausente en nodos, ayuda sobre el problema de la comprobación activa; commit `c0867a7`). Al completar la matriz apareció un defecto real: una edición del agente (`editar_nodo`) creaba una revisión que marcaba el nodo como «explorado»; se arregló con la migración aditiva `Revisiones1770000005000` (`revisiones_nodo.por`) en `7229b26`. La matriz está en `a828edf`. Un `npm run test:docker` aislado se colgó una vez en un test (167 s) y no se reprodujo en tres corridas siguientes: queda como flake no explicado, a vigilar.
