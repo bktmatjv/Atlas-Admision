@@ -20,6 +20,15 @@ export function validate<S extends z.ZodType>(
     );
   return parsed.data;
 }
+// Un error puede traer su propio código estable (p. ej. `elige_tema`) para que el cliente decida qué hacer.
+function codigoDe(e: unknown, status: number) {
+  if (e instanceof HttpException) {
+    const r = e.getResponse();
+    if (typeof r === "object" && r && "codigo" in r && typeof r.codigo === "string" && /^[a-z_]{3,40}$/.test(r.codigo))
+      return r.codigo;
+  }
+  return `HTTP_${status}`;
+}
 @Catch()
 export class Errors implements ExceptionFilter {
   catch(e: unknown, host: ArgumentsHost) {
@@ -50,6 +59,6 @@ export class Errors implements ExceptionFilter {
       .switchToHttp()
       .getResponse<Response>()
       .status(status)
-      .json({ error: { codigo: `HTTP_${status}`, mensaje: message } });
+      .json({ error: { codigo: codigoDe(e, status), mensaje: message } });
   }
 }
