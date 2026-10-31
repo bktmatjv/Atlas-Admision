@@ -29,7 +29,7 @@ Fuera de alcance: Redis o estado compartido entre instancias, streaming, panel d
 | T1 | S1, S2, S4, S5, S6, S7 + pruebas 1–7, 9, 12–14 | hecha | ver `git log` (`feat(tutor): router de modelos con failover`) |
 | T2 | S3 + pruebas del adaptador Cloudflare | hecha | ver `git log` (`feat(tutor): adaptador de Cloudflare Workers AI para el router`) |
 | T3 | S8, S9 + pruebas 8, 10, 11 (+ migración aditiva) | hecha | ver `git log` (`feat(tutor): el turno guarda el destino que respondió y /salud muestra el router`) |
-| T4 | S11 (documentación) | pendiente | — |
+| T4 | S11 (documentación) | hecha | este commit (`docs(tutor): documenta el router de modelos con failover`) |
 
 ## Log
 
@@ -97,3 +97,47 @@ Las páginas oficiales **no se pudieron abrir** desde este contenedor (proxy: `C
   - `/salud` muestra el estado del router (`ABIERTO` con `hasta` tras un 429) sin claves, y `router: null` con el proveedor de pruebas.
 - Resultado real: `npm run test:api` (PostgreSQL 16 local) → **310 pruebas pasan en 10 archivos** (esta vez no apareció el 429 intermitente de la línea base). `npm run lint` y `npm run typecheck` sin errores.
 - Nota: la espera de 1,15 s de la prueba 10 es real (el enfriamiento mínimo configurable es 1000 ms); es la única espera real de las pruebas nuevas.
+
+### T4 — documentación
+
+- `backend/.env.example` (variables del router con claves vacías y la cadena de ejemplo comentada), `backend/README.md` (sección «Router de modelos con failover»: tabla de qué activa el failover, disyuntor, concurrencia, variables, observabilidad y cómo leer `/salud`), `README.md` (configurar el router, tabla de tecnologías, calidad y limitaciones) y `AGENTS.md` §14 (el router es parte de la capa de proveedores). El conteo de pruebas del backend en `README.md` pasó de 247 a 310 (valor medido). `AGENTS.md` conserva el aviso de que los conteos pueden crecer.
+- Los modelos del `.env.example` (`llama-3.3-70b-versatile`, `openai/gpt-oss-120b`, `@cf/google/gemma-4-26b-a4b-it`) son **ejemplos no verificados**: no pude consultar los catálogos de Groq ni de Cloudflare. Ninguno está en el código (hay una prueba que revisa que `AI_MODEL` no esté fijo, y las cadenas de las pruebas usan nombres ficticios).
+- `compose.yaml` no necesita cambios: ya inyecta `backend/.env` con `env_file`, por lo que las variables nuevas llegan al contenedor.
+
+### Verificación de punta a punta que sí se pudo hacer aquí
+
+Con el backend real (`tsx src/main.ts`) contra PostgreSQL 16 local, `AI_PROVIDER=router` y una cadena `groq:modelo-inexistente,groq:otro,cloudflare:@cf/google/gemma-4-26b-a4b-it` con claves falsas (los hosts de Groq y Cloudflare no son alcanzables desde este contenedor):
+- Arranca y `GET /api/v1/salud` devuelve los tres destinos `CERRADO` con `herramientas: true`.
+- Los comandos `curl` del informe final (crear sesión, conversación y mensaje con `Idempotency-Key`) funcionan; el turno respondió **503** «No se pudo contactar al proveedor de IA. Tu mensaje quedó guardado; puedes reintentar.» tras probar los tres destinos con un reintento cada uno (6 intentos, ~1,2 s), y la línea de log `[RouterIA]` mostró destinos y motivos sin prompts ni claves.
+- Tras aplicar las migraciones (`db:migrate`) la columna `mensajes.destino_ia` existe. (`tsx src/main.ts` directo no migra; el contenedor sí lo hace en su arranque.)
+- NO se verificó: ninguna respuesta real de Groq ni de Cloudflare, ni el failover real por 429/404.
+
+### Prueba manual con APIs reales (pendiente para el usuario)
+
+Requiere claves reales. Pasos exactos:
+
+1. En `backend/.env` (desde `backend/.env.example`): `AI_PROVIDER=router`, `GROQ_API_KEY`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (token con permiso de Workers AI) y
+   `AI_CADENA=groq:modelo-que-no-existe,groq:<un modelo real de tu cuenta>,cloudflare:<un modelo con function calling de tu cuenta>`.
+2. `docker compose up --build -d --force-recreate --wait backend`
+3. `curl http://127.0.0.1:3000/api/v1/salud` → tres destinos `CERRADO`.
+4. Crear sesión, conversación y mandar un mensaje:
+   `curl -sS -c jar -X POST http://127.0.0.1:3000/api/v1/sesion -H 'X-Calibra-Request: 1' -H 'Content-Type: application/json' -d '{}'`, luego `POST /api/v1/conversaciones` con `{"tema":"porcentajes"}` y `POST /api/v1/conversaciones/<id>/mensajes` con `{"texto":"Explícame los porcentajes"}` y un encabezado `Idempotency-Key` (mismos encabezados `X-Calibra-Request` y cookie).
+5. Esperado: el primer destino responde 404 (modelo inexistente), `/salud` lo muestra `ABIERTO` con `motivo: "mal_configurado"` y `hasta: null`, y el turno responde 201 desde el segundo destino. `docker compose logs backend | grep RouterIA` muestra el failover. `docker compose exec db psql -U atlas -d atlas -c "select destino_ia, left(texto,40) from mensajes where rol='tutor' order by created_at desc limit 3"` muestra `groq:<modelo real>`.
+6. Repetir con `AI_CADENA=groq:modelo-que-no-existe,cloudflare:<modelo>` para probar Cloudflare: el turno debe terminar con tool calling (si el modelo rechaza `tools` o `tool_choice`, aparecerá un 400 en el log con nivel `error`; elige otro modelo o ponlo en `AI_SIN_HERRAMIENTAS`) y confirmar que ese modelo está disponible en tu plan gratuito (un 403 lo dejará `mal_configurado`).
+7. Un 429 real solo se reproduce agotando la cuota; para comprobarlo, dejar un modelo de Groq de cuota baja como primer destino y consultar `/salud` cuando la consuma: debe quedar `ABIERTO` con `hasta` igual al `retry-after`/reinicio informado, y el modelo de respaldo debe seguir respondiendo (así se confirma que el límite de Groq es por modelo).
+
+### Resultados finales (2026-10-31)
+
+| Comprobación | Resultado |
+| --- | --- |
+| `npm run lint` | sin errores |
+| `npm run typecheck` | sin errores |
+| `npm test` (motor + frontend) | 462 pruebas pasan en 45 archivos |
+| `npm run build` | correcto |
+| `npm run test:api` con PostgreSQL 16 local (mismo esquema aislado que `test:docker`) | **310 pruebas pasan en 10 archivos** (31 de `router.test.ts`, 14 de `cloudflare.test.ts`, 6 nuevas en `system.test.ts`, más las anteriores intactas) |
+| `npm run test:docker` | **no pudo correr**: no hay demonio de Docker en este entorno (`failed to connect to the docker API at unix:///var/run/docker.sock`) |
+| `npm audit --audit-level=moderate` | 14 avisos moderados, los mismos preexistentes |
+| `npm run verify` | no llega a cerrarse por dos motivos del entorno: `test:docker` (sin Docker) y `audit` (los 14 avisos preexistentes). Sus demás pasos se corrieron por separado, arriba |
+
+- Archivos modificados fuera de la lista inicial: ninguno. `backend/src/modules/tutor/cadena.ts` y `tipos-ia.ts` son archivos nuevos dentro de `tutor/**`.
+- Sin verificar: respuestas reales de Groq y Cloudflare; disponibilidad de los modelos de ejemplo; modelo de Cloudflare con function calling en el plan gratuito; forma real del cuerpo de error de Cloudflare; que Groq trate sus límites diarios de forma independiente por modelo. Pasos de la prueba manual arriba.
